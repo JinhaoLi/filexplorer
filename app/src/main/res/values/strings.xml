@@ -1,3 +1,24 @@
 <resources>
-    <string name="app_name">Android资源管理器</string>
+    <string name="app_name">资源管理器</string>
+    <string name="title_activity_main">资源管理器</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+
+    <string name="menu_this_phone">此手机</string>
+    <string name="menu_gallery">相册</string>
+    <string name="menu_fast_read">快速访问</string>
+    <string name="menu_net_ftp">局域网</string>
+    <string name="menu_setting">设置</string>
+    <string name="menu_item_sort">排序</string>
+    <string name="menu_item_sort_name">名称排序</string>
+    <string name="menu_item_sort_size">大小排序</string>
+    <string name="menu_item_sort_date">时间排序</string>
+    <string name="menu_item_sort_type">类型排序</string>
+    <string name="search">搜索</string>
+    <string name="refresh">刷新</string>
+    <string name="close">关闭</string>
+    <string name="add_new">新建</string>
+    <string name="communicate">自定义</string>
 </resources>
