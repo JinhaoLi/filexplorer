@@ -5,4 +5,9 @@
         <item name="windowNoTitle">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
+
+    <style name="item_style">
+        <item name="android:singleLine">true</item>
+        <item name="android:layout_gravity">center</item>
+    </style>
 </resources>
