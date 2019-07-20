@@ -34,14 +34,15 @@ public class FileUtils {
         long size;
         int icon;
         if (isDir) {
-            int lCount = 0;
+            int lCount;
             File[] files = file.listFiles();
             // files==null意味着无法访问此目录
             if (files == null) {
-                return null;
+                //return null;
+            }else {
+                lCount=files.length;
+                fileInfo.setCount(lCount);
             }
-            lCount=files.length;
-            fileInfo.setCount(lCount);
         } else {
             size =file.length();
             icon =FileTypeFilter.getIconRes(name,size);
@@ -64,31 +65,32 @@ public class FileUtils {
         return df.format( date );
     }
 
+    public static void viewFile(final Context context, final String filePath,String type){
+        Intent intent = new Intent();
+        intent.addCategory("android.intent.category.DEFAULT");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setAction(android.content.Intent.ACTION_VIEW);
+        Uri uri;
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N){
+            LogUtils.i("FileUtils:",BuildConfig.APPLICATION_ID+".fileprovider");
+            uri=FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID+".fileprovider",new File(filePath));//authority要和AndroidManifest中的定义authorities的一致
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            //grantUriPermission(context, uri, intent);
+        }else {
+            uri=Uri.fromFile(new File(filePath));
+        }
+        intent.setDataAndType(uri, type);
+        //Intent.createChooser(intent, "请选择对应的软件打开该附件！");
+        context.startActivity(intent);
+    }
+
     public static void viewFile(final Context context, final String filePath) {
         String type = getMimeType(filePath);
-
         if (!TextUtils.isEmpty(type) && !TextUtils.equals(type, "*/*")) {
-            Intent intent = new Intent();
-            intent.addCategory("android.intent.category.DEFAULT");
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            intent.setAction(android.content.Intent.ACTION_VIEW);
-            Uri uri;
-            if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N){
-                //LogUtils.i("FileUtils:",BuildConfig.APPLICATION_ID+".fileprovider");
-                uri=FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID+".fileprovider",new File(filePath));//authority要和AndroidManifest中的定义authorities的一致
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                //grantUriPermission(context, uri, intent);
-            }else {
-                uri=Uri.fromFile(new File(filePath));
-            }
-            intent.setDataAndType(uri, type);
-            //Intent.createChooser(intent, "请选择对应的软件打开该附件！");
-            context.startActivity(intent);
-
+            viewFile(context,filePath,type);
         } else {
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
             dialogBuilder.setTitle("选择文件类型");
-
             String[] menuItemArray = {"文本","音频","视频","图片"};
             dialogBuilder.setItems(menuItemArray,
                     new DialogInterface.OnClickListener() {
@@ -109,11 +111,7 @@ public class FileUtils {
                                     selectType = "image/*";
                                     break;
                             }
-                            Intent intent = new Intent();
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            intent.setAction(android.content.Intent.ACTION_VIEW);
-                            intent.setDataAndType(Uri.fromFile(new File(filePath)), selectType);
-                            context.startActivity(intent);
+                            viewFile(context,filePath,selectType);
                         }
                     });
             dialogBuilder.show();

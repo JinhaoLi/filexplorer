@@ -2,7 +2,7 @@
 <paths>
     <external-path
         name="files_root"
-        path="Android/data/com.jil.filexplorer/Files"/>
+        path="Android/mData/com.jil.filexplorer/Files"/>
     <external-path
         name="external_storage_root"
         path="/"/>

@@ -3,6 +3,9 @@ package com.jil.filexplorer.interfaces;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.jil.filexplorer.utils.LogUtils;
+import com.jil.filexplorer.utils.ToastUtils;
+
 public class OnDoubleClickListener implements View.OnTouchListener {
     private int count = 0;//点击次数
     private long firstClick = 0;//第一次点击时间
@@ -14,10 +17,12 @@ public class OnDoubleClickListener implements View.OnTouchListener {
      * 自定义回调接口
      */
     private DoubleClickCallback mCallback;
+    private boolean moved;
 
 
     public interface DoubleClickCallback {
         void onDoubleClick();
+        void onLongClick();
     }
 
 
@@ -71,6 +76,18 @@ public class OnDoubleClickListener implements View.OnTouchListener {
                     count = 1;
                 }
             }
+        }
+        if(MotionEvent.ACTION_UP ==event.getAction()&&count==1&&!moved){
+            long clickUp = System.currentTimeMillis();//记录放开手指的时间
+            if(clickUp-firstClick>totalTime){
+                mCallback.onLongClick();
+                LogUtils.i("OnTouch","long click");
+                return true;
+            }
+            return false;
+        }
+        if(MotionEvent.ACTION_MOVE ==event.getAction()&&!moved){
+            moved=true;
         }
         return false;
     }

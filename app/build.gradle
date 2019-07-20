@@ -1,5 +1,8 @@
 apply plugin: 'com.android.application'
 
+static def releaseTime() {
+    return new Date().format("yyyy-MM-dd-H-m-s", TimeZone.getTimeZone("UTC"))
+}
 android {
     compileSdkVersion 29
     buildToolsVersion "28.0.3"
@@ -14,8 +17,16 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            shrinkResources true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    android.applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "JIL_${variant.versionCode}-${variant.versionName}-${releaseTime()}.apk"
+
         }
     }
 }

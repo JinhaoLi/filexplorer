@@ -6,20 +6,29 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+
 import androidx.appcompat.app.ActionBar;
 import androidx.core.view.GravityCompat;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+
 import android.view.MenuItem;
+
 import com.google.android.material.navigation.NavigationView;
 import com.jil.filexplorer.customView.ClearActivity;
 import com.jil.filexplorer.ui.FileViewFragment;
 import com.jil.filexplorer.utils.ToastUtils;
+
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.widget.Toolbar;
+
 import android.view.Menu;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Objects;
 
 
@@ -31,6 +40,9 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     private FileViewFragment pageFragment;
     //private FragmentManager fragmentManager;
     private String mPath;
+    private ArrayList<String> historyPath = new ArrayList<>();
+    private ImageButton upDir;
+    private int positionInHistory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,22 +63,32 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                 return false;
             }
         });
-        if(pageFragment!=null){
+        upDir.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                File file  =new File(mPath);
+                String path =file.getParent();
+                pageFragment.load(path,false);
+                /*if(path!=null&&!path.equals("")&&file.canRead()) {
+                    historyPath.add(file.getParent());
+                    positionInHistory++;
+                }*/
+            }
+        });
+        if (pageFragment != null) {
             refresh(pageFragment.getFilePath());
         }
-       hideInput();
+        hideInput();
     }
 
     @Override
     protected void initView() {
         setContentView(R.layout.activity_main);
         editText = (EditText) findViewById(R.id.editText);
+        upDir = findViewById(R.id.imageButton2);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
-        //assert actionBar != null;
-        //actionBar.setIcon(R.mipmap.ic_launcher);
-
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -74,7 +96,11 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+
+        navigationView.getMenu().add(1,3,6,"123");
+        //navigationView.getMenu().removeItem(2);
         navigationView.setNavigationItemSelectedListener(this);
+
     }
 
 
@@ -83,15 +109,13 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else {
-            File file =new File(editText.getText().toString());
-            mPath=file.getParent();
+        } else if (positionInHistory >0 ) {
+            String path = historyPath.get(positionInHistory-1);
+            positionInHistory--;
+            pageFragment.load(path,true);
 
-            if(mPath!=null&& !Objects.equals(mPath, ""))
-                pageFragment.load(mPath);
-            else
-                ToastUtils.showToast(MainActivity.this,"没有访问权限！",1100);
-            //super.onBackPressed();
+        } else {
+            super.onBackPressed();
         }
     }
 
@@ -140,7 +164,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
+        ToastUtils.showToast(MainActivity.this,id+"",1000);
         if (id == R.id.nav_home) {
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
@@ -151,9 +175,9 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
         } else if (id == R.id.nav_setting) {
 
-        } /*else if (id == R.id.nav_send) {
-
-        }*/
+        } else if (id == 3) {
+            //ToastUtils.showToast(MainActivity.this,"");
+        }
 
         //DrawerLayout drawer = findViewById(R.id.drawer_layout);
         //drawer.closeDrawer(GravityCompat.START);
@@ -162,6 +186,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     /**
      * 点击除editText外时，editText范围失去焦点
+     *
      * @param ev
      * @return
      */
@@ -192,6 +217,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     /**
      * 关闭输入法
+     *
      * @param
      * @param
      * @return
@@ -215,12 +241,13 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
 
     public void setFileViewFragment(FileViewFragment fileViewFragment) {
-        this.pageFragment =fileViewFragment;
+        this.pageFragment = fileViewFragment;
     }
 
-    public void refresh(String path){
-        if(editText !=null && path!=null && !path.equals("")){
-            mPath=path;
+    public void refresh(String path) {
+        if (editText != null && path != null && !path.equals("")) {
+            mPath = path;
+            //positionInHistory++;
             editText.setText(path);
             setTitle(pageFragment.getFragmentTitle());
         }
@@ -236,5 +263,19 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         super.onStart();
     }
 
+    public ArrayList<String> getHistoryPath() {
+        return historyPath;
+    }
 
+    public void setHistoryPath(ArrayList<String> historyPath) {
+        this.historyPath = historyPath;
+    }
+
+    public int getPositionInHistory() {
+        return positionInHistory;
+    }
+
+    public void setPositionInHistory(int positionInHistory) {
+        this.positionInHistory = positionInHistory;
+    }
 }

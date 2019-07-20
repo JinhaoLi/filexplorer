@@ -25,12 +25,13 @@ import static com.jil.filexplorer.utils.ColorUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.ColorUtils.SELECTED_COLOR;
 
 public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultViewHolder> {
-    private ArrayList<FileInfo> data;
+    private ArrayList<FileInfo> mData;
     private FileViewFragment mFileViewFragment;
     private MainActivity mMaintivity;
+    private int itemHeigth;
 
-    public FileListAdapter(ArrayList<FileInfo> data, FileViewFragment mFileViewFragment,MainActivity m) {
-        this.data = data;
+    public FileListAdapter(ArrayList<FileInfo> mData, FileViewFragment mFileViewFragment, MainActivity m) {
+        this.mData = mData;
         this.mFileViewFragment=mFileViewFragment;
         this.mMaintivity = m;
     }
@@ -38,6 +39,7 @@ public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultVie
     @Override
     public View onCreateContentView(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate( R.layout.file_list_item_layout, parent, false);
+
         return v;
     }
 
@@ -50,7 +52,7 @@ public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultVie
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(final DefaultViewHolder holder, final int position) {
-        final FileInfo fileInfo =data.get(position);
+        final FileInfo fileInfo = mData.get(position);
         Date date=new Date(fileInfo.getModifiedDate());
         if(fileInfo.isSelected()){
             holder.itemView.setBackgroundColor(SELECTED_COLOR);
@@ -58,20 +60,28 @@ public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultVie
             holder.itemView.setBackgroundColor(NORMAL_COLOR);
         }
         holder.fileName.setText(fileInfo.getFileName());
-        holder.date.setText(FileUtils.getFormatData(date));
+
         holder.type.setText((fileInfo.isDir()) ? "文件夹":"文件");
+        holder.date.setText(FileUtils.getFormatData(date));
         holder.size.setText(fileInfo.getFileSize()/1024+"Kb");
         holder.icon.setImageResource(fileInfo.getIcon()==0 ? R.mipmap.list_ico_dir:fileInfo.getIcon());
         holder.itemView.setOnTouchListener(new OnDoubleClickListener(new OnDoubleClickListener.DoubleClickCallback() {
             @Override
             public void onDoubleClick() {
                 if(fileInfo.isDir()){
-                    mFileViewFragment.load(data.get(position).getFilePath());
+                    String path =fileInfo.getFilePath();
+                    mFileViewFragment.load(path,false);
+                    //mMaintivity.getHistoryPath().add(path);
+                    //int positionHis =mMaintivity.getPositionInHistory()+1;
+                    //mMaintivity.setPositionInHistory(positionHis);
                 }else {
-
                     FileUtils.viewFile(mMaintivity,fileInfo.getFilePath());
-
                 }
+            }
+
+            @Override
+            public void onLongClick() {
+
             }
         }));
 
@@ -89,12 +99,30 @@ public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultVie
             }
         });
 
+        //itemHeigth=holder.itemView.getHeight();
 
+
+    }
+
+    public void setmData(ArrayList<FileInfo> mData) {
+        this.mData = mData;
+    }
+
+    public ArrayList<FileInfo> getmData() {
+        return mData;
+    }
+
+    public void setItemHeigth(int itemHeigth) {
+        this.itemHeigth = itemHeigth;
+    }
+
+    public int getItemHeigth() {
+        return itemHeigth;
     }
 
     @Override
     public int getItemCount() {
-        return data.size();
+        return mData.size();
     }
 
     public class DefaultViewHolder extends RecyclerView.ViewHolder {
@@ -113,13 +141,5 @@ public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultVie
             this.icon= (ImageView) itemView.findViewById(R.id.imageView2);
         }
 
-    }
-
-    public void setData(ArrayList<FileInfo> data) {
-        this.data = data;
-    }
-
-    public ArrayList<FileInfo> getData() {
-        return data;
     }
 }

@@ -6,7 +6,7 @@ import android.view.SubMenu;
 
 import com.jil.filexplorer.R;
 
-public class MenuUtils{
+public class MenuUtils {
 
     public static boolean addMenu(Menu menu) {
         //单选
@@ -19,15 +19,14 @@ public class MenuUtils{
         subMenu.setGroupCheckable(0, true, true);
         subMenu.getItem(0).setChecked(true);*/
 
-        addMenu(menu, 1, 2, R.string.delete, R.drawable.ic_delete_black_24dp);
 
-        addMenu(menu, 2, 2, R.string.add_new, R.drawable.ic_add);
-
-        addMenu(menu, 3, 3, R.string.search, R.drawable.ic_search);
-
-        addMenu(menu, 4, 4, R.string.refresh, R.drawable.ic_refresh);
-
-        addMenu(menu,   5,5,R.string.close,R.drawable.ic_close_black_24dp);
+        addMenu(menu, 1, 1, R.string.copy, R.drawable.ic_content_copy_black_24dp);
+        addMenu(menu, 2, 2, R.string.cut, R.drawable.ic_content_cut_black_24dp);
+        addMenu(menu, 3, 3, R.string.delete, R.drawable.ic_delete_black_24dp);
+        addMenu(menu, 4, 4, R.string.add_new, R.drawable.ic_add);
+        addMenu(menu, 5, 5, R.string.search, R.drawable.ic_search);
+        addMenu(menu, 6, 6, R.string.refresh, R.drawable.ic_refresh);
+        addMenu(menu, 7, 7, R.string.close, R.drawable.ic_close_black_24dp);
 
         /*addMenuInGroup(menu, 5, 4, R.string.setting);
 
@@ -46,7 +45,7 @@ public class MenuUtils{
         MenuItem menuItem = menu.add(0, itemId, order, titleRes);
 
         if (icon > 0) {
-            LogUtils.i("main_icon",""+icon);
+            LogUtils.i("main_icon", "" + icon);
             menuItem.setIcon(icon);
         }
 
