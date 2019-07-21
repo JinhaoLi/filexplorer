@@ -13,6 +13,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -22,6 +24,7 @@ import com.jil.filexplorer.FileInfo;
 import com.jil.filexplorer.MainActivity;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.FileListAdapter;
+import com.jil.filexplorer.interfaces.SortComparator;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.MenuUtils;
@@ -37,14 +40,20 @@ import com.yanzhenjie.recyclerview.swipe.touch.OnItemStateChangedListener;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 
-import static com.jil.filexplorer.utils.ColorUtils.NORMAL_COLOR;
-import static com.jil.filexplorer.utils.ColorUtils.CANT_SELECTED_COLOR;
-import static com.jil.filexplorer.utils.ColorUtils.SELECTED_COLOR;
+import static com.jil.filexplorer.interfaces.SortComparator.SORT_BY_DATE;
+import static com.jil.filexplorer.interfaces.SortComparator.SORT_BY_NAME;
+import static com.jil.filexplorer.interfaces.SortComparator.SORT_BY_SIZE;
+import static com.jil.filexplorer.interfaces.SortComparator.SORT_BY_TYPE;
+import static com.jil.filexplorer.utils.ConstantUtils.CAN_MOVE_COLOR;
+import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
+import static com.jil.filexplorer.utils.ConstantUtils.CANT_SELECTED_COLOR;
+import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
 import static com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView.LEFT_DIRECTION;
 import static com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView.RIGHT_DIRECTION;
 
-public class FileViewFragment extends Fragment {
+public class FileViewFragment extends Fragment implements View.OnClickListener {
     private final static String TAG = "FileViewFragment";
     private String fragmentTitle;
     private MainActivity mMainActivity;
@@ -58,16 +67,30 @@ public class FileViewFragment extends Fragment {
     //记录选中项
     private int selectPosition =-1;
     private LinearLayoutManager linearLayoutManager;
-    private int fileListScrollState;
-    //路径输入
+    private SortComparator comparator =new SortComparator(SORT_BY_NAME);
+    //顶部排序栏,底部操作栏
+    private FrameLayout topBar,underBar;
+    //列名
+    private TextView sortName,sortDate,sortType,sortSize;
 
-    @SuppressLint("ClickableViewAccessibility")
+
+    @SuppressLint({"ClickableViewAccessibility", "ResourceType"})
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         filePath = Environment.getExternalStorageDirectory().getPath();
         mMainActivity = (MainActivity) getActivity();
         mMainActivity.setFileViewFragment(this);
-        rootView = inflater.inflate(R.layout.file_view_fragment_layout, container, false);
+        rootView = inflater.inflate(R.layout.fragment_file_view_layout, container, false);
+        topBar=rootView.findViewById(R.id.top_bar);
+        underBar=rootView.findViewById(R.id.under_bar);
+        sortName=rootView.findViewById(R.id.textView2);
+        sortDate=rootView.findViewById(R.id.textView3);
+        sortSize=rootView.findViewById(R.id.textView5);
+        sortType =rootView.findViewById(R.id.textView4);
+        sortName.setOnClickListener(this);
+        sortDate.setOnClickListener(this);
+        sortSize.setOnClickListener(this);
+        sortType.setOnClickListener(this);
         fileList = (SwipeMenuRecyclerView) rootView.findViewById(R.id.file_list_view);
         linearLayoutManager = new LinearLayoutManager(mMainActivity);
         fileList.setLayoutManager(linearLayoutManager);
@@ -133,71 +156,49 @@ public class FileViewFragment extends Fragment {
             }
         });
 
+        //item拖动状态改变时调用
         fileList.setOnItemStateChangedListener(new OnItemStateChangedListener() {
             @Override
             public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int i) {
-                LogUtils.i(getClass().getName() + ":95", i + "");
-                //选中项次层级
-                View v = linearLayoutManager.findViewByPosition(outOfFromPosition);
-                if (i == 2) {
-                    //此项选中时将背景透明化
-                    viewHolder.itemView.setBackgroundColor(NORMAL_COLOR);
+                LogUtils.i(getClass().getName() + ":167", i + "");
+                if (i == 2) { //i == 2选项被选中
+                    fingerDownState(viewHolder.itemView);
+                }else if(i == 0){ //i == 0 选中项被释放
+                    fingerUpState(viewHolder.itemView);
                 }
-                final ArrayList<FileInfo> fileInfos = fileListAdapter.getmData();
-                if (i == 0 && fileInfos.size() > 1 && !fileList.isComputingLayout() && v != null) {
-                    //i == 0 选中项被释放
-                    v.setBackgroundColor(NORMAL_COLOR);  //恢复次层级颜色
-                    FileInfo inputDir=fileListAdapter.getmData().get(outOfFromPosition);
-
-                    if(selectPosition !=-1 && inputDir.isDir()){    //移动范围超item范围
-                        String name =inputDir.getFileName();
-                        AlertDialog.Builder builder = new AlertDialog.Builder( mMainActivity );
-                        AlertDialog alertDialog=builder.setTitle("文件操作").setMessage("确定移动到"+name+"吗？")
-                                .setNegativeButton("移动" , new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        fileInfos.remove(selectPosition);  //移除选中项
-                                        fileListAdapter.notifyItemRemoved(selectPosition);//通知刷新界面移除效果
-                                        //修正position
-                                        if (selectPosition != fileInfos.size()) {
-                                            fileListAdapter.notifyItemRangeChanged(selectPosition, fileInfos.size() - selectPosition);
-                                        }
-                                        selectPosition =-1;//修正范围
-
-                                    }
-                                })
-                                .setPositiveButton("取消", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        selectPosition =-1;//修正范围
-                                    }
-                                }).create();
-                        alertDialog.show();
-                    }
-                }
-
             }
         });
 
 
+        //item移动位置改变时调用
         fileList.setOnItemMoveListener(new OnItemMoveListener() {
             @Override
             public boolean onItemMove(int fromPosition, int toPosition) {
-                LogUtils.i(getClass().getName() + "157", fromPosition + "--"+toPosition);
+                FileInfo temp =fileInfos.get(outOfFromPosition);
+                //记录此项原来的的位置
+                selectPosition = fromPosition;
                 if (outOfFromPosition != toPosition) {
                     //此项位置发生改变时，将上一次染色的item背景改变为透明
-                    if (linearLayoutManager.findViewByPosition(outOfFromPosition) != null)
-                        linearLayoutManager.findViewByPosition(outOfFromPosition).setBackgroundColor(NORMAL_COLOR);
+                    //if(outOfFromPosition-fromPosition<15&&outOfFromPosition-fromPosition>-15){
+                    try {
+                        if(!temp.isSelected())
+                            linearLayoutManager.findViewByPosition(outOfFromPosition).setBackgroundColor(NORMAL_COLOR);
+                        else
+                            linearLayoutManager.findViewByPosition(outOfFromPosition).setBackgroundColor(SELECTED_COLOR);
+                    }catch (Exception e){
+                        LogUtils.e(loge(191),"list的item过多，屏幕无法显示所有的item，当outOfFromPosition还没修正时，尝试获取View时抛出错误");
+                    }
+
+                    //}
+
                     //刷新此项当前的的位置
                     outOfFromPosition = toPosition;
                 }
-                //记录此项原来的的位置
-                selectPosition = fromPosition;
                 //将此项的次层级item背景改变为浅蓝色
-                FileInfo inputDir=fileListAdapter.getmData().get(toPosition);
-                if(inputDir.isDir()){
-                    linearLayoutManager.findViewByPosition(toPosition).setBackgroundColor(SELECTED_COLOR);
-                }else {
+                FileInfo inputDir=fileInfos.get(toPosition);
+                if(inputDir.isDir()&&!temp.isSelected()){
+                    linearLayoutManager.findViewByPosition(toPosition).setBackgroundColor(CAN_MOVE_COLOR);
+                }else if(!inputDir.isDir()){
                     linearLayoutManager.findViewByPosition(toPosition).setBackgroundColor(CANT_SELECTED_COLOR);
                 }
 
@@ -227,6 +228,7 @@ public class FileViewFragment extends Fragment {
         switch (id){
             case 1:
                 //复制
+                //LogUtils.d("SortPara",""+sortWithDoule(SortPara.SORT_BY_SIZE,fileInfos.get(1),fileInfos.get(2)));
                 break;
             case 2:
                 //剪切
@@ -254,7 +256,7 @@ public class FileViewFragment extends Fragment {
                 }
                 //删除逻辑
                 //Code。。。
-                ToastUtils.showToast(mMainActivity,deleteList.size()+"",1000);
+                ToastUtils.showToast(mMainActivity,"文件并未删除！"+"测试删除"+deletePosition.size()+"项",1000);
                 break;
             case 4:
                 //添加
@@ -268,7 +270,8 @@ public class FileViewFragment extends Fragment {
                 break;
             case 7:
                 //退出
-                this.rootView.setVisibility(View.GONE);
+                //this.rootView.setVisibility(View.GONE);
+                mMainActivity.finish();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -290,6 +293,7 @@ public class FileViewFragment extends Fragment {
             for (File temp : files) {
                 fileInfos.add(FileUtils.getFileInfoFromFile(temp));
             }
+            Collections.sort(fileInfos,comparator);
             LogUtils.i(getClass().getName()+"290",fileInfos.size()+"");
             return true;//可以访问
         }else if(!file.canRead()){
@@ -314,34 +318,131 @@ public class FileViewFragment extends Fragment {
     }
 
     public void load(String filePath,boolean isBack) {
-        if(getFileFromDir(filePath)){
+        if(getFileFromDir(filePath)) {
             if (fileListAdapter == null) {
                 //第一次加载
                 fileListAdapter = new FileListAdapter(fileInfos, this, mMainActivity);
                 fileList.setAdapter(fileListAdapter);
                 mMainActivity.getHistoryPath().add(filePath);
-                mMainActivity.setPositionInHistory(0);
             } else {
                 //刷新
                 fileListAdapter.setmData(fileInfos);
                 fileListAdapter.notifyDataSetChanged();
-                if(!filePath.equals(this.filePath)&&!isBack){
+                if(!isBack){
                     mMainActivity.getHistoryPath().add(filePath);
-                    int positionHis =mMainActivity.getPositionInHistory()+1;
-                    mMainActivity.setPositionInHistory(positionHis);
-                    this.filePath=filePath;
                 }
 
+
             }
+            this.filePath=filePath;
+
             mMainActivity.refresh(filePath);
-        }/*else{
-            ToastUtils.showToast(mMainActivity,"没有找到目录",1000);
-        }*/
+
+        }
+        outOfFromPosition=0;
+        selectPosition=-1;
+    }
+
+    public void sort(int type){
+        switch (type){
+            case R.id.textView2:
+                comparator.setSortType(SORT_BY_NAME);
+                break;
+            case R.id.textView3:
+                comparator.setSortType(SORT_BY_DATE);
+                break;
+            case R.id.textView5:
+                comparator.setSortType(SORT_BY_SIZE);
+                break;
+            case R.id.textView4:
+                comparator.setSortType(SORT_BY_TYPE);
+        }
+        load(filePath,true);
+
     }
 
     //public void
 
     public ArrayList<FileInfo> getFileInfos() {
         return fileInfos;
+    }
+
+    @Override
+    public void onClick(View view) {
+        sort(view.getId());
+    }
+
+    //手指抬起-拖动状态改变
+    private void fingerUpState(View view){
+
+        FileInfo temp =fileInfos.get(outOfFromPosition);
+        //ToastUtils.showToast(mMainActivity,temp.getFileName(),1000);
+        //选中项次层级
+        View v = linearLayoutManager.findViewByPosition(outOfFromPosition);
+        //if (!fileList.isComputingLayout() && v != null) {
+        if(v!=null){
+            if(temp.isSelected()){
+                v.setBackgroundColor(SELECTED_COLOR);  //恢复次层级颜色
+            }else {
+                v.setBackgroundColor(NORMAL_COLOR);  //恢复次层级颜色
+            }
+        }
+        if(selectPosition !=-1 ){    //移动范围超item范围
+            if(temp.isDir()){
+                moveDir(temp);
+            }
+            //被选中的项目恢复原来的颜色
+            View selectItem = linearLayoutManager.findViewByPosition(selectPosition);
+            if(fileInfos.get(selectPosition).isSelected()&&selectItem!=null)
+                selectItem.setBackgroundColor(SELECTED_COLOR);
+            //selectPosition =-1;//修正范围
+        }
+
+
+
+    }
+
+    //手指按下-拖动状态改变
+    private void fingerDownState(View v){
+        //此项选中时将背景透明化
+        //v.setBackgroundColor(NORMAL_COLOR);
+    }
+
+    //手指按下-拖动状态改变,移动文件夹
+    private void moveDir(FileInfo dir){
+        String name =dir.getFileName();
+        AlertDialog.Builder builder = new AlertDialog.Builder( mMainActivity );
+        AlertDialog alertDialog=builder.setTitle("文件操作").setMessage("确定移动到"+name+"吗？")
+                .setNegativeButton("移动" , new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        fileInfos.remove(selectPosition);  //移除选中项
+                        fileListAdapter.notifyItemRemoved(selectPosition);//通知刷新界面移除效果
+                        //修正position
+                        if (selectPosition != fileInfos.size()) {
+                            fileListAdapter.notifyItemRangeChanged(selectPosition, fileInfos.size() - selectPosition);
+                        }
+                        selectPosition =-1;//修正范围
+
+                    }
+                })
+                .setPositiveButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        selectPosition =-1;//修正范围
+                    }
+                }).create();
+        alertDialog.show();
+        alertDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                selectPosition =-1;//修正范围
+            }
+        });
+    }
+
+    private String loge(int line){
+        return getClass().getCanonicalName()+"--"+line;
+
     }
 }

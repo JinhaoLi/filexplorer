@@ -14,17 +14,17 @@ public class FileTypeFilter{
     private final static String[] TEXT = {"txt", "doc", "lrc"};
 
     public static int getIconRes(String name, long fileSize) {
-        if (fileSize < 2*MB) {//大于50M
+        if (fileSize < 2*MB) {//小于2M
             if (imageIf(name)) return R.mipmap.list_ico_image;
             if (textIf(name)) return R.mipmap.list_ico_text;
             if (musicIf(name)) return R.mipmap.list_ico_music;
             if (videoIf(name)) return R.mipmap.list_ico_video;
-        } else if (fileSize < 12*MB) {//大于10M
+        } else if (fileSize < 12*MB) {//小于12M
             if (musicIf(name)) return R.mipmap.list_ico_music;
             if (videoIf(name)) return R.mipmap.list_ico_video;
             if (imageIf(name)) return R.mipmap.list_ico_image;
             if (textIf(name)) return R.mipmap.list_ico_text;
-        } else if (fileSize < 50*MB) {
+        } else if (fileSize < 50*MB) {//小于50M
             if (videoIf(name)) return R.mipmap.list_ico_video;
             if (musicIf(name)) return R.mipmap.list_ico_music;
             if (imageIf(name)) return R.mipmap.list_ico_image;
@@ -42,17 +42,17 @@ public class FileTypeFilter{
         boolean isType = false;
         int i = 0;
         while (!isType && i < TEXT.length) {
-            isType = name.endsWith(TEXT[i]);
+            isType = name.equals(TEXT[i]);
             i++;
         }
         return isType;
     }
 
-    private static boolean imageIf(String name) {
+    public static boolean imageIf(String name) {
         boolean isType = false;
         int i = 0;
         while (!isType && i < IMAGE.length) {
-            isType = name.endsWith(IMAGE[i]);
+            isType = name.equals(IMAGE[i]);
             i++;
         }
         return isType;
@@ -62,7 +62,7 @@ public class FileTypeFilter{
         boolean isType = false;
         int i = 0;
         while (!isType && i < MUSIC.length) {
-            isType = name.endsWith(MUSIC[i]);
+            isType = name.equals(MUSIC[i]);
             i++;
         }
         return isType;
@@ -72,7 +72,7 @@ public class FileTypeFilter{
         boolean isType = false;
         int i = 0;
         while (!isType && i < VIDEO.length) {
-            isType = name.endsWith(VIDEO[i]);
+            isType = name.equals(VIDEO[i]);
             i++;
         }
         return isType;

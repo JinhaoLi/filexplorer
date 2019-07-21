@@ -10,19 +10,28 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.jil.filexplorer.FileInfo;
 import com.jil.filexplorer.MainActivity;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.interfaces.OnDoubleClickListener;
 import com.jil.filexplorer.ui.FileViewFragment;
 import com.jil.filexplorer.utils.FileUtils;
+import com.jil.filexplorer.utils.LogUtils;
 import com.yanzhenjie.recyclerview.swipe.SwipeMenuAdapter;
 
+import java.io.File;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static com.jil.filexplorer.utils.ColorUtils.NORMAL_COLOR;
-import static com.jil.filexplorer.utils.ColorUtils.SELECTED_COLOR;
+import static com.jil.filexplorer.utils.ConstantUtils.GB;
+import static com.jil.filexplorer.utils.ConstantUtils.KB;
+import static com.jil.filexplorer.utils.ConstantUtils.MB;
+import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
+import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
+import static com.jil.filexplorer.utils.FileTypeFilter.imageIf;
+import static com.jil.filexplorer.utils.FileUtils.stayDoubleNumber;
 
 public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultViewHolder> {
     private ArrayList<FileInfo> mData;
@@ -60,11 +69,36 @@ public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultVie
             holder.itemView.setBackgroundColor(NORMAL_COLOR);
         }
         holder.fileName.setText(fileInfo.getFileName());
-
-        holder.type.setText((fileInfo.isDir()) ? "文件夹":"文件");
         holder.date.setText(FileUtils.getFormatData(date));
-        holder.size.setText(fileInfo.getFileSize()/1024+"Kb");
-        holder.icon.setImageResource(fileInfo.getIcon()==0 ? R.mipmap.list_ico_dir:fileInfo.getIcon());
+        //图标
+        if(fileInfo.isDir()){
+            holder.size.setText("");
+            File ico=new File(fileInfo.getFilePath(),"ico");
+            if(!ico.exists()){
+                Glide.with(mMaintivity).load(R.mipmap.list_ico_dir).into(holder.icon);
+            }else {
+                Glide.with(mMaintivity).load(ico).into(holder.icon);
+            }
+            try {
+                File file =new File(fileInfo.getFilePath());
+                int count =file.listFiles().length;
+                holder.type.setText("共"+count+"项");//文件种类
+                //holder.type.setText(count<10? count+"\t\t项":count<100 ? count+"\t项":count+"项");//文件种类
+            }catch (Exception e){
+                LogUtils.e(getClass().getName(),"一个未知的错误，发生在计算文件夹内项目数量并显示出来时");
+                e.printStackTrace();
+            }
+        }else{
+            long size =fileInfo.getFileSize();
+            holder.size.setText(size>GB ? stayDoubleNumber((float) size/GB)+"G":size>MB ? stayDoubleNumber((float) size/MB)+"M":stayDoubleNumber((float) size/KB)+"K");
+            holder.type.setText(fileInfo.getFiletype());//文件种类
+            if(imageIf(fileInfo.getFiletype())){
+                Glide.with(mMaintivity).load(new File(fileInfo.getFilePath())).into(holder.icon);
+            }else {
+                Glide.with(mMaintivity).load(fileInfo.getIcon()).into(holder.icon);
+            }
+        }
+
         holder.itemView.setOnTouchListener(new OnDoubleClickListener(new OnDoubleClickListener.DoubleClickCallback() {
             @Override
             public void onDoubleClick() {
@@ -80,8 +114,10 @@ public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultVie
             }
 
             @Override
-            public void onLongClick() {
-
+            public boolean onLongClick() {
+                //showAlerDialog(mMaintivity,fileInfo);
+                return false;
+                //ToastUtils.showToast(mMaintivity,fileInfo.getIcon()+"--"+fileInfo.getFilePath(),1000);
             }
         }));
 
@@ -95,13 +131,26 @@ public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultVie
                     fileInfo.setSelected(false);
                     view.setBackgroundColor(NORMAL_COLOR);
                 }
-                //ToastUtils.showToast(mMaintivity,fileInfo.getIcon()+"--"+fileInfo.getFileName(),1000);*/
+
             }
         });
 
-        //itemHeigth=holder.itemView.getHeight();
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                //showAlerDialog(mMaintivity,fileInfo);
 
 
+                return true;
+            }
+        });
+
+
+
+    }
+
+    public void refreshList(){
+        notifyDataSetChanged();
     }
 
     public void setmData(ArrayList<FileInfo> mData) {

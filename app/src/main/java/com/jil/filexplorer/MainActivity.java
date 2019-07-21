@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.MotionEvent;
+import android.view.TouchDelegate;
 import android.view.View;
 
 import androidx.appcompat.app.ActionBar;
@@ -23,13 +24,16 @@ import androidx.appcompat.widget.Toolbar;
 
 import android.view.Menu;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListPopupWindow;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Objects;
+
 
 
 public class MainActivity extends ClearActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -42,7 +46,6 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     private String mPath;
     private ArrayList<String> historyPath = new ArrayList<>();
     private ImageButton upDir;
-    private int positionInHistory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,13 +53,26 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     }
 
-    @Override
     @SuppressLint("ClickableViewAccessibility")
+    @Override
     protected void initAction() {
+        ImageButton viewHistory =findViewById(R.id.imageButton3);
+        viewHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showListPopulWindow();
+                editText.setFocusable(true);
+                editText.selectAll();
+                editText.setFocusableInTouchMode(true);
+                editText.requestFocus();
+                editText.setTextColor(Color.BLACK);
+            }
+        });
         editText.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 editText.setFocusable(true);
+                editText.selectAll();
                 editText.setFocusableInTouchMode(true);
                 editText.requestFocus();
                 editText.setTextColor(Color.BLACK);
@@ -68,11 +84,9 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
             public void onClick(View view) {
                 File file  =new File(mPath);
                 String path =file.getParent();
+                if(path!=null&&!path.equals(""))
                 pageFragment.load(path,false);
-                /*if(path!=null&&!path.equals("")&&file.canRead()) {
-                    historyPath.add(file.getParent());
-                    positionInHistory++;
-                }*/
+                else ToastUtils.showToast(MainActivity.this,"空路径无法访问",1000);
             }
         });
         if (pageFragment != null) {
@@ -109,11 +123,10 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else if (positionInHistory >0 ) {
-            String path = historyPath.get(positionInHistory-1);
-            positionInHistory--;
+        } else if (!mPath.equals("/")) {
+            File file =new File(mPath);
+            String path =file.getParent();
             pageFragment.load(path,true);
-
         } else {
             super.onBackPressed();
         }
@@ -127,35 +140,6 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        /*int id = item.getItemId();
-        //path.setFocusable(false);
-        switch (id){
-            case 1:
-                ArrayList<FileInfo> deleteList =pageFragment.getFileInfos();
-                for(FileInfo fileInfo:pageFragment.getFileInfos()){
-                    if(fileInfo.isSelected()) deleteList.add(fileInfo);
-                }
-
-                ToastUtils.showToast(MainActivity.this,deleteList.size()+"",1000);
-                break;
-            case 11:
-                LogUtils.i("main","sort by name");
-                break;
-            case 7:
-                System.exit(0);
-                break;
-            case 4:
-                pageFragment.load(editText.getText().toString());
-                break;
-            case 5:
-                finish();
-                break;
-
-        }*/
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -164,7 +148,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-        ToastUtils.showToast(MainActivity.this,id+"",1000);
+        ToastUtils.showToast(MainActivity.this,"菜单ID："+id,1000);
         if (id == R.id.nav_home) {
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
@@ -215,6 +199,27 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         editText.setTextColor(Color.WHITE);
     }
 
+    private void showListPopulWindow() {
+        while (historyPath.size()>10){
+            historyPath.remove(0);
+        }
+        //final String[] list = {"1", "2", "3","4","5","6","7","8","9","0"};//要填充的数据
+        final ListPopupWindow listPopupWindow;
+        listPopupWindow = new ListPopupWindow(this);
+        listPopupWindow.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, historyPath));//用android内置布局，或设计自己的样式
+        listPopupWindow.setAnchorView(editText);//以哪个控件为基准，在该处以mEditText为基准
+        listPopupWindow.setModal(true);
+
+        listPopupWindow.setOnItemClickListener(new AdapterView.OnItemClickListener() {//设置项点击监听
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                pageFragment.load(historyPath.get(i),true);
+                listPopupWindow.dismiss();//如果已经选择了，隐藏起来
+            }
+        });
+        listPopupWindow.show();//把ListPopWindow展示出来
+    }
+
     /**
      * 关闭输入法
      *
@@ -224,7 +229,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
      */
     public boolean isShouldHideInput(View v, MotionEvent event) {
         if (v != null && (v instanceof EditText)) {
-            editText = (EditText) v;
+            //editText = (EditText) v;
             int[] leftTop = {0, 0};
             //获取输入框当前的location位置
             v.getLocationInWindow(leftTop);
@@ -247,7 +252,6 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     public void refresh(String path) {
         if (editText != null && path != null && !path.equals("")) {
             mPath = path;
-            //positionInHistory++;
             editText.setText(path);
             setTitle(pageFragment.getFragmentTitle());
         }
@@ -267,15 +271,5 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         return historyPath;
     }
 
-    public void setHistoryPath(ArrayList<String> historyPath) {
-        this.historyPath = historyPath;
-    }
 
-    public int getPositionInHistory() {
-        return positionInHistory;
-    }
-
-    public void setPositionInHistory(int positionInHistory) {
-        this.positionInHistory = positionInHistory;
-    }
 }

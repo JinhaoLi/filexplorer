@@ -22,7 +22,7 @@ public class OnDoubleClickListener implements View.OnTouchListener {
 
     public interface DoubleClickCallback {
         void onDoubleClick();
-        void onLongClick();
+        boolean onLongClick();
     }
 
 
@@ -48,9 +48,8 @@ public class OnDoubleClickListener implements View.OnTouchListener {
                     @Override
                     public void run() {
                         try {
-                            Thread.sleep(200);
+                            Thread.sleep(400);
                             if (count==1) {
-                                mCallback.onClick(v);//单击回调
                                 count = 0;
                                 firstClick = 0;
                             }
@@ -79,12 +78,10 @@ public class OnDoubleClickListener implements View.OnTouchListener {
         }
         if(MotionEvent.ACTION_UP ==event.getAction()&&count==1&&!moved){
             long clickUp = System.currentTimeMillis();//记录放开手指的时间
-            if(clickUp-firstClick>totalTime){
-                mCallback.onLongClick();
+            if(clickUp-firstClick>=totalTime){
                 LogUtils.i("OnTouch","long click");
-                return true;
+                return mCallback.onLongClick();
             }
-            return false;
         }
         if(MotionEvent.ACTION_MOVE ==event.getAction()&&!moved){
             moved=true;

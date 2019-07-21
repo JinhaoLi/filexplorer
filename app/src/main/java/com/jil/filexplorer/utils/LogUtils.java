@@ -4,6 +4,8 @@ package com.jil.filexplorer.utils;
 
 import android.util.Log;
 
+import java.util.logging.Logger;
+
 public final class LogUtils {
 
 	private static final boolean LOGV = true;

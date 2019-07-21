@@ -6,7 +6,7 @@ public class FileInfo {
     //文件路径
     private String filePath;
     //文件大小
-    private long fileSize;
+    private long fileSize=0;
     //是否文件夹
     private boolean isDir;
     //包含数量
@@ -23,6 +23,8 @@ public class FileInfo {
     private boolean isHidden;
     //图标
     private int icon;
+    //文件后缀
+    private String filetype;
 
     public FileInfo(String fileName, String filePath,boolean isDir,long modifiedDate, boolean canRead, boolean canWrite, boolean isHidden) {
         this.fileName = fileName;
@@ -120,5 +122,13 @@ public class FileInfo {
 
     public void setHidden(boolean hidden) {
         isHidden = hidden;
+    }
+
+    public String getFiletype() {
+        return filetype;
+    }
+
+    public void setFiletype(String filetype) {
+        this.filetype = filetype;
     }
 }
