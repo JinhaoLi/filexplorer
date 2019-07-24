@@ -44,21 +44,6 @@ public class OnDoubleClickListener implements View.OnTouchListener {
             count++;
             if (1 == count) {
                 firstClick = System.currentTimeMillis();//记录第一次点击时间
-                /*new Thread(new Runnable() {   //使用线程判断是单击还是双击，缺点单击有延时
-                    @Override
-                    public void run() {
-                        try {
-                            Thread.sleep(400);
-                            if (count==1) {
-                                count = 0;
-                                firstClick = 0;
-                            }
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-                }).start();*/
 
             } else if (2 == count) {
                 //第二次点击时间

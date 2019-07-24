@@ -5,7 +5,7 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_home"
+            android:id="@+id/nav_phone"
             android:icon="@drawable/ic_phone"
             android:title="@string/menu_this_phone" />
         <item
@@ -13,13 +13,18 @@
             android:icon="@drawable/ic_image"
             android:title="@string/menu_gallery" />
         <item
-            android:id="@+id/nav_slideshow"
+            android:id="@+id/nav_fast_entry"
             android:icon="@drawable/ic_star_black"
             android:title="@string/menu_fast_read" />
         <item
             android:id="@+id/nav_ftp_net"
             android:icon="@drawable/ic_wifi_black"
             android:title="@string/menu_net_ftp" />
+
+        <item
+            android:id="@+id/nav_recycle_station"
+            android:icon="@drawable/ic_delete_black_24dp"
+            android:title="@string/recycle_station" />
     </group>
 
     <item
@@ -30,10 +35,21 @@
                 android:id="@+id/nav_setting"
                 android:icon="@drawable/ic_settings"
                 android:title="@string/menu_setting" />
-            <!--<item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="@string/menu_send" />-->
+            <item
+                android:id="@+id/nav_about"
+                android:icon="@drawable/ic_info_outline_black_24dp"
+                android:title="@string/about" />
+        </menu>
+    </item>
+
+    <item
+        android:title="@string/windows">
+        <menu>
+
+            <item
+                android:id="@+id/windows"
+                android:icon="@mipmap/list_ico_dir"
+                android:title="windows -1" />
         </menu>
     </item>
 

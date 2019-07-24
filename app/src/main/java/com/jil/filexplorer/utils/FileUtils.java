@@ -6,10 +6,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.PointF;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.text.TextUtils;
+import android.view.MotionEvent;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.content.FileProvider;
@@ -54,6 +56,11 @@ public class FileUtils {
             fileInfo.setIcon(icon);
         }
         return fileInfo;
+    }
+
+    public static FileInfo getFileInfoFromPath(String path){
+        File file =new File(path);
+        return getFileInfoFromFile(file);
     }
 
     public static boolean reNameFile(File file,String name){
@@ -198,15 +205,123 @@ public class FileUtils {
         context.startActivity(intent);
     }
 
-    public static float stayDoubleNumber(float priceCar){
+    /**
+     * 保留小数点后2位
+     * @param priceCar
+     * @return
+     */
+    public static float stayFrieNumber(float priceCar){
         // 设置位数
-        int scale = 2;
+        int scale = getScale(priceCar);
         // 表示四舍五入，可以选择其他舍值方式，例如去尾，等等.
         int roundingMode = 4;
         BigDecimal bd = new BigDecimal((float) priceCar);
         bd = bd.setScale(scale, roundingMode);
         priceCar = bd.floatValue();
         return priceCar;
+    }
+
+    /** 删除单个文件
+     * @param filePath$Name 要删除的文件的文件名
+     * @return 单个文件删除成功返回true，否则返回false
+     */
+    private static boolean deleteSingleFile(String filePath$Name) {
+        File file = new File(filePath$Name);
+        // 如果文件路径所对应的文件存在，并且是一个文件，则直接删除
+        if (file.exists() && file.isFile()) {
+            if (file.delete()) {
+                LogUtils.i("--Method--", "Copy_Delete.deleteSingleFile: 删除单个文件" + filePath$Name + "成功！");
+                return true;
+            } else {
+                LogUtils.i("删除进程：", "删除单个文件" + filePath$Name + "失败！");
+                return false;
+            }
+        } else {
+            LogUtils.i("删除进程：", "删除单个文件失败：" + filePath$Name + "不存在！");
+            return false;
+        }
+    }
+
+
+    public static boolean deleteAFile(FileInfo fileInfo){
+        String loaction =fileInfo.getFilePath();
+        if(fileInfo.isDir()){
+            return deleteDirectory(loaction);
+        }else {
+            return deleteSingleFile(loaction);
+        }
+    }
+
+    /** 删除目录及目录下的文件
+     * @param filePath 要删除的目录的文件路径
+     * @return 目录删除成功返回true，否则返回false
+     */
+    private static boolean deleteDirectory(String filePath) {
+        // 如果dir不以文件分隔符结尾，自动添加文件分隔符
+        if (!filePath.endsWith(File.separator))
+            filePath = filePath + File.separator;
+        File dirFile = new File(filePath);
+        // 如果dir对应的文件不存在，或者不是一个目录，则退出
+        if ((!dirFile.exists()) || (!dirFile.isDirectory())) {
+            LogUtils.i("删除进程：", "删除目录失败：" + filePath + "不存在！");
+            return false;
+        }
+        boolean flag = true;
+        // 删除文件夹中的所有文件包括子目录
+        File[] files = dirFile.listFiles();
+        for (File file : files) {
+            // 删除子文件
+            if (file.isFile()) {
+                flag = deleteSingleFile(file.getAbsolutePath());
+                if (!flag)
+                    break;
+            }
+            // 删除子目录
+            else if (file.isDirectory()) {
+                flag = deleteDirectory(file
+                        .getAbsolutePath());
+                if (!flag)
+                    break;
+            }
+        }
+        if (!flag) {
+            LogUtils.i("删除进程：", "删除目录失败！");
+            return false;
+        }
+        // 删除当前目录
+        if (dirFile.delete()) {
+            LogUtils.i("--Method--", "Copy_Delete.deleteDirectory: 删除目录" + filePath + "成功！");
+            return true;
+        } else {
+            LogUtils.i("删除进程：", "删除目录：" + filePath + "失败！");
+            return false;
+        }
+    }
+
+    public static int getScale(float f){
+        if(f<10){
+            return 3;
+        }else if(f<100){
+            return 2;
+        } else if(f<1000){
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    // 计算两个触摸点之间的距离
+    public static float getDistance(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        return (float)Math.sqrt(x * x + y * y);
+    }
+
+    // 计算两个触摸点的中点
+    private static PointF getMiddle(MotionEvent event) {
+        float x = event.getX(0) + event.getX(1);
+        float y = event.getY(0) + event.getY(1);
+        return new PointF(x / 2, y / 2);
     }
 
 

@@ -1,10 +1,14 @@
 package com.jil.filexplorer.utils;
 
+import android.content.Context;
+import android.graphics.Color;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 
 import com.jil.filexplorer.R;
+import com.yanzhenjie.recyclerview.swipe.SwipeMenu;
+import com.yanzhenjie.recyclerview.swipe.SwipeMenuItem;
 
 public class MenuUtils {
 
@@ -57,5 +61,29 @@ public class MenuUtils {
         }
 
     }
+
+    public static SwipeMenuItem createSwipeMenu(Context context, int backgroundRes, int titleRes, int textColor) {
+        return new SwipeMenuItem(context)
+                .setText(context.getString(titleRes)) // 文字。
+                .setTextColor(textColor) // 文字颜色。
+                .setTextSize(15) // 文字大小。
+                .setWidth(120)
+                .setWeight(1)
+                .setHeight(-1)
+                .setBackgroundDrawable(backgroundRes);
+    }
+
+    public static void fileSwipeMenu(SwipeMenu swipeLeftMenu, SwipeMenu swipeRightMenu, Context context) {
+        SwipeMenuItem deleteItem = createSwipeMenu(context, R.drawable.button_click_type_red, R.string.delete, Color.WHITE);
+        SwipeMenuItem detailItem = createSwipeMenu(context, R.drawable.button_click_type, R.string.detail, Color.WHITE);
+        SwipeMenuItem copyItem = createSwipeMenu(context, R.drawable.button_click_type, R.string.copy, Color.WHITE);
+        SwipeMenuItem cutItem = createSwipeMenu(context, R.drawable.button_click_type, R.string.cut, Color.WHITE);
+
+        swipeRightMenu.addMenuItem(deleteItem);// 添加一个按钮到右侧侧菜单。.
+        swipeRightMenu.addMenuItem(detailItem);// 添加一个按钮到右侧侧菜单。.
+        swipeLeftMenu.addMenuItem(copyItem);// 添加一个按钮到左侧侧菜单。.
+        swipeLeftMenu.addMenuItem(cutItem);// 添加一个按钮到左侧侧菜单。.
+    }
+
 
 }

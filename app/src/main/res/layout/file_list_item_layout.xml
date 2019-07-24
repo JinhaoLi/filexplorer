@@ -18,7 +18,8 @@
         android:layout_gravity="center"
         android:layout_weight="5"
         android:singleLine="true"
-        android:text="名称" />
+        android:text="名称"
+        android:textColor="@android:color/primary_text_light" />
 
     <TextView
         android:id="@+id/textView3"
@@ -26,7 +27,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:singleLine="true"
-        android:text="修改日期" />
+        android:text="修改日期"
+        android:textColor="@android:color/primary_text_light" />
 
 
     <TextView
@@ -37,7 +39,8 @@
         android:layout_weight="7"
         android:singleLine="true"
         android:text="类型"
-        android:textAlignment="center" />
+        android:textAlignment="center"
+        android:textColor="@android:color/primary_text_light" />
 
     <TextView
         android:id="@+id/textView5"
@@ -46,5 +49,6 @@
         android:layout_gravity="center"
         android:layout_weight="7"
         android:text="大小"
-        android:textAlignment="textEnd" />
+        android:textAlignment="textEnd"
+        android:textColor="@android:color/primary_text_light" />
 </LinearLayout>

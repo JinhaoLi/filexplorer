@@ -36,10 +36,11 @@ public class SortComparator implements Comparator<FileInfo> {
             case SORT_BY_SIZE:
                 return (int) (f1.getFileSize()-f2.getFileSize());
             case SORT_BY_DATE:
+                if(f1.getModifiedDate()==f2.getModifiedDate()) return 0;
                 return (int) (f1.getModifiedDate()-f2.getModifiedDate());
             case SORT_BY_TYPE:
                 if (f1.getFiletype()==null||f2.getFiletype()==null){
-                    return 0;
+                    return 1;
                 }
                 return f1.getFiletype().compareTo(f2.getFiletype());
             case SORT_BY_NAME_REV:
@@ -47,14 +48,15 @@ public class SortComparator implements Comparator<FileInfo> {
             case SORT_BY_SIZE_REV:
                 return (int) (f2.getFileSize()-f1.getFileSize());
             case SORT_BY_DATE_REV:
+                if(f1.getModifiedDate()==f2.getModifiedDate()) return 0;
                 return (int) (f2.getModifiedDate()-f1.getModifiedDate());
             case SORT_BY_TYPE_REV:
                 if (f1.getFiletype()==null||f2.getFiletype()==null){
-                    return 0;
+                    return 1;
                 }
                 return f2.getFiletype().compareTo(f1.getFiletype());
             default:
-                return 0;
+                return 1;
 
         }
     }
@@ -86,5 +88,9 @@ public class SortComparator implements Comparator<FileInfo> {
             this.sortType=sortType;
         }
         LogUtils.d("setSortTypeOUT",this.sortType+"___"+sortType);
+    }
+
+    public int getSortType() {
+        return sortType;
     }
 }

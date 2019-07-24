@@ -7,12 +7,12 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:m=".MainActivity"
     tools:showIn="@layout/app_bar_main"
+    android:id="@+id/fragment_page"
     android:background="@android:color/white">
-
 
     <fragment
         android:id="@+id/fragment"
-        android:name="com.jil.filexplorer.ui.FileViewFragment"
+        android:name="com.jil.filexplorer.ui.FileShowFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </FrameLayout>
