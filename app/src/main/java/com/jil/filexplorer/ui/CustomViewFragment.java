@@ -16,11 +16,11 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.jil.filexplorer.FileInfo;
+import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.MainActivity;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.FileListAdapter;
-import com.jil.filexplorer.interfaces.SortComparator;
+import com.jil.filexplorer.Api.SortComparator;
 import com.jil.filexplorer.utils.LogUtils;
 import com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView;
 import com.yanzhenjie.recyclerview.swipe.touch.OnItemStateChangedListener;
@@ -29,14 +29,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 
-import static com.jil.filexplorer.interfaces.SortComparator.SORT_BY_DATE;
-import static com.jil.filexplorer.interfaces.SortComparator.SORT_BY_DATE_REV;
-import static com.jil.filexplorer.interfaces.SortComparator.SORT_BY_NAME;
-import static com.jil.filexplorer.interfaces.SortComparator.SORT_BY_NAME_REV;
-import static com.jil.filexplorer.interfaces.SortComparator.SORT_BY_SIZE;
-import static com.jil.filexplorer.interfaces.SortComparator.SORT_BY_SIZE_REV;
-import static com.jil.filexplorer.interfaces.SortComparator.SORT_BY_TYPE;
-import static com.jil.filexplorer.interfaces.SortComparator.SORT_BY_TYPE_REV;
+import static com.jil.filexplorer.Api.SortComparator.SORT_BY_DATE;
+import static com.jil.filexplorer.Api.SortComparator.SORT_BY_DATE_REV;
+import static com.jil.filexplorer.Api.SortComparator.SORT_BY_NAME;
+import static com.jil.filexplorer.Api.SortComparator.SORT_BY_NAME_REV;
+import static com.jil.filexplorer.Api.SortComparator.SORT_BY_SIZE;
+import static com.jil.filexplorer.Api.SortComparator.SORT_BY_SIZE_REV;
+import static com.jil.filexplorer.Api.SortComparator.SORT_BY_TYPE;
+import static com.jil.filexplorer.Api.SortComparator.SORT_BY_TYPE_REV;
 import static com.jil.filexplorer.utils.ConstantUtils.CAN_MOVE_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.GB;
 import static com.jil.filexplorer.utils.ConstantUtils.GIRD_LINER_LAYOUT;
@@ -222,6 +222,10 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
                 grid.setBackgroundColor(NORMAL_COLOR);
                 break;
             case R.id.imageView3:
+                if (spanCount < 7 && linearLayoutManager instanceof GridLayoutManager)
+                    spanCount++;
+                else if(spanCount>=7 && linearLayoutManager instanceof GridLayoutManager)
+                    spanCount=2;
                 if (spanCount == 7) {
                     makeGridLayout(spanCount, R.layout.flie_grid_item_layout_40dp);
                 } else if (spanCount == 6) {
@@ -237,15 +241,8 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
                 } else {
                     makeGridLayout(spanCount, R.layout.flie_grid_item_layout_100dp);
                 }
-
                 view.setBackgroundColor(GIRD_LINER_LAYOUT);
                 liner.setBackgroundColor(NORMAL_COLOR);
-                if (spanCount < 7) {
-                    spanCount++;
-                } else {
-                    spanCount = 2;
-                }
-
                 break;
         }
 
@@ -483,16 +480,16 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
                     case MotionEvent.ACTION_POINTER_DOWN:
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        if (event.getPointerCount() == 2&&linearLayoutManager instanceof GridLayoutManager) {
+                        if (event.getPointerCount() == 2 && linearLayoutManager instanceof GridLayoutManager) {
                             float newDistance = getDistance(event);
                             if (newDistance > 100f && newDistance >= distance * 1.3) {
-                                if(spanCount>2){
+                                if (spanCount > 2) {
                                     spanCount--;
                                     makeGridLayout(spanCount, makeItemLayoutRes(spanCount));
                                 }
                                 distance = newDistance;
                             } else if (newDistance > 100f && newDistance <= distance / 1.3) {
-                                if(spanCount<7){
+                                if (spanCount < 7) {
                                     spanCount++;
                                     makeGridLayout(spanCount, makeItemLayoutRes(spanCount));
                                 }

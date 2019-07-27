@@ -1,11 +1,18 @@
 package com.jil.filexplorer;
 
 import android.annotation.SuppressLint;
+import android.app.NotificationManager;
+import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
+import android.provider.Settings;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -16,8 +23,11 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import android.view.MenuItem;
 
 import com.google.android.material.navigation.NavigationView;
-import com.jil.filexplorer.customView.ClearActivity;
+import com.jil.filexplorer.Activity.AfterIntentService;
+import com.jil.filexplorer.Activity.ClearActivity;
+import com.jil.filexplorer.Activity.ProgressActivity;
 import com.jil.filexplorer.ui.CustomViewFragment;
+import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.ToastUtils;
 
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -37,10 +47,14 @@ import android.widget.ListPopupWindow;
 import java.io.File;
 import java.util.ArrayList;
 
+import static com.jil.filexplorer.Activity.ProgressActivity.setOnActionFinish;
+import static com.jil.filexplorer.utils.NotificationUtils.registerNotifty;
 
-public class MainActivity extends ClearActivity implements NavigationView.OnNavigationItemSelectedListener {
+
+public class MainActivity extends ClearActivity implements NavigationView.OnNavigationItemSelectedListener, ProgressActivity.OnActionFinish {
     //路径输入
     private EditText editText;
+    private boolean activityIsRunning;
     //actionBar 图标资源
     private int mIconRes;
     private FragmentManager fragmentManager;
@@ -59,6 +73,9 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        activityIsRunning=true;
+        registerNotifty(MainActivity.this);//注册通知渠道
+
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -172,6 +189,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
             String path = file1.getParent();
             customViewFragment.load(path, true);
         } else {
+            activityIsRunning=false;
             super.onBackPressed();
         }
     }
@@ -271,6 +289,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     public void refresh(String path) {
         if (editText != null && path != null && !path.equals("")) {
+            setOnActionFinish(this);
             mPath = path;
             editText.setText(path);
             setTitle(customViewFragment.getFragmentTitle());
@@ -291,4 +310,21 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         return historyPath;
     }
 
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @Override
+    public void OnRefresh() {
+        if(activityIsRunning){
+            try {
+                customViewFragment.load(mPath,true);
+            }catch (Exception e){
+                LogUtils.e("复制任务进行中退出activity","activity已退出，无法刷新");
+                e.printStackTrace();
+            }
+        }
+    }
 }

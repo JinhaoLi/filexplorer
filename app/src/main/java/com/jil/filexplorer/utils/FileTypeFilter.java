@@ -1,10 +1,6 @@
 package com.jil.filexplorer.utils;
 
 import com.jil.filexplorer.R;
-import com.jil.filexplorer.interfaces.Filter;
-
-import java.io.File;
-import java.io.FilenameFilter;
 
 public class FileTypeFilter{
     private final static long MB =1024*1024;

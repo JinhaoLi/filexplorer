@@ -1,11 +1,13 @@
-package com.jil.filexplorer.interfaces;
+package com.jil.filexplorer.Api;
 
-import com.jil.filexplorer.FileInfo;
 import com.jil.filexplorer.utils.LogUtils;
 
 import java.util.Comparator;
 
 
+/**
+ * 排序
+ */
 public class SortComparator implements Comparator<FileInfo> {
 
     @Override

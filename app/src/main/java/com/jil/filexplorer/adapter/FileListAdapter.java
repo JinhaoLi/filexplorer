@@ -11,10 +11,10 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.jil.filexplorer.FileInfo;
+import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.MainActivity;
 import com.jil.filexplorer.R;
-import com.jil.filexplorer.interfaces.OnDoubleClickListener;
+import com.jil.filexplorer.Api.OnDoubleClickListener;
 import com.jil.filexplorer.ui.CustomViewFragment;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;

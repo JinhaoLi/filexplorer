@@ -12,4 +12,10 @@ public class ConstantUtils {
     public final static long MB =1024*1024;
     public final static long KB =1024;
     public final static int GIRD_LINER_LAYOUT =Color.argb(81,0,196,255);//item被选中时的颜色
+    public final static int PROGRESS_MODE_COPY =1;
+    public final static int PROGRESS_MODE_MOVE =2;
+    public final static int PROGRESS_MODE_RECYCLE=3;
+    public final static int PROGRESS_MODE_RENAME=4;
+    public final static String CHANNEL_ID = "com.jil.filexplorer.copy_action";
+
 }

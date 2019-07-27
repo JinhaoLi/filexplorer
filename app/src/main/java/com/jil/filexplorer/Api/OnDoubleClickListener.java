@@ -1,11 +1,13 @@
-package com.jil.filexplorer.interfaces;
+package com.jil.filexplorer.Api;
 
 import android.view.MotionEvent;
 import android.view.View;
 
 import com.jil.filexplorer.utils.LogUtils;
-import com.jil.filexplorer.utils.ToastUtils;
 
+/**
+ * 双击
+ */
 public class OnDoubleClickListener implements View.OnTouchListener {
     private int count = 0;//点击次数
     private long firstClick = 0;//第一次点击时间

@@ -1,16 +1,34 @@
 package com.jil.filexplorer.utils;
 
 import android.app.AlertDialog;
+import android.app.Service;
 import android.content.Context;
-import android.content.DialogInterface;
+import android.util.DisplayMetrics;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListPopupWindow;
 
-import com.jil.filexplorer.FileInfo;
+import com.jil.filexplorer.Api.FileInfo;
 
 public class DialogUtils {
+
+
+    /**
+     * 获取density
+     * @param context
+     * @return
+     */
+    public static float getDensity(Context context){
+        DisplayMetrics metrics = new DisplayMetrics();
+        WindowManager manager = (WindowManager) context.getSystemService(Service.WINDOW_SERVICE);
+        if (manager != null) {
+            manager.getDefaultDisplay().getMetrics(metrics);
+        }
+        return metrics.density;
+    }
+
     public static void showAlerDialog(Context context, FileInfo fileInfo){
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
         dialogBuilder.setTitle("文件详细信息");

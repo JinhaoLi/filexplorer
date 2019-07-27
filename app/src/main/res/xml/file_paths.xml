@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--安卓api大于23使用外部应用程序打开文件必须使用次方法-->
 <paths>
     <external-path
         name="files_root"

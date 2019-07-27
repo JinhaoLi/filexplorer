@@ -30,4 +30,6 @@
     <string name="recycle_station">回收站</string>
     <string name="how_many_item">个项目</string>
     <string name="select">已选择</string>
+    <string name="re_name">重命名</string>
+    <string name="paste">粘贴</string>
 </resources>

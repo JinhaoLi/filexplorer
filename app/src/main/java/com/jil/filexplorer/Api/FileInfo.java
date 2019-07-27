@@ -1,4 +1,4 @@
-package com.jil.filexplorer;
+package com.jil.filexplorer.Api;
 
 public class FileInfo {
     //文件名

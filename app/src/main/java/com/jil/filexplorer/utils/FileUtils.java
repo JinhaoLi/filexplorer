@@ -17,10 +17,16 @@ import androidx.annotation.RequiresApi;
 import androidx.core.content.FileProvider;
 
 import com.jil.filexplorer.BuildConfig;
-import com.jil.filexplorer.FileInfo;
+import com.jil.filexplorer.Api.FileInfo;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -242,13 +248,114 @@ public class FileUtils {
         }
     }
 
-
+    /**
+     * 删除文件
+     * @param fileInfo
+     * @return
+     */
     public static boolean deleteAFile(FileInfo fileInfo){
+
         String loaction =fileInfo.getFilePath();
         if(fileInfo.isDir()){
             return deleteDirectory(loaction);
         }else {
             return deleteSingleFile(loaction);
+        }
+
+    }
+
+    /**
+     * 复制文件夹及其路径下的所有文件
+     * @param from
+     * @param to
+     * @throws IOException
+     */
+    public static void copyDirWithFile(File from,File to) {
+        File targt =new File(to.getPath(),from.getName());
+        if(!targt.exists()) targt.mkdir();
+        File[] files =from.listFiles();
+        if(files!=null){
+            for(File temp:files){
+                if(temp.isFile()){
+                    nioBufferCopy(temp,new File(targt,temp.getName()));
+                }else {
+                    copyDirWithFile(temp,targt);
+                }
+            }
+        }
+    }
+
+    public static boolean reNameFile(FileInfo inFile,String fileName){
+        File in= new File(inFile.getFilePath());
+        File out= new File(in.getParent(),fileName);
+        if(!out.exists()){
+            return in.renameTo(out);
+        }else {
+            return false;
+        }
+    }
+
+
+    /**
+     * 复制文件，效率最高
+     * @param source
+     * @param target
+     */
+    private static void nioTransferCopy(File source, File target) {
+        FileChannel in = null;
+        FileChannel out = null;
+        FileInputStream inStream = null;
+        FileOutputStream outStream = null;
+        try {
+            inStream = new FileInputStream(source);
+            outStream = new FileOutputStream(target);
+            in = inStream.getChannel();
+            out = outStream.getChannel();
+            in.transferTo(0, in.size(), out);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            closeAnyThing(inStream,in,outStream,out);
+        }
+    }
+
+    /**
+     * 复制文件，可监测进度
+     * @param source
+     * @param target
+     */
+    private static void nioBufferCopy(File source, File target) {
+        FileChannel in = null;
+        FileChannel out = null;
+        FileInputStream inStream = null;
+        FileOutputStream outStream = null;
+        try {
+            inStream = new FileInputStream(source);
+            outStream = new FileOutputStream(target);
+            in = inStream.getChannel();
+            out = outStream.getChannel();
+            ByteBuffer buffer = ByteBuffer.allocate(4096);
+            while (in.read(buffer) != -1) {
+                buffer.flip();
+                out.write(buffer);
+                buffer.clear();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            closeAnyThing(inStream,in,outStream,out);
+        }
+    }
+
+    public static void closeAnyThing(Closeable... closeable){
+        for(Closeable temp:closeable) {
+            try {
+                if(temp!=null) {
+                    temp.close();
+                }
+            }catch(Exception e) {
+                LogUtils.i("资源关闭失败","在FileUtils.closeAnyThing()");
+            }
         }
     }
 
@@ -323,6 +430,5 @@ public class FileUtils {
         float y = event.getY(0) + event.getY(1);
         return new PointF(x / 2, y / 2);
     }
-
 
 }
