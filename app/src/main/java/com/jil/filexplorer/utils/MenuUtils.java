@@ -45,21 +45,16 @@ public class MenuUtils {
     }
 
     private static void addMenu(Menu menu, int itemId, int order, int titleRes, int icon) {
-
         MenuItem menuItem = menu.add(0, itemId, order, titleRes);
-
         if (icon > 0) {
             LogUtils.i("main_icon", "" + icon);
             menuItem.setIcon(icon);
         }
-
         if (itemId != 10) {
             menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         } else {
             menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
-
         }
-
     }
 
     public static SwipeMenuItem createSwipeMenu(Context context, int backgroundRes, int titleRes, int textColor) {

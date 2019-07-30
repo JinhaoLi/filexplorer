@@ -23,10 +23,17 @@ public class OnDoubleClickListener implements View.OnTouchListener {
 
 
     public interface DoubleClickCallback {
+        /**
+         * 双击
+         */
         void onDoubleClick();
+
+        /**
+         * 按下手指300ms之后抬起手指就会触发
+         * @return true,处理完毕。false,继续传递下去
+         */
         boolean onLongClick();
     }
-
 
     public OnDoubleClickListener(DoubleClickCallback callback) {
         super();
@@ -66,7 +73,7 @@ public class OnDoubleClickListener implements View.OnTouchListener {
         if(MotionEvent.ACTION_UP ==event.getAction()&&count==1&&!moved){
             long clickUp = System.currentTimeMillis();//记录放开手指的时间
             if(clickUp-firstClick>=totalTime){
-                LogUtils.i("OnTouch","long click");
+                LogUtils.i(getClass().getName(),"long click");
                 return mCallback.onLongClick();
             }
         }

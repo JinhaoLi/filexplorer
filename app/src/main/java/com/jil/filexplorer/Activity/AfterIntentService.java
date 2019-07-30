@@ -27,6 +27,7 @@ import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.Api.ProgressMessage;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.ui.CopyProgressDialog;
+import com.jil.filexplorer.utils.CopyFileUtils;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.NotificationUtils;
 
@@ -39,14 +40,15 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 
 import static androidx.constraintlayout.widget.Constraints.TAG;
+import static com.jil.filexplorer.Api.FileOperation.MODE_COPY;
 import static com.jil.filexplorer.utils.ConstantUtils.CHANNEL_ID;
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
-import static com.jil.filexplorer.utils.ConstantUtils.PROGRESS_MODE_COPY;
 import static com.jil.filexplorer.utils.DialogUtils.getDensity;
 import static com.jil.filexplorer.utils.FileUtils.closeAnyThing;
 
 public class AfterIntentService extends IntentService{
     private static final String ACTION_COPY = "com.jil.filexplorer.Activity.action.COPY";
+    private static final String ACTIONS_COPY = "com.jil.filexplorer.Activity.actions.COPY";
     private static final String ACTION_MOVE = "com.jil.filexplorer.Activity.action.MOVE";
     private static final String EXTRA_ComeFile = "com.jil.filexplorer.Activity.extra.PARAM1";
     private static final String EXTRA_ToFile = "com.jil.filexplorer.Activity.extra.PARAM2";
@@ -70,6 +72,8 @@ public class AfterIntentService extends IntentService{
     private NotificationManager notificationManager;
 
     private static UpdateUI updateUI;
+    private static boolean copying;
+    private static Context Scontext;
 
     public static void setUpdateUI(UpdateUI updateUIInterface) {
         updateUI = updateUIInterface;
@@ -80,23 +84,21 @@ public class AfterIntentService extends IntentService{
         super("com.jil.filexplorer.Activity.AfterIntentService");
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    @Override
-    public void onCreate() {
-        super.onCreate();
-    }
-
-    public static void startActionsCopy(Context context, String comeFilePath, String toFilePath,ArrayList<FileInfo> infos) {
+    public static void startActionsCopy(Context context,String toFilePath,ArrayList<FileInfo> infos) {
         fileInfoArrayList=infos;
         Intent intent = new Intent(context, AfterIntentService.class);
-        intent.setAction(ACTION_COPY);
-        intent.putExtra(EXTRA_ComeFile, comeFilePath);
+        intent.setAction(ACTIONS_COPY);
         intent.putExtra(EXTRA_ToFile, toFilePath);
         context.startService(intent);
     }
 
+    public static void stop(){
+        copying=false;
+    }
+
 
     public static void startActionCopy(Context context, String comeFilePath, String toFilePath) {
+        Scontext=context;
         Intent intent = new Intent(context, AfterIntentService.class);
         intent.setAction(ACTION_COPY);
         intent.putExtra(EXTRA_ComeFile, comeFilePath);
@@ -117,13 +119,19 @@ public class AfterIntentService extends IntentService{
         if (intent != null) {
             final String action = intent.getAction();
             if (ACTION_COPY.equals(action)) {
-                builder = new NotificationCompat.Builder(this, CHANNEL_ID);
-                notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
                 String in = intent.getStringExtra(EXTRA_ComeFile);
                 String to = intent.getStringExtra(EXTRA_ToFile);
-                mProgresss = new ProgressMessage(System.currentTimeMillis(), projectCount, PROGRESS_MODE_COPY, in, to);
+                builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+                notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
+                mProgresss = new ProgressMessage(System.currentTimeMillis(), projectCount, MODE_COPY, in, to);
                 copyFile$Dir(new File(in), new File(to));
-            } else if (ACTION_MOVE.equals(action)) {
+            } else if (ACTIONS_COPY.equals(action)) {
+                long size=0;
+                for(FileInfo temp:fileInfoArrayList){
+                    size+=getLength(new File(temp.getFilePath()));
+                }
+                allSize=size;
+
 
             }
         }
@@ -136,6 +144,7 @@ public class AfterIntentService extends IntentService{
         File file=new File(to.getPath(),in.getName());
         Intent i =new Intent(this,ProgressActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        copying=true;
         if (in.isFile()) {//文件对拷
             if(!file.exists()){
                 startActivity(i);
@@ -193,7 +202,7 @@ public class AfterIntentService extends IntentService{
      */
     private void canSeeBufferCopy(File source, File target) {
         mProgresss.setNowProjectName(source.getName());
-        if (!target.isDirectory() && source.exists()) {
+        if (!target.isDirectory() && source.exists()&&copying) {
             FileChannel in = null;
             FileChannel out = null;
             FileInputStream inStream = null;
@@ -203,12 +212,12 @@ public class AfterIntentService extends IntentService{
                 outStream = new FileOutputStream(target);
                 in = inStream.getChannel();
                 out = outStream.getChannel();
-                ByteBuffer buffer = ByteBuffer.allocate(4096 * 20);
-                while (in.read(buffer) != -1) {
+                ByteBuffer buffer = ByteBuffer.allocate(4096 * 50);
+                while (in.read(buffer) != -1&&copying) {
                     buffer.flip();
                     out.write(buffer);
                     buffer.clear();
-                    refreshProgresss(4096 * 20);
+                    refreshProgresss(4096 * 50);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -255,13 +264,12 @@ public class AfterIntentService extends IntentService{
             targt.mkdir();
         }
         File[] files = from.listFiles();
-        if (files != null) {
+        if (files != null&&copying) {
             for (File temp : files) {
                 if (temp.isFile()) {
                     //nioBufferCopy(temp, new File(targt, temp.getName()));
                     canSeeBufferCopy(temp, new File(targt, temp.getName()));
                     copyOverCount++;
-                    //refreshProgresss(temp.length());
                 } else {
                     copyDirWithFile(temp, targt);
                 }
@@ -282,15 +290,15 @@ public class AfterIntentService extends IntentService{
      */
     private void refreshProgresss(long size) {
         Message message = new Message();
-        LogUtils.i("已复制：", mProgresss.getProggress() + "%--" + copySize / MB);
+        LogUtils.i("已复制：", mProgresss.getProgress() + "%--" + copySize / MB);
         mProgresss.setCopyOverCount(copyOverCount);
         copySize += size;
         mProgresss.setNowLoacation(copySize);
         copySize=mProgresss.getNowLoacation();
         message.obj = mProgresss;
-        message.what = mProgresss.getProggress();
+        message.what = mProgresss.getProgress();
         if (updateUI != null) updateUI.updateUI(message);
-        builder.setProgress(100, mProgresss.getProggress(), false);
+        builder.setProgress(100, mProgresss.getProgress(), false);
         notificationManager.notify(1410, builder.build());
     }
 

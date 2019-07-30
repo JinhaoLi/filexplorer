@@ -41,6 +41,8 @@
         </activity>
         <activity android:name=".Activity.ProgressActivity"
             android:theme="@style/AppTheme.jilNoActionBar"/>
+        <activity android:name=".Activity.ProgerssDialogActivity"
+            android:theme="@style/AppTheme.jilNoActionBar"/>
         <!-- 安卓api大于23使用外部应用程序打开文件必须使用次方法 -->
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -51,7 +53,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-        <receiver android:name=".Api.NotificationClickReceiver" />
     </application>
 
 </manifest>

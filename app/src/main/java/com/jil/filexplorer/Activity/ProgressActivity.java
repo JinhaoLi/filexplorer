@@ -17,6 +17,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.jil.filexplorer.Api.ProgressMessage;
 import com.jil.filexplorer.R;
 
+/**
+ * 接收AfterIntentService进度并显示
+ */
 public class ProgressActivity extends AppCompatActivity implements AfterIntentService.UpdateUI{
     @SuppressLint("HandlerLeak")
     private Handler handler=new Handler(){
@@ -29,7 +32,7 @@ public class ProgressActivity extends AppCompatActivity implements AfterIntentSe
                 finish();
             }
             if(progressMessage!=null){
-                progressBar.setProgress(progressMessage.getProggress());
+                progressBar.setProgress(progressMessage.getProgress());
                 mTitle.setText(progressMessage.getTitle());
                 mMessage.setText(Html.fromHtml(progressMessage.getMessage()));
                 smallTitle.setText(progressMessage.getTitle());
@@ -42,11 +45,9 @@ public class ProgressActivity extends AppCompatActivity implements AfterIntentSe
         }
     };
 
-
     private ProgressMessage progressMessage;
     private ProgressBar progressBar;
     private ImageView close,smaller;
-    AfterIntentService.UpdateUI updateUI;
     private static OnActionFinish onActionFinish;
     private TextView mTitle,mMessage,smallTitle,speedText,projectName,remainTime,remainCount;
 
@@ -75,9 +76,8 @@ public class ProgressActivity extends AppCompatActivity implements AfterIntentSe
         close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i =new Intent(ProgressActivity.this,AfterIntentService.class);
-                stopService(i);
-                finish();
+                AfterIntentService.stop();
+                //finish();
             }
         });
     }

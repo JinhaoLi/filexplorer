@@ -1,11 +1,14 @@
 package com.jil.filexplorer.Api;
 
+import static com.jil.filexplorer.Api.FileOperation.MODE_COPY;
+import static com.jil.filexplorer.Api.FileOperation.MODE_COPYS;
+import static com.jil.filexplorer.Api.FileOperation.MODE_MOVE;
+import static com.jil.filexplorer.Api.FileOperation.MODE_RENAME;
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
-import static com.jil.filexplorer.utils.ConstantUtils.PROGRESS_MODE_COPY;
-import static com.jil.filexplorer.utils.ConstantUtils.PROGRESS_MODE_MOVE;
-import static com.jil.filexplorer.utils.ConstantUtils.PROGRESS_MODE_RECYCLE;
-import static com.jil.filexplorer.utils.ConstantUtils.PROGRESS_MODE_RENAME;
 
+/**
+ * 进度消息
+ */
 public class ProgressMessage {
     //开始时间
     private long startTime;
@@ -16,9 +19,9 @@ public class ProgressMessage {
     //进度类型
     private int mType;
     //原路径
-    String out;
+    private String in;
     //目标路径
-    String to;
+    private String to;
 
     //现在复制到的位置
     private long nowLoacation=1;
@@ -27,7 +30,7 @@ public class ProgressMessage {
     //进行中的项目名称
     private String nowProjectName;
 
-    //百分百
+    //百分比
     private int mProgress;
     //进度标题
     private String title;
@@ -36,21 +39,37 @@ public class ProgressMessage {
     //速度
     private float speed;
 
-    public ProgressMessage(long startTime, long endLoacation, int projectCount, int mType, String out, String to) {
+
+    public ProgressMessage(long startTime, long endLoacation, int projectCount, int mType,String to) {
         this.startTime = startTime;
         this.endLoacation = endLoacation;
         this.projectCount = projectCount;
         this.mType = mType;
-        this.out = out;
         this.to = to;
     }
 
-    public ProgressMessage(long startTime,int projectCount, int mType, String out, String to) {
+    public void setIn(String in) {
+        this.in = in;
+    }
+
+    public void setTo(String to) {
+        this.to = to;
+    }
+
+    public ProgressMessage(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public ProgressMessage(long startTime, int projectCount, int mType, String in, String to) {
         this.startTime = startTime;
         this.projectCount = projectCount;
         this.mType = mType;
-        this.out = out;
+        this.in = in;
         this.to = to;
+    }
+
+    public ProgressMessage() {
+
     }
 
     public void setNowLoacation(long nowLoacation) {
@@ -78,38 +97,35 @@ public class ProgressMessage {
     }
 
     public String getTitle(){
-        this.mProgress =getProggress();
+        this.mProgress =getProgress();
         return "已完成"+ mProgress +"%";
     }
 
-    public int getProggress(){
-        if(mType==PROGRESS_MODE_COPY){
+    public int getProgress(){
+        if(mType==MODE_COPY){
             return (int) (nowLoacation*100/endLoacation);
         }else {
             return (int) (nowLoacation*100/endLoacation);
-            //return (copyOverCount *100/projectCount);
         }
     }
 
     public String getMessage(){
         String start,type;
-        String out ="<font color=\"#1586C6\">"+this.out+"</font>";
+        String out ="<font color=\"#1586C6\">"+this.in +"</font>";
         String to ="<font color=\"#1586C6\">"+this.to+"</font>";
         if(projectCount!=1){
             start="正在将"+projectCount+"个项目从";
         }else {
             start="正在将";
         }
-        if(mType==PROGRESS_MODE_COPY){
+        if(mType==MODE_COPY||mType==MODE_COPYS){
             type ="复制到";
-        }else if(mType==PROGRESS_MODE_MOVE){
+        }else if(mType==MODE_MOVE){
             type ="移动到";
-        }else if(mType==PROGRESS_MODE_RECYCLE){
-            type ="移动到";
-        }else if(mType==PROGRESS_MODE_RENAME){
+        }else if(mType==MODE_RENAME){
             type ="重命名为";
         }else {
-            type="";
+            type="---";
         }
         return start+out+type+to;
     }
@@ -120,18 +136,22 @@ public class ProgressMessage {
 
     public String getSpeed(){
         long nowTime =(System.currentTimeMillis()-startTime)/1000;
-        if(mType==PROGRESS_MODE_COPY&&nowTime!=0){
-            return "速度："+ (nowLoacation/(nowTime))/MB+"Mb/秒";
-        }else if(nowTime!=0) {
-            return "速度："+ copyOverCount /(nowTime)+"个项目/秒";
-        }else {
-            return "";
+        //nowTime= nowTime==0? 1:nowTime;
+        if(nowTime!=0){
+            if(mType==MODE_COPYS||mType==MODE_COPY){
+                return "速度："+ (nowLoacation/(nowTime))/MB+"Mb/秒";
+            }else if(mType==MODE_MOVE) {
+                return "速度："+ copyOverCount /(nowTime)+"个项目/秒";
+            }else {
+                return "";
+            }
         }
+        return "";
     }
 
     public String getReMainCount(){
-        if(mType==PROGRESS_MODE_COPY){
-            return "剩余项目："+(projectCount- copyOverCount)+"("+(endLoacation-nowLoacation)/MB+"MB)";
+        if(mType==MODE_COPYS||mType==MODE_COPY){
+            return "剩余项目："+(projectCount-copyOverCount)+"("+(endLoacation-nowLoacation)/MB+"MB)";
         }else {
             return "剩余项目："+(projectCount- copyOverCount);
         }
@@ -140,12 +160,14 @@ public class ProgressMessage {
 
     public String getReMainTime(){
         long nowTime =System.currentTimeMillis()-startTime;
-        if(mType==PROGRESS_MODE_COPY){
+        nowTime= nowTime==0? 1:nowTime;
+        if(mType==MODE_COPYS||mType==MODE_COPY){
             return "剩余时间：大约"+(endLoacation-nowLoacation) / (nowLoacation/nowTime) /1000+"秒";
         }else {
-            return "剩余时间：大约"+(projectCount- copyOverCount)  / (copyOverCount /(nowTime/1000))  +"秒";
+            return "剩余时间：大约"+(projectCount- copyOverCount)  / (copyOverCount /nowTime)/1000  +"秒";
         }
     }
+
 
     public String getCopyOverCount(){
         return "名称："+ nowProjectName;

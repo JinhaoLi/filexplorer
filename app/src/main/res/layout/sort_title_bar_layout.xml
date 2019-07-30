@@ -18,10 +18,10 @@
         <TextView
             android:id="@+id/textView2"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="5"
-            android:singleLine="true"
             android:background="@drawable/sort_button_background"
+            android:singleLine="true"
             android:text="名称" />
 
         <View
@@ -33,9 +33,9 @@
         <TextView
             android:id="@+id/textView3"
             android:layout_width="124dp"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
+            android:layout_height="match_parent"
             android:background="@drawable/sort_button_background"
+            android:singleLine="true"
             android:text="修改日期" />
 
         <View
@@ -47,10 +47,10 @@
         <TextView
             android:id="@+id/textView4"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="7"
-            android:singleLine="true"
             android:background="@drawable/sort_button_background"
+            android:singleLine="true"
             android:text="类型" />
 
         <View
@@ -62,10 +62,10 @@
         <TextView
             android:id="@+id/textView5"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="7"
-            android:singleLine="true"
             android:background="@drawable/sort_button_background"
+            android:singleLine="true"
             android:text="大小" />
 
     </LinearLayout>

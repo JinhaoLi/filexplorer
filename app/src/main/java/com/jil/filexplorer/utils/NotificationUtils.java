@@ -37,7 +37,6 @@ public class NotificationUtils {
         }
     }
 
-
     /**
      * 注册通知步骤2提交
      * @param context
@@ -54,9 +53,9 @@ public class NotificationUtils {
     public static void setNotification(Context context, NotificationCompat.Builder builder,NotificationManager notificationManager,String content) {
         Intent intent = new Intent(context, ProgressActivity.class);// ========= 重点2============
         PendingIntent pendingIntent = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        //if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             pendingIntent = PendingIntent.getActivity(context, 0, intent,PendingIntent.FLAG_IMMUTABLE);
-        }
+        //}
 
         //通知的构建过程基本与默认相同
         Notification notification = builder
@@ -71,7 +70,7 @@ public class NotificationUtils {
                 //.setVibrate(new long[]{100, 200, 200, 200})//震动
                 .setContentIntent(pendingIntent)
                 .build();
-        //notification.flags=Notification.FLAG_ONGOING_EVENT; //如果此通知涉及正在进行的事情，请设置,用户无法移除
+        notification.flags=Notification.FLAG_ONGOING_EVENT; //如果此通知涉及正在进行的事情，请设置,用户无法移除
         //notification.flags |= Notification.FLAG_NO_CLEAR;//点击才可以移除
         //启动activity
         //Intent intentOne = new Intent(context, MainActivity.class);

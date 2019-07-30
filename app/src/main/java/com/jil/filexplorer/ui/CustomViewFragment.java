@@ -10,12 +10,10 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.MainActivity;
 import com.jil.filexplorer.R;
@@ -24,11 +22,9 @@ import com.jil.filexplorer.Api.SortComparator;
 import com.jil.filexplorer.utils.LogUtils;
 import com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView;
 import com.yanzhenjie.recyclerview.swipe.touch.OnItemStateChangedListener;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
-
 import static com.jil.filexplorer.Api.SortComparator.SORT_BY_DATE;
 import static com.jil.filexplorer.Api.SortComparator.SORT_BY_DATE_REV;
 import static com.jil.filexplorer.Api.SortComparator.SORT_BY_NAME;
@@ -48,7 +44,6 @@ import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
 import static com.jil.filexplorer.utils.FileUtils.getDistance;
 import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
 
-@SuppressLint("ValidFragment")
 public abstract class CustomViewFragment extends Fragment implements View.OnClickListener {
     protected final static String TAG = "CustomViewFragment";
     protected String fragmentTitle;
@@ -61,10 +56,9 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
     protected SwipeMenuRecyclerView fileList;
     //记录上次经过项
     protected int outOfFromPosition;
-    //记录选中项
-    protected int selectPosition = -1;
+    //记录位置是否已经改变
+    protected boolean selectPositionChange = true;
     protected LinearLayoutManager linearLayoutManager;
-    protected GridLayoutManager gridLayoutManager;
     protected SortComparator comparator = new SortComparator(SORT_BY_NAME);
     //顶部排序栏,底部操作栏
     private FrameLayout topBar;
@@ -75,7 +69,7 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
     //排列方式按钮
     protected ImageView liner, grid;
     //grid下一行多少个
-    protected int spanCount = 2;
+    protected int spanCount = 4;
 
     public CustomViewFragment(String filePath) {
         super();
@@ -99,7 +93,6 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
         mMainActivity.setCustomViewFragment(this);
         rootView = inflater.inflate(R.layout.fragment_file_view_layout, container, false);
         topBar = rootView.findViewById(R.id.top_bar);
-
 
         fileList = rootView.findViewById(R.id.file_list_view);
 
@@ -179,7 +172,7 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
 
     protected void sortReFresh(int sortType) {
         try {
-            comparator = new SortComparator(sortType);
+            comparator.setSortType(sortType);
             Collections.sort(fileInfos, comparator);
         } catch (Exception e) {
             comparator.setSortType(SORT_BY_NAME);
@@ -259,14 +252,14 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
         //ToastUtils.showToast(mMainActivity,temp.getFileName(),1000);
         //选中项次层级
         View v = linearLayoutManager.findViewByPosition(outOfFromPosition);
-        if (v != null && selectPosition == -1) {
+        if (v != null && selectPositionChange) {
             if (temp.isSelected()) {
                 v.setBackgroundColor(SELECTED_COLOR);  //恢复次层级颜色
             } else {
                 v.setBackgroundColor(NORMAL_COLOR);  //恢复次层级颜色
             }
         }
-        if (selectPosition == -1) {    //移动范围超item范围
+        if (selectPositionChange) {    //移动范围超item范围
             if (temp.isDir()) {
                 moveDir(temp);
             }
@@ -289,7 +282,7 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
     protected boolean itemPositionDrag(int toPosition) {
         FileInfo temp = fileInfos.get(outOfFromPosition);//从此项离开
         FileInfo inputDir = fileInfos.get(toPosition);//进入此项
-        selectPosition = -1;//代表位置已经改变
+        selectPositionChange = true;//代表位置已经改变
         //记录此项原来的的位置
         if (outOfFromPosition != toPosition) {
             //此项位置发生改变时，将上一次染色的item背景改变为透明
@@ -321,7 +314,7 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
      * @param v
      */
     private void fingerDownState(View v) {
-        selectPosition = longClickPosition;
+        selectPositionChange = false;
         int[] ints = getSelectStartAndEndPosition();
         selectSomePosition(ints[1], longClickPosition);
         //此项选中时将背景透明化
@@ -342,12 +335,6 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
      */
     private void selectSomePosition(int start, int end) {
         if (start != -1 && start != end) {
-            /*for (int i = start; i <=end; i++) {
-                fileInfos.get(i).setSelected(true);
-                View selectItem = linearLayoutManager.findViewByPosition(i);
-                if (selectItem != null)
-                    selectItem.setBackgroundColor(SELECTED_COLOR);
-            }*/
             int s = start > end ? end : start;
             int e = start > end ? start : end;
             if (fileInfos.get(end).isSelected()) {
@@ -376,8 +363,8 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
      *
      * @return
      */
-    protected LinkedList<FileInfo> getSelectedList() {
-        LinkedList<FileInfo> selectList = new LinkedList<>();//储存删除对象
+    protected ArrayList<FileInfo> getSelectedList() {
+        ArrayList<FileInfo> selectList = new ArrayList<>();//储存删除对象
         for (int i = 0; i < fileInfos.size(); i++) {
             FileInfo fileInfo = fileInfos.get(i);
             if (fileInfo.isSelected()) {
@@ -394,7 +381,7 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
      */
     private int[] getSelectStartAndEndPosition() {
         int[] SelectStartAndEndPosition = new int[2];//储存位置
-        LinkedList<FileInfo> selectList = getSelectedList();
+        ArrayList<FileInfo> selectList = getSelectedList();
         if (selectList.size() != 0) {
             SelectStartAndEndPosition[0] = fileInfos.indexOf(selectList.get(0));
             SelectStartAndEndPosition[1] = fileInfos.indexOf(selectList.get(selectList.size() - 1));
@@ -411,7 +398,7 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
      * @param deleteList 选中的列表
      * @return
      */
-    protected ArrayList<Integer> getSelectPosition(LinkedList<FileInfo> deleteList) {
+    protected ArrayList<Integer> getSelectPosition(ArrayList<FileInfo> deleteList) {
         ArrayList<Integer> selectPosition = new ArrayList<>();//储存位置
         for (int i = 0; i < deleteList.size(); i++) {
             FileInfo fileInfo = deleteList.get(i);
@@ -427,7 +414,7 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
 
     @SuppressLint("SetTextI18n")
     public void refreshUnderBar() {
-        LinkedList<FileInfo> selectList = getSelectedList();
+        ArrayList<FileInfo> selectList = getSelectedList();
         String how = selectList.size() == 0 ? "" : getString(R.string.select) + selectList.size() + getString(R.string.how_many_item);
         long size = 0L;
         boolean haveDir = false;

@@ -1,41 +1,15 @@
 package com.jil.filexplorer;
 
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
-import android.app.Service;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.IBinder;
-import android.provider.Settings;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-
-import androidx.appcompat.app.ActionBar;
-import androidx.core.view.GravityCompat;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-
-import android.view.MenuItem;
-
-import com.google.android.material.navigation.NavigationView;
-import com.jil.filexplorer.Activity.AfterIntentService;
-import com.jil.filexplorer.Activity.ClearActivity;
-import com.jil.filexplorer.Activity.ProgressActivity;
-import com.jil.filexplorer.ui.CustomViewFragment;
-import com.jil.filexplorer.utils.LogUtils;
-import com.jil.filexplorer.utils.ToastUtils;
-
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-
-import android.view.Menu;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -44,6 +18,22 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ListPopupWindow;
 
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+
+import com.google.android.material.navigation.NavigationView;
+import com.jil.filexplorer.Activity.ClearActivity;
+import com.jil.filexplorer.Activity.ProgressActivity;
+import com.jil.filexplorer.ui.CustomViewFragment;
+import com.jil.filexplorer.utils.CopyFileUtils;
+import com.jil.filexplorer.utils.LogUtils;
+import com.jil.filexplorer.utils.ToastUtils;
+
 import java.io.File;
 import java.util.ArrayList;
 
@@ -51,7 +41,7 @@ import static com.jil.filexplorer.Activity.ProgressActivity.setOnActionFinish;
 import static com.jil.filexplorer.utils.NotificationUtils.registerNotifty;
 
 
-public class MainActivity extends ClearActivity implements NavigationView.OnNavigationItemSelectedListener, ProgressActivity.OnActionFinish {
+public class MainActivity extends ClearActivity implements NavigationView.OnNavigationItemSelectedListener, ProgressActivity.OnActionFinish, CopyFileUtils.CopyOverListener {
     //路径输入
     private EditText editText;
     private boolean activityIsRunning;
@@ -318,6 +308,18 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     @Override
     public void OnRefresh() {
+        if(activityIsRunning){
+            try {
+                customViewFragment.load(mPath,true);
+            }catch (Exception e){
+                LogUtils.e("复制任务进行中退出activity","activity已退出，无法刷新");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void updateUi() {
         if(activityIsRunning){
             try {
                 customViewFragment.load(mPath,true);
