@@ -231,7 +231,7 @@ public class FileUtils {
      * @param filePath$Name 要删除的文件的文件名
      * @return 单个文件删除成功返回true，否则返回false
      */
-    private static boolean deleteSingleFile(String filePath$Name) {
+    public static boolean deleteSingleFile(String filePath$Name) {
         File file = new File(filePath$Name);
         // 如果文件路径所对应的文件存在，并且是一个文件，则直接删除
         if (file.exists() && file.isFile()) {
@@ -363,7 +363,7 @@ public class FileUtils {
      * @param filePath 要删除的目录的文件路径
      * @return 目录删除成功返回true，否则返回false
      */
-    private static boolean deleteDirectory(String filePath) {
+    public static boolean deleteDirectory(String filePath) {
         // 如果dir不以文件分隔符结尾，自动添加文件分隔符
         if (!filePath.endsWith(File.separator))
             filePath = filePath + File.separator;

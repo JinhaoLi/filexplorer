@@ -9,95 +9,93 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+
 import static com.jil.filexplorer.utils.FileUtils.closeAnyThing;
+import static com.jil.filexplorer.utils.FileUtils.deleteDirectory;
+import static com.jil.filexplorer.utils.FileUtils.deleteSingleFile;
 
 /**
  * 文件操作类
  * 必须在非UI线程调用
  */
 public class FileOperation {
-    public final static int MODE_COPY =1521;
-    public final static int MODE_COPYS =1541;
-    public final static int MODE_MOVE =1410;
-    public final static int MODE_RENAME=1415;
+    public final static int MODE_COPY = -4;
+    public final static int MODE_MOVE = -5;
+    public final static int MODE_DELETE = -6;
+    public final static int MODE_RENAME = -7;
     private int ID;
-    private File inFile;
     private int mode;
-    private ArrayList<File> inFiles;
+    private ArrayList<FileInfo> inFiles;
     private long actionSize;
     private long overSize;
     private boolean running;
     private int overCount;
     private ProgressMessage progressMessage;
     private ProgressChangeListener progressChangeListener;
-
-    private File toDir;
+    private FileInfo toDir;
     private static FileOperation fileOperation;
     private int projectCount;
-
-    public int getProjectCount() {
-        return projectCount;
-    }
 
     private FileOperation(int ID) {
         this.ID = ID;
     }
 
-    public void addProgressChangeListener(ProgressChangeListener progressChangeListener){
-        this.progressChangeListener=progressChangeListener;
+    public void addProgressChangeListener(ProgressChangeListener progressChangeListener) {
+        this.progressChangeListener = progressChangeListener;
     }
 
-    public ProgressMessage getProgressMessage() {
-        return progressMessage;
-    }
 
-    public static FileOperation with(int id){
-        fileOperation =new FileOperation(id);
+    public static FileOperation with(int id) {
+        fileOperation = new FileOperation(id);
         return fileOperation;
     }
 
-    public FileOperation copy(File inFile){
-        this.inFile =inFile;
-        this.mode=MODE_COPY;
-        return this;
-    }
 
-    public FileOperation move(ArrayList<FileInfo> inFiles){
-
-    }
-
-    public FileOperation copy(ArrayList<File> inFiles){
-        this.inFiles =inFiles;
-        this.mode=MODE_COPYS;
+    public FileOperation move(ArrayList<FileInfo> inFiles) {
+        this.inFiles = inFiles;
+        this.mode = MODE_MOVE;
         initialization();
         return this;
     }
 
-    public FileOperation to(File toDir){
-        if(!toDir.isDirectory()) {
+    public FileOperation delete(ArrayList<FileInfo> inFiles) {
+        this.inFiles = inFiles;
+        this.mode = MODE_DELETE;
+        initialization();
+        return this;
+    }
+
+    public FileOperation copy(ArrayList<FileInfo> inFiles) {
+        this.inFiles = inFiles;
+        this.mode = MODE_COPY;
+        initialization();
+        return this;
+    }
+
+    public FileOperation to(FileInfo toDir) {
+        if (!toDir.isDir()) {
             LogUtils.e("FileOperation", "目标不是文件夹");
             return null;
-        }else {
-            this.toDir=toDir;
-            progressMessage=new ProgressMessage(System.currentTimeMillis(),actionSize
-                    ,projectCount,mode,toDir.getPath());
+        } else {
+            this.toDir = toDir;
+            progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize
+                    , projectCount, mode, toDir.getFilePath());
             return this;
         }
     }
 
+
     private void initialization() {
-        actionSize=0;
-        overSize=0;
-        projectCount=0;
-        overCount=0;
-        if(mode==MODE_COPYS&&inFiles.size()>0){
-            long size=0;
-            for(File temp:inFiles){
-                size+=getLength(temp);
+        overSize = 0;
+        actionSize = 0;
+        projectCount = 0;
+        overCount = 0;
+        if (inFiles.size() > 0) {
+            long size = 0;
+            for (FileInfo temp : inFiles) {
+                size += getLength(new File(temp.getFilePath()));
             }
-            actionSize=size;
-        }else {
-            actionSize=getLength(inFile);
+            actionSize = size;
         }
     }
 
@@ -124,45 +122,98 @@ public class FileOperation {
     }
 
 
-    private void FilesCopy() {
-        for (File temp:inFiles){
-            progressMessage.setIn(temp.getPath());
-            File$DirCopy(temp,toDir);
+    private void filesCopy() {
+        for (FileInfo temp : inFiles) {
+            progressMessage.setIn(temp.getFilePath());
+            File$DirCopy(new File(temp.getFilePath()), new File(toDir.getFilePath()));
         }
     }
 
-    private void File$DirCopy(File inFile , File toDir) {
-        if(toDir.getPath().startsWith(inFile.getPath())){
+    private void File$DirCopy(File inFile, File toDir) {
+        if (toDir.getPath().startsWith(inFile.getPath())) {
             System.err.println("目标文件夹是源文件的子目录");
-            return ;
+            return;
         }
-        if(!inFile.isDirectory()){
-            nioBufferCopy(inFile,new File(toDir,inFile.getName()));
-        }else {
-            copyDirWithFile(inFile,toDir);
+        if (!inFile.isDirectory()) {
+            nioBufferCopy(inFile, new File(toDir, inFile.getName()));
+        } else {
+            copyDirWithFile(inFile, toDir);
         }
 
     }
 
-    public void start(){
-        running=true;
-        progressChangeListener.progressChang(progressMessage);
-        switch (mode){
+    public void start() {
+        running = true;
+        //progressChangeListener.progressChang(progressMessage);
+        switch (mode) {
             case MODE_COPY:
-                File$DirCopy(inFile,toDir);
+                filesCopy();
                 break;
-            case MODE_COPYS:
-                FilesCopy();
+            case MODE_MOVE:
+                filesMove();
+                break;
+            case MODE_DELETE:
+                filesDelete();
                 break;
         }
     }
 
-    public void stopAction(){
-        running=false;
+    private void filesDelete() {
+        progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize
+                , projectCount, mode);
+        for(FileInfo temp:inFiles){
+            if(!running)
+                break;
+            String loaction =temp.getFilePath();
+            progressMessage.setNowProjectName(temp.getFileName());
+            if(temp.isDir()){
+                deleteDirectory(loaction);
+            }else {
+                deleteSingleFile(loaction);
+            }
+        }
+        progressMessage.setNowLoacation(actionSize);
+        progressChangeListener.progressChang(progressMessage);
+    }
+
+    private void filesMove() {
+        for(FileInfo temp:inFiles){
+            if(!running)
+                break;
+            if (toDir.getFileName().startsWith(temp.getFileName())) {
+                System.err.println("目标文件夹是源文件的子目录");
+                continue;
+            }
+            File f =new File(temp.getFilePath());
+            if(moveFile(f)) {
+                overCount++;
+                progressMessage.setCopyOverCount(overCount);
+            }
+            sendProgress(f.length());
+        }
+        progressMessage.setNowLoacation(actionSize);
+        progressChangeListener.progressChang(progressMessage);
+
+    }
+
+    /**
+     * 移动文件
+     * @param file
+     * @return
+     */
+    private boolean moveFile(File file){
+        File result =new File(toDir.getFilePath(),file.getName());
+        boolean b=file.renameTo(result);
+        return b;
+    }
+
+    public void stopAction() {
+        running = false;
     }
 
     /**
      * 复制文件，可监测进度
+     *
      * @param source G:\作业\安卓\ayun.apk
      * @param target G:\作业\安卓\安卓项目开发\解包打包G:\作业\安卓\安卓项目开发\解包打包\ayun.apk
      */
@@ -171,58 +222,132 @@ public class FileOperation {
         FileChannel out = null;
         FileInputStream inStream = null;
         FileOutputStream outStream = null;
-        long size =source.length();
+        long size = source.length();
         try {
             inStream = new FileInputStream(source);
             outStream = new FileOutputStream(target);
             in = inStream.getChannel();
             out = outStream.getChannel();
-            ByteBuffer buffer = ByteBuffer.allocate(1024*1024*20);
+            ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024 * 20);
             progressMessage.setNowProjectName(source.getName());
             while (in.read(buffer) != -1) {
                 buffer.flip();
                 out.write(buffer);
                 buffer.clear();
-                size-=1024*1024*20;
-                sendProgress(size>0 ? 1024*1024*20:(1024*1024*20)+size);
+                size -= 1024 * 1024 * 20;
+                sendProgress(size > 0 ? 1024 * 1024 * 20 : (1024 * 1024 * 20) + size);
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally{
+        } finally {
             overCount++;
             progressMessage.setCopyOverCount(overCount);
-            closeAnyThing(inStream,in,outStream,out);
+            closeAnyThing(inStream, in, outStream, out);
         }
     }
 
+    /**
+     *
+     * @param add
+     */
     private void sendProgress(long add) {
-        overSize+=add;
+        overSize += add;
         progressMessage.setNowLoacation(overSize);
-        if(actionSize>0&&progressChangeListener!=null)
+        if (actionSize > 0 && progressChangeListener != null)
             progressChangeListener.progressChang(progressMessage);
-        //progressChangeListener.progressChang((int)((overSize*100)/actionSize),overSize);
 
     }
 
     /**
      * 复制文件夹及其路径下的所有文件
-     * @param from  G:\作业\安卓
-     * @param to    F:\Oracle VM VirtualBox\
+     *
+     * @param from G:\作业\安卓
+     * @param to   F:\Oracle VM VirtualBox\
      */
-    private void copyDirWithFile(File from,File to) {
-        File targt =new File(to.getPath(),from.getName()); //F:\Oracle VM VirtualBox\安卓
-        if(!targt.exists()) targt.mkdir();
-        File[] files =from.listFiles();
-        if(files!=null){
-            for(File temp:files){
-                if(!running)
+    private void copyDirWithFile(File from, File to) {
+        File targt = new File(to.getPath(), from.getName()); //F:\Oracle VM VirtualBox\安卓
+        if (!targt.exists()) targt.mkdir();
+        File[] files = from.listFiles();
+        if (files != null) {
+            for (File temp : files) {
+                if (!running)
                     break;
-                if(temp.isFile()){
-                    nioBufferCopy(temp,new File(targt,temp.getName()));
-                }else {
-                    copyDirWithFile(temp,targt);
+                if (temp.isFile()) {
+                    nioBufferCopy(temp, new File(targt, temp.getName()));
+                } else {
+                    copyDirWithFile(temp, targt);
                 }
             }
+        }
+    }
+
+    /** 删除单个文件
+     * @param filePath$Name 要删除的文件的文件名
+     * @return 单个文件删除成功返回true，否则返回false
+     */
+    private boolean deleteSingleFile(String filePath$Name) {
+        File file = new File(filePath$Name);
+        // 如果文件路径所对应的文件存在，并且是一个文件，则直接删除
+        if (file.exists() && file.isFile()) {
+            overCount++;
+            progressMessage.setCopyOverCount(overCount);
+            sendProgress(file.length());
+            if (file.delete()) {
+                LogUtils.i("--Method--", "Copy_Delete.deleteSingleFile: 删除单个文件" + filePath$Name + "成功！");
+                return true;
+            } else {
+                LogUtils.i("删除进程：", "删除单个文件" + filePath$Name + "失败！");
+                return false;
+            }
+        } else {
+            LogUtils.i("删除进程：", "删除单个文件失败：" + filePath$Name + "不存在！");
+            return false;
+        }
+    }
+
+    /** 删除目录及目录下的文件
+     * @param filePath 要删除的目录的文件路径
+     * @return 目录删除成功返回true，否则返回false
+     */
+    private boolean deleteDirectory(String filePath) {
+        // 如果dir不以文件分隔符结尾，自动添加文件分隔符
+        if (!filePath.endsWith(File.separator))
+            filePath = filePath + File.separator;
+        File dirFile = new File(filePath);
+        // 如果dir对应的文件不存在，或者不是一个目录，则退出
+        if ((!dirFile.exists()) || (!dirFile.isDirectory())) {
+            LogUtils.i("删除进程：", "删除目录失败：" + filePath + "不存在！");
+            return false;
+        }
+        boolean flag = true;
+        // 删除文件夹中的所有文件包括子目录
+        File[] files = dirFile.listFiles();
+        for (File file : files) {
+            // 删除子文件
+            if (file.isFile()) {
+                flag = deleteSingleFile(file.getAbsolutePath());
+                if (!flag)
+                    break;
+            }
+            // 删除子目录
+            else if (file.isDirectory()) {
+                flag = deleteDirectory(file
+                        .getAbsolutePath());
+                if (!flag)
+                    break;
+            }
+        }
+        if (!flag) {
+            LogUtils.i("删除进程：", "删除目录失败！");
+            return false;
+        }
+        // 删除当前目录
+        if (dirFile.delete()) {
+            LogUtils.i("--Method--", "Copy_Delete.deleteDirectory: 删除目录" + filePath + "成功！");
+            return true;
+        } else {
+            LogUtils.i("删除进程：", "删除目录：" + filePath + "失败！");
+            return false;
         }
     }
 

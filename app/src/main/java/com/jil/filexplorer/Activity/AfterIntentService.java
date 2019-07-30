@@ -27,7 +27,6 @@ import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.Api.ProgressMessage;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.ui.CopyProgressDialog;
-import com.jil.filexplorer.utils.CopyFileUtils;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.NotificationUtils;
 

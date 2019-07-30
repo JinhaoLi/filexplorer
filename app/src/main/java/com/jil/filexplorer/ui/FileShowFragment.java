@@ -3,12 +3,9 @@ package com.jil.filexplorer.ui;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,11 +31,14 @@ import com.yanzhenjie.recyclerview.swipe.touch.OnItemMoveListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 
+import static com.jil.filexplorer.Api.FileOperation.MODE_COPY;
+import static com.jil.filexplorer.Api.FileOperation.MODE_DELETE;
+import static com.jil.filexplorer.Api.FileOperation.MODE_MOVE;
+import static com.jil.filexplorer.utils.ConstantUtils.MB;
 import static com.jil.filexplorer.utils.DialogUtils.showAlerDialog;
 import static com.jil.filexplorer.utils.FileUtils.deleteAFile;
-import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromFile;
+import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;
 import static com.jil.filexplorer.utils.MenuUtils.fileSwipeMenu;
 import static com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView.LEFT_DIRECTION;
 import static com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView.RIGHT_DIRECTION;
@@ -47,7 +47,7 @@ public class FileShowFragment extends CustomViewFragment {
     /**
      * 要复制的文件路径
      */
-    private ArrayList<FileInfo> copyList =new ArrayList<>();
+    private ArrayList<FileInfo> missionList =new ArrayList<>();
     /**+
      * 复制进度显示
      */
@@ -56,6 +56,7 @@ public class FileShowFragment extends CustomViewFragment {
      * 文件操作类
      */
     private FileOperation fileOperation;
+    private int fileOperationType;
 
     public FileShowFragment() { }
 
@@ -102,13 +103,17 @@ public class FileShowFragment extends CustomViewFragment {
                 }
                 if (menuPosition == 0 && direction == LEFT_DIRECTION) {
                     //复制
-                    copyList.clear();
-                    copyList.add(fileInfos.get(adapterPosition));
+                    fileOperationType =MODE_COPY;
+                    missionList.clear();
+                    missionList.add(fileInfos.get(adapterPosition));
                     closeable.smoothCloseMenu();
                 }
                 if (menuPosition == 1 && direction == LEFT_DIRECTION) {
                     //剪切逻辑
-                    linearLayoutManager.findViewByPosition(adapterPosition).setAlpha(0.5f);
+                    fileOperationType=MODE_MOVE;
+                    missionList.clear();
+                    missionList.add(fileInfos.get(adapterPosition));
+                    //linearLayoutManager.findViewByPosition(adapterPosition).setAlpha(0.5f);
                     ToastUtils.showToast(mMainActivity, getString(R.string.cut), 1000);
                     closeable.smoothCloseMenu();
                 }
@@ -202,8 +207,8 @@ public class FileShowFragment extends CustomViewFragment {
         //path.setFocusable(false);
         switch (id) {
             case 1:
-                copyList=getSelectedList();
-
+                missionList =getSelectedList();
+                fileOperationType =MODE_COPY;
                 break;
             case 2:
                 pasteMenuClick();
@@ -216,10 +221,12 @@ public class FileShowFragment extends CustomViewFragment {
                     fileListAdapter.notifyDataSetChanged();
                     outOfFromPosition=0;
                 }
+                fileOperationType=MODE_DELETE;
+                missionList=deleteList;
+                deleteFile();
+
                 clearUnderBar();
-                //删除逻辑
-                //Code。。。
-                ToastUtils.showToast(mMainActivity, "文件并未删除！" + "测试删除" + deletePosition.size() + "项", 1000);
+               // ToastUtils.showToast(mMainActivity, "文件并未删除！" + "测试删除" + deletePosition.size() + "项", 1000);
                 break;
             case 4:
                 //添加
@@ -227,7 +234,9 @@ public class FileShowFragment extends CustomViewFragment {
                 //c1.show();
                 break;
             case 5:
-                //搜索
+                //剪切
+                fileOperationType =MODE_MOVE;
+                missionList=getSelectedList();
                 break;
             case 6:
                 //刷新
@@ -242,20 +251,46 @@ public class FileShowFragment extends CustomViewFragment {
         return super.onOptionsItemSelected(item);
     }
 
+    private void deleteFile() {
+        //使用AsyncTask
+        progressDialog=new CopyProgressDialog(mMainActivity);
+        if(missionList.size()>0){
+            final ActionThread acthread=new ActionThread();
+            acthread.execute(missionList);
+            progressDialog.setDialogCloseClickListener(new DialogCloseClickListener() {
+                @Override
+                public void onCloseClick() {
+                    fileOperation.stopAction();
+                    progressDialog.dismiss();
+                    acthread.cancel(true);
+                }
+            });
+            progressDialog.show();
+        }
+    }
+
     private void pasteMenuClick() {
         //使用AsyncTask
         progressDialog=new CopyProgressDialog(mMainActivity);
         ArrayList<FileInfo> topath =new ArrayList<>();
-        topath.add(getFileInfoFromFile(new File(filePath)));
-        final ActionThread acthread=new ActionThread();
-        acthread.execute(copyList,topath);
-        progressDialog.setDialogCloseClickListener(new DialogCloseClickListener() {
-            @Override
-            public void onCloseClick() {
-                fileOperation.stopAction();
-                acthread.cancel(true);
-            }
-        });
+        topath.add(getFileInfoFromPath(filePath));
+        if(missionList!=null&&missionList.size()>0){
+            final ActionThread acthread=new ActionThread();
+            acthread.execute(missionList,topath);
+            progressDialog.setDialogCloseClickListener(new DialogCloseClickListener() {
+                @Override
+                public void onCloseClick() {
+                    fileOperation.stopAction();
+                    progressDialog.dismiss();
+                    acthread.cancel(true);
+                }
+            });
+            progressDialog.show();
+        }else {
+            ToastUtils.showToast(mMainActivity,"源路径不存在",1000);
+        }
+
+
 //        File in =new File(copyPath.getFilePath());
 //        File to =new File(filePath,copyPath.getFileName());
 //        if(to.exists()){
@@ -316,12 +351,20 @@ public class FileShowFragment extends CustomViewFragment {
     private class ActionThread extends AsyncTask<ArrayList<FileInfo>,ProgressMessage,Integer>{
         @Override
         protected Integer doInBackground(ArrayList<FileInfo>... inParams) {
-            ArrayList<File> files =new ArrayList<>();
-            File aims =new File (inParams[1].get(0).getFilePath());
-            for(FileInfo temp :inParams[0]){
-                files.add(new File(temp.getFilePath()));
+            switch (fileOperationType){
+                case MODE_COPY:
+                    fileOperation=FileOperation.with(24).copy(inParams[0]).to(inParams[1].get(0));
+                    break;
+                case MODE_MOVE:
+                    fileOperation=FileOperation.with(25).move(inParams[0]).to(inParams[1].get(0));
+                    //missionList.clear();
+                    break;
+                case MODE_DELETE:
+                    fileOperation=FileOperation.with(44).delete(inParams[0]);
+                    //missionList.clear();
+                    break;
             }
-            fileOperation=FileOperation.with(24).copy(files).to(aims);
+
             fileOperation.addProgressChangeListener(new ProgressChangeListener() {
                 @Override
                 public void progressChang(ProgressMessage progressMessage) {
@@ -336,13 +379,16 @@ public class FileShowFragment extends CustomViewFragment {
         @Override
         protected void onProgressUpdate(ProgressMessage... values) {
             super.onProgressUpdate(values);
-            if(!progressDialog.isShowing()&values[0].getProgress()==0)
-                progressDialog.show();
-            if(values[0].getNowLoacation()>100)
+            if(values[0].getNowLoacation()>2)
                 progressDialog.setParame(values[0]);
-            if(values[0].getProgress()>=100) {
+            if(values[0].getProgress()>=100||values[0].getNowLoacation()>=values[0].getEndLoacation()) {
+                if(fileOperationType==MODE_DELETE||fileOperationType==MODE_MOVE)
+                    missionList.clear();
                 progressDialog.dismiss();
                 load(filePath,true);
+                if(values[0].copyOverCount<values[0].projectCount){
+                    ToastUtils.showToast(mMainActivity,"失败"+(values[0].projectCount-values[0].copyOverCount)+"项",1000);
+                }
             }
         }
 
