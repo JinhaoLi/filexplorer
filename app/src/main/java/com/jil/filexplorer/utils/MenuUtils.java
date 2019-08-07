@@ -70,9 +70,9 @@ public class MenuUtils {
 
     public static void fileSwipeMenu(SwipeMenu swipeLeftMenu, SwipeMenu swipeRightMenu, Context context) {
         SwipeMenuItem deleteItem = createSwipeMenu(context, R.drawable.button_click_type_red, R.string.delete, Color.WHITE);
-        SwipeMenuItem detailItem = createSwipeMenu(context, R.drawable.button_click_type, R.string.detail, Color.WHITE);
-        SwipeMenuItem copyItem = createSwipeMenu(context, R.drawable.button_click_type, R.string.copy, Color.WHITE);
-        SwipeMenuItem cutItem = createSwipeMenu(context, R.drawable.button_click_type, R.string.cut, Color.WHITE);
+        SwipeMenuItem detailItem = createSwipeMenu(context, R.drawable.button_click_type_bule_bule, R.string.detail, Color.WHITE);
+        SwipeMenuItem copyItem = createSwipeMenu(context, R.drawable.button_click_type_bule_bule, R.string.copy, Color.WHITE);
+        SwipeMenuItem cutItem = createSwipeMenu(context, R.drawable.button_click_type_bule_bule, R.string.cut, Color.WHITE);
 
         swipeRightMenu.addMenuItem(deleteItem);// 添加一个按钮到右侧侧菜单。.
         swipeRightMenu.addMenuItem(detailItem);// 添加一个按钮到右侧侧菜单。.

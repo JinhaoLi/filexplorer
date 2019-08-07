@@ -211,29 +211,17 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
                 break;
             case R.id.imageView5:
                 makeLinerLayout();
+                fileList.setLongPressDragEnabled(false);
                 view.setBackgroundColor(GIRD_LINER_LAYOUT);
                 grid.setBackgroundColor(NORMAL_COLOR);
                 break;
             case R.id.imageView3:
+                fileList.setLongPressDragEnabled(true);
                 if (spanCount < 7 && linearLayoutManager instanceof GridLayoutManager)
                     spanCount++;
                 else if(spanCount>=7 && linearLayoutManager instanceof GridLayoutManager)
                     spanCount=2;
-                if (spanCount == 7) {
-                    makeGridLayout(spanCount, R.layout.flie_grid_item_layout_40dp);
-                } else if (spanCount == 6) {
-                    makeGridLayout(spanCount, R.layout.flie_grid_item_layout_60dp);
-                } else if (spanCount == 5) {
-                    makeGridLayout(spanCount, R.layout.flie_grid_item_layout_80dp);
-                } else if (spanCount == 4) {
-                    makeGridLayout(spanCount, R.layout.flie_grid_item_layout_100dp);
-                } else if (spanCount == 3) {
-                    makeGridLayout(spanCount, R.layout.flie_grid_item_layout_120dp);
-                } else if (spanCount == 2) {
-                    makeGridLayout(spanCount, R.layout.flie_grid_item_layout_140dp);
-                } else {
-                    makeGridLayout(spanCount, R.layout.flie_grid_item_layout_100dp);
-                }
+                makeGridLayout(spanCount, makeItemLayoutRes(spanCount));
                 view.setBackgroundColor(GIRD_LINER_LAYOUT);
                 liner.setBackgroundColor(NORMAL_COLOR);
                 break;
@@ -313,7 +301,7 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
      *
      * @param v
      */
-    private void fingerDownState(View v) {
+    protected void fingerDownState(View v) {
         selectPositionChange = false;
         int[] ints = getSelectStartAndEndPosition();
         selectSomePosition(ints[1], longClickPosition);

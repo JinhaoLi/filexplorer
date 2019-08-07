@@ -61,7 +61,6 @@ public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultVie
     @Override
     public void onBindViewHolder(final DefaultViewHolder holder, final int position) {
         final FileInfo fileInfo = mData.get(position);
-        Date date = new Date(fileInfo.getModifiedDate());
         if (fileInfo.isSelected()) {
             holder.itemView.setBackgroundColor(SELECTED_COLOR);
         } else {
@@ -69,7 +68,7 @@ public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultVie
         }
         holder.fileName.setText(fileInfo.getFileName());
         if(itemLayoutRes==R.layout.file_list_item_layout){
-            holder.date.setText(FileUtils.getFormatData(date));
+            holder.date.setText(FileUtils.getFormatData(fileInfo.getModifiedDate()));
             setItemIco(fileInfo,holder);
             setItemTypeAndSize(fileInfo,holder);
         }else {

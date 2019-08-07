@@ -231,10 +231,9 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         while (historyPath.size() > 10) {
             historyPath.remove(0);
         }
-        //final String[] list = {"1", "2", "3","4","5","6","7","8","9","0"};//要填充的数据
         final ListPopupWindow listPopupWindow;
         listPopupWindow = new ListPopupWindow(this);
-        listPopupWindow.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, historyPath));//用android内置布局，或设计自己的样式
+        listPopupWindow.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, historyPath));//用android内置布局，或设计自己的样式
         listPopupWindow.setAnchorView(editText);//以哪个控件为基准，在该处以mEditText为基准
         listPopupWindow.setModal(true);
 
@@ -250,7 +249,6 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     /**
      * 关闭输入法
-     *
      * @param
      * @param
      * @return
@@ -281,7 +279,13 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         if (editText != null && path != null && !path.equals("")) {
             setOnActionFinish(this);
             mPath = path;
-            editText.setText(path);
+            String s;
+            if(path.length()>50){
+                s ="..."+path.substring(path.length()-45);
+            }else {
+                s=path;
+            }
+            editText.setText(s);
             setTitle(customViewFragment.getFragmentTitle());
         }
 

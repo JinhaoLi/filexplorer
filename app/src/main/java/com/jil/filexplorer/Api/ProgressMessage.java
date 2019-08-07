@@ -115,6 +115,10 @@ public class ProgressMessage {
         return "已完成"+ mProgress +"%";
     }
 
+    /**
+     * 返回百分比
+     * @return 百分比
+     */
     public int getProgress(){
         if(mType== MODE_COPY){
             return (int) (nowLoacation*100/endLoacation);
@@ -125,6 +129,15 @@ public class ProgressMessage {
 
     public String getMessage(){
         String start,type;
+        if(this.in!=null&&this.in.length()>50){
+            String s =this.in.substring(this.in.length()-45);
+            this.in="..."+s;
+        }
+
+        if(this.to!=null&&this.to.length()>50){
+            String s =this.to.substring(this.to.length()-45);
+            this.to="..."+s;
+        }
         String out ="<font color=\"#1586C6\">"+this.in +"</font>";
         String to ="<font color=\"#1586C6\">"+this.to+"</font>";
         if(projectCount!=0){
@@ -178,18 +191,23 @@ public class ProgressMessage {
     public String getReMainTime(){
         long nowTime =System.currentTimeMillis()-startTime;
         nowTime= nowTime==0 ? 1:nowTime;
+        float s= (endLoacation-nowLoacation) / (nowLoacation/(nowTime/1000f));
         if(mType== MODE_COPY){
-            return "剩余时间：大约"+(endLoacation-nowLoacation) / (nowLoacation/nowTime) /1000+"秒";
+            return "剩余时间：大约"+s+"秒";
         }else {
-            long speed =(copyOverCount/nowTime)/1000;
-            speed= speed==0 ? 1:speed;
-            return "剩余时间：大约"+(projectCount- copyOverCount)  /  speed +"秒";
+            float speed_1 =(copyOverCount/(nowTime/1000f));
+            speed_1= speed_1==0 ? 1:speed_1;
+            return "剩余时间：大约"+(projectCount- copyOverCount)  /  speed_1 +"秒";
         }
     }
 
 
-    public String getCopyOverCount(){
+    public String getfileName(){
         return "名称："+ nowProjectName;
+    }
+
+    public int getOverCount(){
+        return copyOverCount;
     }
 
 }

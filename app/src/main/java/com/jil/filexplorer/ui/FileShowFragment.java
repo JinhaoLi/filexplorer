@@ -35,9 +35,7 @@ import java.util.Collections;
 import static com.jil.filexplorer.Api.FileOperation.MODE_COPY;
 import static com.jil.filexplorer.Api.FileOperation.MODE_DELETE;
 import static com.jil.filexplorer.Api.FileOperation.MODE_MOVE;
-import static com.jil.filexplorer.utils.ConstantUtils.MB;
 import static com.jil.filexplorer.utils.DialogUtils.showAlerDialog;
-import static com.jil.filexplorer.utils.FileUtils.deleteAFile;
 import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;
 import static com.jil.filexplorer.utils.MenuUtils.fileSwipeMenu;
 import static com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView.LEFT_DIRECTION;
@@ -57,6 +55,8 @@ public class FileShowFragment extends CustomViewFragment {
      */
     private FileOperation fileOperation;
     private int fileOperationType;
+
+    private Closeable closeItemMenu;
 
     public FileShowFragment() { }
 
@@ -87,26 +87,25 @@ public class FileShowFragment extends CustomViewFragment {
         fileList.setSwipeMenuItemClickListener(new OnSwipeMenuItemClickListener() {
             @Override
             public void onItemClick(Closeable closeable, int adapterPosition, int menuPosition, int direction) {
+                closeItemMenu=closeable;
                 if (menuPosition == 0 && direction == RIGHT_DIRECTION) {
                     //删除逻辑
-                    if(deleteAFile(fileInfos.get(adapterPosition))){
-                        ToastUtils.showToast(mMainActivity,"已删除！",1000);
-                    }
+                    fileOperationType=MODE_DELETE;
+                    missionList.clear();
+                    missionList.add(fileInfos.get(adapterPosition));
                     deleteItem(adapterPosition);
-                    closeable.smoothCloseMenu();
+                    deleteFile();
                 }
 
                 if (menuPosition == 1 && direction == RIGHT_DIRECTION) {
                     //属性
                     showAlerDialog(mMainActivity,fileInfos.get(adapterPosition));
-                    closeable.smoothCloseMenu();
                 }
                 if (menuPosition == 0 && direction == LEFT_DIRECTION) {
                     //复制
                     fileOperationType =MODE_COPY;
                     missionList.clear();
                     missionList.add(fileInfos.get(adapterPosition));
-                    closeable.smoothCloseMenu();
                 }
                 if (menuPosition == 1 && direction == LEFT_DIRECTION) {
                     //剪切逻辑
@@ -115,15 +114,15 @@ public class FileShowFragment extends CustomViewFragment {
                     missionList.add(fileInfos.get(adapterPosition));
                     //linearLayoutManager.findViewByPosition(adapterPosition).setAlpha(0.5f);
                     ToastUtils.showToast(mMainActivity, getString(R.string.cut), 1000);
-                    closeable.smoothCloseMenu();
                 }
+                closeable.smoothCloseMenu();
 
             }
         });
         fileList.setOnItemMoveListener(new OnItemMoveListener() {
             @Override
             public boolean onItemMove(int fromPosition, int toPosition) {
-               return itemPositionDrag(toPosition);
+                return itemPositionDrag(toPosition);
             }
 
             @Override
@@ -141,8 +140,10 @@ public class FileShowFragment extends CustomViewFragment {
     @Override
     protected void deleteItem(int adapterPosition) {
         fileInfos.remove(adapterPosition);
-        fileListAdapter.notifyItemRemoved(adapterPosition);
-        fileListAdapter.notifyItemRangeChanged(adapterPosition, fileInfos.size());
+        //fileListAdapter.notifyItemRemoved(adapterPosition);
+        fileListAdapter.notifyDataSetChanged();
+        //fileListAdapter.notifyItemRangeRemoved(adapterPosition, fileInfos.size());
+
         clearUnderBar();
     }
 
@@ -172,6 +173,8 @@ public class FileShowFragment extends CustomViewFragment {
         }
     }
 
+
+
     @Override
     public void load(String filePath, boolean isBack) {
         if (getFileListFromDir(filePath)) {
@@ -199,6 +202,12 @@ public class FileShowFragment extends CustomViewFragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         MenuUtils.addMenu(menu);
         super.onCreateOptionsMenu(menu, mMainActivity.getMenuInflater());
+    }
+
+    @Override
+    protected void fingerDownState(View v) {
+        if(closeItemMenu!=null) closeItemMenu.smoothCloseMenu();
+        super.fingerDownState(v);
     }
 
     @Override
@@ -232,6 +241,7 @@ public class FileShowFragment extends CustomViewFragment {
                 //添加
                 //CopyProgressDialog c1 = new CopyProgressDialog(mMainActivity);
                 //c1.show();
+
                 break;
             case 5:
                 //剪切
@@ -240,7 +250,12 @@ public class FileShowFragment extends CustomViewFragment {
                 break;
             case 6:
                 //刷新
-                load(mMainActivity.getEditText().getText().toString(), false);
+                String s =mMainActivity.getEditText().getText().toString();
+                if(s.startsWith("...")){
+                    load(filePath ,true);
+                }else {
+                    load(mMainActivity.getEditText().getText().toString(), false);
+                }
                 break;
             case 7:
                 //退出
@@ -275,6 +290,7 @@ public class FileShowFragment extends CustomViewFragment {
         ArrayList<FileInfo> topath =new ArrayList<>();
         topath.add(getFileInfoFromPath(filePath));
         if(missionList!=null&&missionList.size()>0){
+            progressDialog.show();
             final ActionThread acthread=new ActionThread();
             acthread.execute(missionList,topath);
             progressDialog.setDialogCloseClickListener(new DialogCloseClickListener() {
@@ -285,12 +301,9 @@ public class FileShowFragment extends CustomViewFragment {
                     acthread.cancel(true);
                 }
             });
-            progressDialog.show();
         }else {
             ToastUtils.showToast(mMainActivity,"源路径不存在",1000);
         }
-
-
 //        File in =new File(copyPath.getFilePath());
 //        File to =new File(filePath,copyPath.getFileName());
 //        if(to.exists()){
@@ -381,7 +394,7 @@ public class FileShowFragment extends CustomViewFragment {
             super.onProgressUpdate(values);
             if(values[0].getNowLoacation()>2)
                 progressDialog.setParame(values[0]);
-            if(values[0].getProgress()>=100||values[0].getNowLoacation()>=values[0].getEndLoacation()) {
+            if(values[0].getProgress()>=100||values[0].getNowLoacation()>=values[0].getEndLoacation()||(values[0].getOverCount()==values[0].getProjectCount())) {
                 if(fileOperationType==MODE_DELETE||fileOperationType==MODE_MOVE)
                     missionList.clear();
                 progressDialog.dismiss();

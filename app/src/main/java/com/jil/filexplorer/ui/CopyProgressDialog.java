@@ -13,9 +13,6 @@ import com.jil.filexplorer.Api.DialogCloseClickListener;
 import com.jil.filexplorer.Api.ProgressMessage;
 import com.jil.filexplorer.R;
 
-import static com.jil.filexplorer.utils.CopyFileUtils.stopCopyDir;
-import static com.jil.filexplorer.utils.CopyFileUtils.stopCopyFile;
-
 /**
  * 一个监测进度的dialog
  */
@@ -68,7 +65,7 @@ public class CopyProgressDialog extends AlertDialog implements View.OnClickListe
         speedText.setText(message.getSpeed());
         reMainingText.setText(message.getReMainCount());
         mTimeText.setText(message.getReMainTime());
-        mFileNameText.setText(message.getCopyOverCount());
+        mFileNameText.setText(message.getfileName());
         setProgress(message.getProgress());
    }
 

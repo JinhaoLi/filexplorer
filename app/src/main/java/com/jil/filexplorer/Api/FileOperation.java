@@ -127,6 +127,8 @@ public class FileOperation {
             progressMessage.setIn(temp.getFilePath());
             File$DirCopy(new File(temp.getFilePath()), new File(toDir.getFilePath()));
         }
+        progressMessage.setCopyOverCount(projectCount);
+        progressChangeListener.progressChang(progressMessage);
     }
 
     private void File$DirCopy(File inFile, File toDir) {
