@@ -77,13 +77,18 @@ public class FileListAdapter extends SwipeMenuAdapter<FileListAdapter.DefaultVie
 
         holder.itemView.setOnTouchListener(new OnDoubleClickListener(new OnDoubleClickListener.DoubleClickCallback() {
             @Override
-            public void onDoubleClick() {
+            public void onDoubleClick(View view) {
                 if (fileInfo.isDir()) {
                     String path = fileInfo.getFilePath();
                     mCustomViewFragment.load(path, false);
                 } else {
                     FileUtils.viewFile(mMaintivity, fileInfo.getFilePath());
+                    if(fileInfo.isSelected()){
+                        fileInfo.setSelected(false);
+                        view.setBackgroundColor(NORMAL_COLOR);
+                    }
                 }
+                mCustomViewFragment.refreshUnderBar();
             }
 
             @Override

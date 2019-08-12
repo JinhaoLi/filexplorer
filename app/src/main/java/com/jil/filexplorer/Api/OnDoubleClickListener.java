@@ -26,7 +26,7 @@ public class OnDoubleClickListener implements View.OnTouchListener {
         /**
          * 双击
          */
-        void onDoubleClick();
+        void onDoubleClick(View view);
 
         /**
          * 按下手指300ms之后抬起手指就会触发
@@ -59,7 +59,7 @@ public class OnDoubleClickListener implements View.OnTouchListener {
                 long secondClick = System.currentTimeMillis();//记录第二次点击时间
                 if (secondClick - firstClick < totalTime) {//判断二次点击时间间隔是否在设定的间隔时间之内
                     if (mCallback != null) {
-                        mCallback.onDoubleClick();
+                        mCallback.onDoubleClick(v);
                     }
                     count = 0;
                     firstClick = 0;

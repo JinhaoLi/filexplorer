@@ -120,6 +120,9 @@ public class ProgressMessage {
      * @return 百分比
      */
     public int getProgress(){
+        if(endLoacation==0){
+            return 100;
+        }
         if(mType== MODE_COPY){
             return (int) (nowLoacation*100/endLoacation);
         }else {

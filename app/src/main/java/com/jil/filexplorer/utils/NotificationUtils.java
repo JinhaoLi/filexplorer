@@ -56,7 +56,6 @@ public class NotificationUtils {
         //if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             pendingIntent = PendingIntent.getActivity(context, 0, intent,PendingIntent.FLAG_IMMUTABLE);
         //}
-
         //通知的构建过程基本与默认相同
         Notification notification = builder
                 .setSmallIcon(R.mipmap.ic_launcher)//通知的构建过程基本与默认相同

@@ -117,8 +117,9 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
         sortType.setOnClickListener(this);
         liner.setOnClickListener(this);
         grid.setOnClickListener(this);
-        fileList.setLongPressDragEnabled(true);// 开启长按拖拽
         setHasOptionsMenu(true);//onCreateOptionsMenu生效条件
+
+        fileList.setLongPressDragEnabled(true);// 开启长按拖拽
         //item拖动状态改变时调用
         fileList.setOnItemStateChangedListener(new OnItemStateChangedListener() {
             @Override
@@ -211,12 +212,12 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
                 break;
             case R.id.imageView5:
                 makeLinerLayout();
-                fileList.setLongPressDragEnabled(false);
+                //fileList.setLongPressDragEnabled(false);
                 view.setBackgroundColor(GIRD_LINER_LAYOUT);
                 grid.setBackgroundColor(NORMAL_COLOR);
                 break;
             case R.id.imageView3:
-                fileList.setLongPressDragEnabled(true);
+                //fileList.setLongPressDragEnabled(true);
                 if (spanCount < 7 && linearLayoutManager instanceof GridLayoutManager)
                     spanCount++;
                 else if(spanCount>=7 && linearLayoutManager instanceof GridLayoutManager)
@@ -397,13 +398,13 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
 
     @SuppressLint("SetTextI18n")
     protected void clearUnderBar() {
-        underBarInfo.setText(fileInfos.size() + getString(R.string.how_many_item));
+        underBarInfo.setText("\t"+fileInfos.size() + getString(R.string.how_many_item));
     }
 
     @SuppressLint("SetTextI18n")
-    public void refreshUnderBar() {
+    public int refreshUnderBar() {
         ArrayList<FileInfo> selectList = getSelectedList();
-        String how = selectList.size() == 0 ? "" : getString(R.string.select) + selectList.size() + getString(R.string.how_many_item);
+        String how = selectList.size() == 0 ? "" : "|\t"+getString(R.string.select) + selectList.size() + getString(R.string.how_many_item);
         long size = 0L;
         boolean haveDir = false;
         String big;
@@ -417,11 +418,12 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
         if (haveDir || selectList.size() == 0) {
             big = "";
         } else {
-            big = size > GB ? stayFrieNumber((float) size / GB) + "GB"
-                    : size > MB ? stayFrieNumber((float) size / MB) + "MB"
-                    : stayFrieNumber((float) size / KB) + "KB";
+            big = size > GB ? stayFrieNumber((float) size / GB) + "GB"+"\t\t|"
+                    : size > MB ? stayFrieNumber((float) size / MB) + "MB"+"\t\t|"
+                    : stayFrieNumber((float) size / KB) + "KB"+"\t\t|";
         }
-        underBarInfo.setText(fileInfos.size() + getString(R.string.how_many_item) + "\t\t\t" + how + "\t\t\t" + big);
+        underBarInfo.setText("\t"+fileInfos.size() + getString(R.string.how_many_item) + "\t\t" + how + "\t\t" + big);
+        return selectList.size();
     }
 
     private static int makeItemLayoutRes(int spanCount) {

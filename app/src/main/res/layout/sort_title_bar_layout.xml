@@ -22,7 +22,8 @@
             android:layout_weight="5"
             android:background="@drawable/sort_button_background"
             android:singleLine="true"
-            android:text="名称" />
+            android:text="名称"
+            android:textColor="@android:color/tertiary_text_light" />
 
         <View
             android:id="@+id/view2"
@@ -36,7 +37,8 @@
             android:layout_height="match_parent"
             android:background="@drawable/sort_button_background"
             android:singleLine="true"
-            android:text="修改日期" />
+            android:text="修改日期"
+            android:textColor="@android:color/tertiary_text_light"/>
 
         <View
             android:id="@+id/view3"
@@ -51,7 +53,8 @@
             android:layout_weight="7"
             android:background="@drawable/sort_button_background"
             android:singleLine="true"
-            android:text="类型" />
+            android:text="类型"
+            android:textColor="@android:color/tertiary_text_light"/>
 
         <View
             android:id="@+id/view4"
@@ -66,7 +69,8 @@
             android:layout_weight="7"
             android:background="@drawable/sort_button_background"
             android:singleLine="true"
-            android:text="大小" />
+            android:text="大小"
+            android:textColor="@android:color/tertiary_text_light"/>
 
     </LinearLayout>
 

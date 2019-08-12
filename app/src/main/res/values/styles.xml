@@ -6,17 +6,24 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="actionOverflowMenuStyle">@style/optionMenuBlue</item>
+        <item name="android:textColor">@android:color/white</item>
     </style>
 
-    <style name="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-    </style>
-
-    <style name="MyTheme" parent="AppTheme.NoActionBar">
+    <style name="MyThemeGray" parent="AppTheme.NoActionBar">
         <item name="colorAccent">@color/colorPrimary_black</item>
         <item name="colorPrimary">@color/colorPrimary_black</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark_black</item>
+        <item name="actionOverflowMenuStyle">@style/optionMenuGray</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="optionMenuGray" parent="Widget.AppCompat.Light.ActionBar">
+        <item name="android:popupBackground">@color/colorPrimary_black</item>
+    </style>
+
+    <style name="optionMenuBlue" parent="Widget.AppCompat.ActionBar">
+        <item name="android:popupBackground">@color/colorPrimary</item>
     </style>
 
 
@@ -24,7 +31,6 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
-
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 

@@ -32,4 +32,5 @@
     <string name="select">已选择</string>
     <string name="re_name">重命名</string>
     <string name="paste">粘贴</string>
+    <string name="action">操作</string>
 </resources>

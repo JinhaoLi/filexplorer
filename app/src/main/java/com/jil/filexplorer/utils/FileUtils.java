@@ -1,5 +1,7 @@
 package com.jil.filexplorer.utils;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -14,12 +16,15 @@ import android.text.TextUtils;
 import android.view.MotionEvent;
 
 import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import com.jil.filexplorer.BuildConfig;
 import com.jil.filexplorer.Api.FileInfo;
 
 import java.io.Closeable;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -32,6 +37,49 @@ import java.util.Date;
 import java.util.List;
 
 public class FileUtils {
+
+    /**
+     * 请求授权
+     */
+    public static void requestPermission(Activity activity) {
+        if (ContextCompat.checkSelfPermission( activity ,
+                Manifest.permission.READ_EXTERNAL_STORAGE ) != PackageManager.PERMISSION_GRANTED) { //表示未授权时
+            //进行授权
+            ActivityCompat.requestPermissions( activity , new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE} , 1 );
+        }
+    }
+
+    public static boolean RootCommand(String command){
+        Process process =null;
+        DataOutputStream os =null;
+
+        try {
+            process =Runtime.getRuntime().exec("su");
+            //process = Runtime.getRuntime().exec("sudo"); //切换到root帐号
+            os =new DataOutputStream(process.getOutputStream());
+            os.writeBytes(command+"\n");
+            os.writeBytes("exit\n");
+            os.flush();
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            LogUtils.d("*** DEBUG ***", "ROOT REE" + e.getMessage());
+            return false;
+        }finally {
+            if(os!=null){
+                try {
+                    os.close();
+                    process.destroy();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            LogUtils.d("*** DEBUG ***", "Root SUC ");
+            return true;
+        }
+
+    }
 
     public static FileInfo getFileInfoFromFile(File file){
         boolean isDir =file.isDirectory();

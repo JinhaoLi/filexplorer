@@ -3,6 +3,7 @@ package com.jil.filexplorer;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
@@ -18,6 +19,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ListPopupWindow;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.Toolbar;
@@ -38,12 +40,13 @@ import java.io.File;
 import java.util.ArrayList;
 
 import static com.jil.filexplorer.Activity.ProgressActivity.setOnActionFinish;
+import static com.jil.filexplorer.utils.FileUtils.requestPermission;
 import static com.jil.filexplorer.utils.NotificationUtils.registerNotifty;
 
 
 public class MainActivity extends ClearActivity implements NavigationView.OnNavigationItemSelectedListener, ProgressActivity.OnActionFinish, CopyFileUtils.CopyOverListener {
     //路径输入
-    private EditText editText;
+    private EditText pathEdit;
     private boolean activityIsRunning;
     //actionBar 图标资源
     private int mIconRes;
@@ -58,14 +61,31 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     DrawerLayout drawer;
     FragmentTransaction fragmentTransaction;
     private ArrayList<CustomViewFragment> fragments;
-    private String sdcardPath = Environment.getExternalStorageDirectory().getPath();
+    private int refuseCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        registerNotifty(this);//注册通知渠道
+        requestPermission(this);//动态申请权限
         activityIsRunning=true;
-        registerNotifty(MainActivity.this);//注册通知渠道
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                customViewFragment.load(pathEdit.getText().toString(), true);
+            } else { //拒绝权限申请
+                if (refuseCount >= 2) {
+                    finish();
+                    return;
+                }
+                refuseCount++;
+                requestPermission(this);//动态申请权限
+            }
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -76,21 +96,21 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
             @Override
             public void onClick(View view) {
                 showListPopulWindow();
-                editText.setFocusable(true);
-                editText.selectAll();
-                editText.setFocusableInTouchMode(true);
-                editText.requestFocus();
-                editText.setTextColor(Color.BLACK);
+                pathEdit.setFocusable(true);
+                pathEdit.selectAll();
+                pathEdit.setFocusableInTouchMode(true);
+                pathEdit.requestFocus();
+                pathEdit.setTextColor(Color.BLACK);
             }
         });
-        editText.setOnTouchListener(new View.OnTouchListener() {
+        pathEdit.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                editText.setFocusable(true);
-                editText.selectAll();
-                editText.setFocusableInTouchMode(true);
-                editText.requestFocus();
-                editText.setTextColor(Color.BLACK);
+                pathEdit.setFocusable(true);
+                pathEdit.selectAll();
+                pathEdit.setFocusableInTouchMode(true);
+                pathEdit.requestFocus();
+                pathEdit.setTextColor(Color.BLACK);
                 return false;
             }
         });
@@ -116,7 +136,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         fragments = new ArrayList<>();
         fragmentManager = getSupportFragmentManager();
         pageRound = findViewById(R.id.fragment_page);
-        editText = (EditText) findViewById(R.id.editText);
+        pathEdit = (EditText) findViewById(R.id.editText);
         upDir = findViewById(R.id.imageButton2);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -211,8 +231,8 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                 if (imm != null) {
                     assert v != null;
                     hideInput();
-                    if (editText != null) {
-                        editText.clearFocus();
+                    if (pathEdit != null) {
+                        pathEdit.clearFocus();
                     }
                 }
             }
@@ -223,8 +243,8 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     }
 
     private void hideInput() {
-        editText.setFocusable(false);
-        editText.setTextColor(Color.WHITE);
+        pathEdit.setFocusable(false);
+        pathEdit.setTextColor(Color.WHITE);
     }
 
     private void showListPopulWindow() {
@@ -233,8 +253,8 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         }
         final ListPopupWindow listPopupWindow;
         listPopupWindow = new ListPopupWindow(this);
-        listPopupWindow.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, historyPath));//用android内置布局，或设计自己的样式
-        listPopupWindow.setAnchorView(editText);//以哪个控件为基准，在该处以mEditText为基准
+        listPopupWindow.setAdapter(new ArrayAdapter<>(this, R.layout.listpopup_window_item_layout, historyPath));//用android内置布局，或设计自己的样式
+        listPopupWindow.setAnchorView(pathEdit);//以哪个控件为基准，在该处以mEditText为基准
         listPopupWindow.setModal(true);
 
         listPopupWindow.setOnItemClickListener(new AdapterView.OnItemClickListener() {//设置项点击监听
@@ -255,7 +275,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
      */
     public boolean isShouldHideInput(View v, MotionEvent event) {
         if (v != null && (v instanceof EditText)) {
-            //editText = (EditText) v;
+            //pathEdit = (EditText) v;
             int[] leftTop = {0, 0};
             //获取输入框当前的location位置
             v.getLocationInWindow(leftTop);
@@ -276,7 +296,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     }
 
     public void refresh(String path) {
-        if (editText != null && path != null && !path.equals("")) {
+        if (pathEdit != null && path != null && !path.equals("")) {
             setOnActionFinish(this);
             mPath = path;
             String s;
@@ -285,14 +305,14 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
             }else {
                 s=path;
             }
-            editText.setText(s);
+            pathEdit.setText(s);
             setTitle(customViewFragment.getFragmentTitle());
         }
 
     }
 
-    public EditText getEditText() {
-        return editText;
+    public EditText getPathEdit() {
+        return pathEdit;
     }
 
     @Override

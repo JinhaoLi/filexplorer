@@ -1,6 +1,14 @@
 package com.jil.filexplorer.Api;
 
+import android.app.NotificationManager;
+import android.content.Context;
+import android.os.Message;
+
+import androidx.core.app.NotificationCompat;
+
+import com.jil.filexplorer.Activity.AfterIntentService;
 import com.jil.filexplorer.utils.LogUtils;
+import com.jil.filexplorer.utils.NotificationUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,6 +18,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 
+import static android.content.Context.NOTIFICATION_SERVICE;
+import static com.jil.filexplorer.utils.ConstantUtils.CHANNEL_ID;
+import static com.jil.filexplorer.utils.ConstantUtils.MB;
 import static com.jil.filexplorer.utils.FileUtils.closeAnyThing;
 import static com.jil.filexplorer.utils.FileUtils.deleteDirectory;
 import static com.jil.filexplorer.utils.FileUtils.deleteSingleFile;
@@ -19,34 +30,71 @@ import static com.jil.filexplorer.utils.FileUtils.deleteSingleFile;
  * 必须在非UI线程调用
  */
 public class FileOperation {
-    public final static int MODE_COPY = -4;
-    public final static int MODE_MOVE = -5;
+    public final static int MODE_COPY   = -4;
+    public final static int MODE_MOVE   = -5;
     public final static int MODE_DELETE = -6;
     public final static int MODE_RENAME = -7;
-    private int ID;
-    private int mode;
-    private ArrayList<FileInfo> inFiles;
-    private long actionSize;
-    private long overSize;
-    private boolean running;
-    private int overCount;
-    private ProgressMessage progressMessage;
-    private ProgressChangeListener progressChangeListener;
-    private FileInfo toDir;
+    private Context context;
     private static FileOperation fileOperation;
+    /**
+     * 任务模式
+     */
+    private int mode;
+    /**
+     * 任务队列
+     */
+    private ArrayList<FileInfo> inFiles;
+    /**
+     * 任务总大小
+     */
+    private long actionSize;
+    /**
+     * 已完成大小
+     */
+    private long overSize;
+    /**
+     * 运行状态
+     */
+    private static boolean running;
+    /**
+     * 完成项目数
+     */
+    private int overCount;
+    /**
+     * 进度信息
+     */
+    private ProgressMessage progressMessage;
+    /**
+     * 目标路径
+     */
+    private FileInfo toDir;
+    /**
+     * 任务总数
+     */
     private int projectCount;
 
-    private FileOperation(int ID) {
-        this.ID = ID;
+    private static AfterIntentService.UpdateUI updateUI;
+    private static NotificationCompat.Builder builder;
+    private static NotificationManager notificationManager;
+
+    public static void setUpdateUI(AfterIntentService.UpdateUI updateui){
+        updateUI=updateui;
+    }
+
+    private FileOperation(Context context) {
+        this.context =context;
     }
 
     public void addProgressChangeListener(ProgressChangeListener progressChangeListener) {
-        this.progressChangeListener = progressChangeListener;
+        //this.progressChangeListener = progressChangeListener;
     }
 
 
-    public static FileOperation with(int id) {
-        fileOperation = new FileOperation(id);
+    public static FileOperation with(Context context) {
+        fileOperation = new FileOperation(context);
+        builder = new NotificationCompat.Builder(context, CHANNEL_ID);
+        notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+        NotificationUtils.setNotification(context, builder, notificationManager,"复制任务进行中...");
         return fileOperation;
     }
 
@@ -127,8 +175,8 @@ public class FileOperation {
             progressMessage.setIn(temp.getFilePath());
             File$DirCopy(new File(temp.getFilePath()), new File(toDir.getFilePath()));
         }
-        progressMessage.setCopyOverCount(projectCount);
-        progressChangeListener.progressChang(progressMessage);
+//        progressMessage.setCopyOverCount(projectCount);
+//        progressChangeListener.progressChang(progressMessage);
     }
 
     private void File$DirCopy(File inFile, File toDir) {
@@ -158,6 +206,14 @@ public class FileOperation {
                 filesDelete();
                 break;
         }
+        misstionFinish();
+    }
+
+    private void misstionFinish() {
+        Message finishMesssage = new Message();
+        finishMesssage.what = -1;
+        if (updateUI != null) updateUI.updateUI(finishMesssage);
+        notificationManager.cancel(1410);
     }
 
     private void filesDelete() {
@@ -175,7 +231,7 @@ public class FileOperation {
             }
         }
         progressMessage.setNowLoacation(actionSize);
-        progressChangeListener.progressChang(progressMessage);
+        //progressChangeListener.progressChang(progressMessage);
     }
 
     private void filesMove() {
@@ -191,10 +247,10 @@ public class FileOperation {
                 overCount++;
                 progressMessage.setCopyOverCount(overCount);
             }
-            sendProgress(f.length());
+            refreshProgresss(f.length());
         }
         progressMessage.setNowLoacation(actionSize);
-        progressChangeListener.progressChang(progressMessage);
+        //progressChangeListener.progressChang(progressMessage);
 
     }
 
@@ -209,7 +265,7 @@ public class FileOperation {
         return b;
     }
 
-    public void stopAction() {
+    public static void stopAction() {
         running = false;
     }
 
@@ -237,7 +293,7 @@ public class FileOperation {
                 out.write(buffer);
                 buffer.clear();
                 size -= 1024 * 1024 * 20;
-                sendProgress(size > 0 ? 1024 * 1024 * 20 : (1024 * 1024 * 20) + size);
+                refreshProgresss(size > 0 ? 1024 * 1024 * 20 : (1024 * 1024 * 20) + size);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -255,9 +311,26 @@ public class FileOperation {
     private void sendProgress(long add) {
         overSize += add;
         progressMessage.setNowLoacation(overSize);
-        if (actionSize > 0 && progressChangeListener != null)
-            progressChangeListener.progressChang(progressMessage);
+        //if (actionSize > 0 && progressChangeListener != null)
+           // progressChangeListener.progressChang(progressMessage);
 
+    }
+
+    /**
+     * 复制文件时发送进度
+     */
+    private void refreshProgresss(long size) {
+        Message message = new Message();
+        LogUtils.i("已复制：", progressMessage.getProgress() + "%--" + overSize / MB);
+        progressMessage.setCopyOverCount(overCount);
+        overSize += size;
+        progressMessage.setNowLoacation(overSize);
+        overSize=progressMessage.getNowLoacation();
+        message.obj = progressMessage;
+        message.what = progressMessage.getProgress();
+        if (updateUI != null) updateUI.updateUI(message);
+        builder.setProgress(100, progressMessage.getProgress(), false);
+        notificationManager.notify(1410, builder.build());
     }
 
     /**
@@ -293,7 +366,7 @@ public class FileOperation {
         if (file.exists() && file.isFile()) {
             overCount++;
             progressMessage.setCopyOverCount(overCount);
-            sendProgress(file.length());
+            refreshProgresss(file.length());
             if (file.delete()) {
                 LogUtils.i("--Method--", "Copy_Delete.deleteSingleFile: 删除单个文件" + filePath$Name + "成功！");
                 return true;
@@ -352,5 +425,7 @@ public class FileOperation {
             return false;
         }
     }
+
+
 
 }

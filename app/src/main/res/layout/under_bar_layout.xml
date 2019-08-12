@@ -71,7 +71,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="TextView" />
+        android:text="0个项目  |"
+        android:textColor="@android:color/tertiary_text_light" />
 
     <ImageView
         android:id="@+id/imageView5"

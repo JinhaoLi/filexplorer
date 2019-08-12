@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.jil.filexplorer.Api.FileOperation;
 import com.jil.filexplorer.Api.ProgressMessage;
 import com.jil.filexplorer.R;
 
@@ -41,7 +42,6 @@ public class ProgressActivity extends AppCompatActivity implements AfterIntentSe
                 remainTime.setText(progressMessage.getReMainTime());
                 remainCount.setText(progressMessage.getReMainCount());
             }
-
         }
     };
 
@@ -53,7 +53,13 @@ public class ProgressActivity extends AppCompatActivity implements AfterIntentSe
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        AfterIntentService.setUpdateUI(this);
+        //AfterIntentService.setUpdateUI(this);
+        Intent i =getIntent();
+        boolean b =i.getBooleanExtra("action_progress",false);
+        if(b){
+            finish();
+        }
+        FileOperation.setUpdateUI(this);
         super.onCreate(savedInstanceState);
         requestWindowFeature( Window.FEATURE_LEFT_ICON);
         setContentView(R.layout.progress_dialog_layout);
@@ -76,8 +82,9 @@ public class ProgressActivity extends AppCompatActivity implements AfterIntentSe
         close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AfterIntentService.stop();
-                //finish();
+                //AfterIntentService.stop();
+                FileOperation.stopAction();
+                finish();
             }
         });
     }
