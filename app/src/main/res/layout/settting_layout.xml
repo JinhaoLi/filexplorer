@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SettingActivity">
+    tools:context=".SettingActivity"
+    android:orientation="vertical">
 
-    <ScrollView
+    <TextView
+        android:id="@+id/appbar_title"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="50dp"
+        android:background="@color/colorPrimary_black"
+        android:gravity="center_vertical"
+        android:text="  资源管理器设置"
+        android:textColor="@android:color/background_light"
+        android:textSize="18sp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
-    </ScrollView>
-
-    <Switch
-        android:id="@+id/switch1"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/set_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="主题颜色" />
-</FrameLayout>
+        android:layout_height="match_parent" />
+
+</LinearLayout>

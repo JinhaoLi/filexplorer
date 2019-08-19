@@ -24,26 +24,35 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <service
-            android:name=".Activity.AfterIntentService"
-            android:exported="false"></service>
+        <activity android:name=".ImageDisplayActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            <data
+                android:mimeType="image/jpeg"
+                android:scheme="file" />
+            </intent-filter>
+        </activity>
         <!-- android:name="android.support.multidex.MultiDexApplication"> -->
-        <activity android:name=".SettingActivity" />
+        <activity android:name=".SettingActivity"
+            android:theme="@style/MyThemeGray"/>
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Activity.ProgressActivity"
-            android:theme="@style/AppTheme.jilNoActionBar"/>
-        <activity android:name=".Activity.ProgerssDialogActivity"
-            android:theme="@style/AppTheme.jilNoActionBar"/>
-        <!-- 安卓api大于23使用外部应用程序打开文件必须使用次方法 -->
+        <activity
+            android:name=".Activity.ProgressActivity"
+            android:theme="@style/AppTheme.jilNoActionBar" />
+        <activity
+            android:name=".Activity.ProgerssDialogActivity"
+            android:theme="@style/AppTheme.jilNoActionBar" /> <!-- 安卓api大于23使用外部应用程序打开文件必须使用次方法 -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.jil.filexplorer.fileprovider"

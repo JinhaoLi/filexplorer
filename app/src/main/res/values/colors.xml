@@ -13,5 +13,6 @@
     <color name="RedPrimary">#C61515</color>
     <color name="RedPrimaryLight">#FF2727</color>
     <color name="colorPrimary_black">#424242</color>
-    <color name="colorPrimaryDark_black">#000000</color>
+    <color name="colorPrimaryDark_black">#353535</color>
+    <color name="half_alp">#79424242</color>
 </resources>

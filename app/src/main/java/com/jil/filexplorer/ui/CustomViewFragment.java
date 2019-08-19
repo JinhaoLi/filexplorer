@@ -2,29 +2,52 @@ package com.jil.filexplorer.ui;
 
 import android.annotation.SuppressLint;
 ;
+import android.app.Activity;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ListPopupWindow;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.jil.filexplorer.Activity.ProgressActivity;
 import com.jil.filexplorer.Api.FileInfo;
+import com.jil.filexplorer.Api.FileOperation;
+import com.jil.filexplorer.Api.OnItemTouchListener;
+import com.jil.filexplorer.Api.ProgressMessage;
 import com.jil.filexplorer.MainActivity;
 import com.jil.filexplorer.R;
+import com.jil.filexplorer.SettingActivity;
 import com.jil.filexplorer.adapter.FileListAdapter;
 import com.jil.filexplorer.Api.SortComparator;
 import com.jil.filexplorer.utils.LogUtils;
+import com.jil.filexplorer.utils.MenuUtils;
+import com.jil.filexplorer.utils.ToastUtils;
 import com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView;
 import com.yanzhenjie.recyclerview.swipe.touch.OnItemStateChangedListener;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
+
+import static com.jil.filexplorer.Activity.ProgressActivity.setOnActionFinish;
+import static com.jil.filexplorer.Api.FileOperation.MODE_COPY;
+import static com.jil.filexplorer.Api.FileOperation.MODE_DELETE;
+import static com.jil.filexplorer.Api.FileOperation.MODE_MOVE;
+import static com.jil.filexplorer.Api.SettingParam.saveSharedPreferences;
 import static com.jil.filexplorer.Api.SortComparator.SORT_BY_DATE;
 import static com.jil.filexplorer.Api.SortComparator.SORT_BY_DATE_REV;
 import static com.jil.filexplorer.Api.SortComparator.SORT_BY_NAME;
@@ -34,6 +57,7 @@ import static com.jil.filexplorer.Api.SortComparator.SORT_BY_SIZE_REV;
 import static com.jil.filexplorer.Api.SortComparator.SORT_BY_TYPE;
 import static com.jil.filexplorer.Api.SortComparator.SORT_BY_TYPE_REV;
 import static com.jil.filexplorer.utils.ConstantUtils.CAN_MOVE_COLOR;
+import static com.jil.filexplorer.utils.ConstantUtils.DARK_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.GB;
 import static com.jil.filexplorer.utils.ConstantUtils.GIRD_LINER_LAYOUT;
 import static com.jil.filexplorer.utils.ConstantUtils.KB;
@@ -44,115 +68,99 @@ import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
 import static com.jil.filexplorer.utils.FileUtils.getDistance;
 import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
 
-public abstract class CustomViewFragment extends Fragment implements View.OnClickListener {
+public abstract class CustomViewFragment extends Fragment {
     protected final static String TAG = "CustomViewFragment";
     protected String fragmentTitle;
     protected MainActivity mMainActivity;
     private View rootView;
-    protected TextView underBarInfo;
+    private String underBarInfos;
     protected String filePath;
     protected ArrayList<FileInfo> fileInfos;
     protected FileListAdapter fileListAdapter;
-    protected SwipeMenuRecyclerView fileList;
+    protected RecyclerView fileList;
+    public boolean menuVisible;
+    //全选按钮可见状态
+    public boolean allSelect=false;
+
+    private boolean isRecovery;
+
+    public void addFileInfos(ArrayList<FileInfo> fileInfos){
+        this.fileInfos.addAll(fileInfos);
+        fileListAdapter.notifyDataSetChanged();
+    }
+    public void addFileInfo(FileInfo fileInfos){
+        this.fileInfos.add(fileInfos);
+        fileListAdapter.notifyDataSetChanged();
+    }
+
+    public void removeFileInfos(ArrayList<FileInfo> fileInfos){
+        this.fileInfos.removeAll(fileInfos);
+        fileListAdapter.notifyDataSetChanged();
+    }
+
     //记录上次经过项
     protected int outOfFromPosition;
     //记录位置是否已经改变
     protected boolean selectPositionChange = true;
     protected LinearLayoutManager linearLayoutManager;
     protected SortComparator comparator = new SortComparator(SORT_BY_NAME);
-    //顶部排序栏,底部操作栏
-    private FrameLayout topBar;
-    protected FrameLayout underBar;
-    //列名
-    private TextView sortName, sortDate, sortType, sortSize;
+
     protected int longClickPosition;
-    //排列方式按钮
-    protected ImageView liner, grid;
+
     //grid下一行多少个
     protected int spanCount = 4;
 
-    public CustomViewFragment(String filePath) {
-        super();
+    public CustomViewFragment(Activity activity,String filePath) {
+        this.mMainActivity =(MainActivity)activity;
         this.filePath = filePath;
-    }
-
-    public CustomViewFragment() {
-        super();
     }
 
     @SuppressLint({"ClickableViewAccessibility", "ResourceType"})
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = initView(inflater, container);
+        if(!isRecovery)
         initAction();
         return v;
     }
 
     protected View initView(LayoutInflater inflater, ViewGroup container) {
-        mMainActivity = (MainActivity) getActivity();
-        mMainActivity.setCustomViewFragment(this);
-        rootView = inflater.inflate(R.layout.fragment_file_view_layout, container, false);
-        topBar = rootView.findViewById(R.id.top_bar);
-
-        fileList = rootView.findViewById(R.id.file_list_view);
-
-        underBar = rootView.findViewById(R.id.under_bar);
-        underBarInfo = underBar.findViewById(R.id.textView6);
-        liner = underBar.findViewById(R.id.imageView5);
-        grid = underBar.findViewById(R.id.imageView3);
-
-        sortName = rootView.findViewById(R.id.textView2);
-        sortDate = rootView.findViewById(R.id.textView3);
-        sortSize = rootView.findViewById(R.id.textView5);
-        sortType = rootView.findViewById(R.id.textView4);
-
+        if(rootView==null){
+            isRecovery=false;
+            rootView = inflater.inflate(R.layout.fragment_file_view_layout, container, false);
+            fileList = rootView.findViewById(R.id.file_list_view);
+        }else {
+            isRecovery=true;
+        }
         return rootView;
     }
 
     @SuppressLint("ClickableViewAccessibility")
     protected void initAction() {
-        sortName.setOnClickListener(this);
-        sortDate.setOnClickListener(this);
-        sortSize.setOnClickListener(this);
-        sortType.setOnClickListener(this);
-        liner.setOnClickListener(this);
-        grid.setOnClickListener(this);
-        setHasOptionsMenu(true);//onCreateOptionsMenu生效条件
+        //setHasOptionsMenu(true);//onCreateOptionsMenu生效条件
 
-        fileList.setLongPressDragEnabled(true);// 开启长按拖拽
+        //fileList.setLongPressDragEnabled(true);// 开启长按拖拽
         //item拖动状态改变时调用
-        fileList.setOnItemStateChangedListener(new OnItemStateChangedListener() {
-            @Override
-            public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int i) {
-                LogUtils.i(getClass().getName() + ":167", i + "");
-                if (i == 2) { //i == 2选项被选中
-                    fingerDownState(viewHolder.itemView);
-                } else if (i == 0) { //i == 0 选中项被释放
-                    fingerUpState(viewHolder.itemView);
-                }
-            }
-        });
-        sacleIcon();
+//        fileList.setOnItemStateChangedListener(new OnItemStateChangedListener() {
+//            @Override
+//            public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int i) {
+//                LogUtils.i(getClass().getName() + ":167", i + "");
+//                if (i == 2) { //i == 2选项被选中
+//                    fingerDownState(viewHolder.itemView);
+//                } else if (i == 0) { //i == 0 选中项被释放
+//                    fingerUpState(viewHolder.itemView);
+//                }
+//            }
+//        });
     }
 
-    protected void makeLinerLayout() {
-        linearLayoutManager = new LinearLayoutManager(mMainActivity);
-        fileListAdapter = new FileListAdapter(fileInfos, this, mMainActivity, R.layout.file_list_item_layout);
-        fileList.setAdapter(fileListAdapter);
-        fileList.setLayoutManager(linearLayoutManager);
-    }
 
-    protected void makeGridLayout(int spanCount, int layoutRes) {
-        linearLayoutManager = new GridLayoutManager(mMainActivity, spanCount);
-        fileListAdapter = new FileListAdapter(fileInfos, this, mMainActivity, layoutRes);
-        fileList.setAdapter(fileListAdapter);
-        fileList.setLayoutManager(linearLayoutManager);
 
-    }
+
 
     protected abstract void deleteItem(int adapterPosition);
 
-    protected abstract boolean getFileListFromDir(String filePath);
+    protected abstract boolean getFileListFromDir(String filePath,boolean isBack);
 
     public String getFilePath() {
         return filePath;
@@ -164,14 +172,21 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
 
 
     /**
-     * 刷新
-     *
+     * 载入刷新
      * @param filePath
      * @param isBack
      */
     public abstract void load(String filePath, boolean isBack);
 
-    protected void sortReFresh(int sortType) {
+    public MainActivity getmMainActivity() {
+        return mMainActivity;
+    }
+
+    public int getSortType(){
+        return comparator.getSortType();
+    }
+
+    public void sortReFresh(int sortType) {
         try {
             comparator.setSortType(sortType);
             Collections.sort(fileInfos, comparator);
@@ -180,54 +195,6 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
             Collections.sort(fileInfos, comparator);
         }
         fileListAdapter.notifyItemRangeChanged(0, fileInfos.size());
-    }
-
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.textView2:
-                if (comparator.getSortType() == SORT_BY_NAME)
-                    sortReFresh(SORT_BY_NAME_REV);
-                else
-                    sortReFresh(SORT_BY_NAME);
-                break;
-            case R.id.textView3:
-                if (comparator.getSortType() == SORT_BY_DATE)
-                    sortReFresh(SORT_BY_DATE_REV);
-                else
-                    sortReFresh(SORT_BY_DATE);
-                break;
-            case R.id.textView5:
-                if (comparator.getSortType() == SORT_BY_SIZE)
-                    sortReFresh(SORT_BY_SIZE_REV);
-                else
-                    sortReFresh(SORT_BY_SIZE);
-                break;
-            case R.id.textView4:
-                if (comparator.getSortType() == SORT_BY_TYPE)
-                    sortReFresh(SORT_BY_TYPE_REV);
-                else
-                    sortReFresh(SORT_BY_TYPE);
-                break;
-            case R.id.imageView5:
-                makeLinerLayout();
-                //fileList.setLongPressDragEnabled(false);
-                view.setBackgroundColor(GIRD_LINER_LAYOUT);
-                grid.setBackgroundColor(NORMAL_COLOR);
-                break;
-            case R.id.imageView3:
-                //fileList.setLongPressDragEnabled(true);
-                if (spanCount < 7 && linearLayoutManager instanceof GridLayoutManager)
-                    spanCount++;
-                else if(spanCount>=7 && linearLayoutManager instanceof GridLayoutManager)
-                    spanCount=2;
-                makeGridLayout(spanCount, makeItemLayoutRes(spanCount));
-                view.setBackgroundColor(GIRD_LINER_LAYOUT);
-                liner.setBackgroundColor(NORMAL_COLOR);
-                break;
-        }
-
     }
 
 
@@ -322,7 +289,7 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
      * @param start
      * @param end
      */
-    private void selectSomePosition(int start, int end) {
+    protected void selectSomePosition(int start, int end) {
         if (start != -1 && start != end) {
             int s = start > end ? end : start;
             int e = start > end ? start : end;
@@ -342,8 +309,58 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
                 }
             }
         }
+        refreshUnderBar();
+    }
+
+    public void unSelectAll(){
+        for(FileInfo fileInfo:fileInfos){
+            if(fileInfo.isSelected()){
+                fileInfo.setSelected(false);
+                int i =fileInfos.indexOf(fileInfo);
+                View selectItem = linearLayoutManager.findViewByPosition(i);
+                if (selectItem != null)
+                    selectItem.setBackgroundColor(NORMAL_COLOR);
+            }
+        }
+        mMainActivity.setOperationGroupVisible(false);
+        mMainActivity.setAllSelectIco(false);
+    }
+
+    /**
+     * 全部选项选中
+     * @return 是全选为true
+     */
+    public boolean selectAllPosition() {
+        boolean isAll;
+        if (getSelectedList().size()==fileInfos.size()) {
+            for (int i = 0; i < fileInfos.size(); i++) {
+                fileInfos.get(i).setSelected(false);
+                View selectItem = fileList.getChildAt(i);
+                if (selectItem != null){
+                    selectItem.setBackgroundColor(NORMAL_COLOR);
+                }
+
+            }
+            isAll=false;
+        } else {
+            for (int i = 0; i < fileInfos.size(); i++) {
+                fileInfos.get(i).setSelected(true);
+                View selectItem = linearLayoutManager.findViewByPosition(i);
+                if (selectItem != null){
+                    selectItem.setBackgroundColor(SELECTED_COLOR);
+                }
+
+            }
+            isAll=true;
+        }
 
         refreshUnderBar();
+        return isAll;
+    }
+
+
+    public void load(){
+        load(filePath,true);
     }
 
 
@@ -352,7 +369,7 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
      *
      * @return
      */
-    protected ArrayList<FileInfo> getSelectedList() {
+    public ArrayList<FileInfo> getSelectedList() {
         ArrayList<FileInfo> selectList = new ArrayList<>();//储存删除对象
         for (int i = 0; i < fileInfos.size(); i++) {
             FileInfo fileInfo = fileInfos.get(i);
@@ -387,7 +404,7 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
      * @param deleteList 选中的列表
      * @return
      */
-    protected ArrayList<Integer> getSelectPosition(ArrayList<FileInfo> deleteList) {
+    public ArrayList<Integer> getSelectPosition(ArrayList<FileInfo> deleteList) {
         ArrayList<Integer> selectPosition = new ArrayList<>();//储存位置
         for (int i = 0; i < deleteList.size(); i++) {
             FileInfo fileInfo = deleteList.get(i);
@@ -398,16 +415,25 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
 
     @SuppressLint("SetTextI18n")
     protected void clearUnderBar() {
-        underBarInfo.setText("\t"+fileInfos.size() + getString(R.string.how_many_item));
+        //underBarInfo.setText("\t"+fileInfos.size() + getString(R.string.how_many_item));
+        mMainActivity.clearUnderBar();
     }
+
+    public int getFileInfosSize(){
+        if(fileInfos!=null)
+        return fileInfos.size();
+        else
+        return 0;
+    }
+
 
     @SuppressLint("SetTextI18n")
     public int refreshUnderBar() {
         ArrayList<FileInfo> selectList = getSelectedList();
-        String how = selectList.size() == 0 ? "" : "|\t"+getString(R.string.select) + selectList.size() + getString(R.string.how_many_item);
+
         long size = 0L;
         boolean haveDir = false;
-        String big;
+
         for (FileInfo temp : selectList) {
             if (!temp.isDir()) {
                 size += temp.getFileSize();
@@ -415,18 +441,21 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
                 haveDir = true;
             }
         }
-        if (haveDir || selectList.size() == 0) {
-            big = "";
-        } else {
-            big = size > GB ? stayFrieNumber((float) size / GB) + "GB"+"\t\t|"
-                    : size > MB ? stayFrieNumber((float) size / MB) + "MB"+"\t\t|"
-                    : stayFrieNumber((float) size / KB) + "KB"+"\t\t|";
+        if(selectList.size()==fileInfos.size()&&fileInfos.size()!=0){
+            allSelect=true;
+        }else {
+            allSelect=false;
         }
-        underBarInfo.setText("\t"+fileInfos.size() + getString(R.string.how_many_item) + "\t\t" + how + "\t\t" + big);
+        mMainActivity.setAllSelectIco(allSelect);
+        mMainActivity.refreshUnderBar(selectList.size(),size,haveDir);
         return selectList.size();
     }
 
-    private static int makeItemLayoutRes(int spanCount) {
+    public void setUnderBarInfos(String underBarInfos) {
+        this.underBarInfos = underBarInfos;
+    }
+
+    public static int makeItemLayoutRes(int spanCount) {
         if (spanCount == 7) {
             return R.layout.flie_grid_item_layout_40dp;
         } else if (spanCount == 6) {
@@ -444,40 +473,19 @@ public abstract class CustomViewFragment extends Fragment implements View.OnClic
         }
     }
 
-    private float distance = 50000;
 
-    @SuppressLint("ClickableViewAccessibility")
-    private void sacleIcon() {
-        fileList.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_DOWN:
-                        break;
-                    case MotionEvent.ACTION_POINTER_DOWN:
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        if (event.getPointerCount() == 2 && linearLayoutManager instanceof GridLayoutManager) {
-                            float newDistance = getDistance(event);
-                            if (newDistance > 100f && newDistance >= distance * 1.3) {
-                                if (spanCount > 2) {
-                                    spanCount--;
-                                    makeGridLayout(spanCount, makeItemLayoutRes(spanCount));
-                                }
-                                distance = newDistance;
-                            } else if (newDistance > 100f && newDistance <= distance / 1.3) {
-                                if (spanCount < 7) {
-                                    spanCount++;
-                                    makeGridLayout(spanCount, makeItemLayoutRes(spanCount));
-                                }
-                                distance = newDistance;
-                            }
-                            return true;
-                        }
-                        break;
-                }
-                return false;
-            }
-        });
+
+
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (null != rootView) {
+            ((ViewGroup) rootView.getParent()).removeView(rootView);
+        }
+    }
+
+    public String getUnderBarInfos() {
+        return underBarInfos;
     }
 }

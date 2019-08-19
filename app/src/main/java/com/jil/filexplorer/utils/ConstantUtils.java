@@ -12,5 +12,9 @@ public class ConstantUtils {
     public final static long KB =1024;
     public final static int GIRD_LINER_LAYOUT =Color.argb(81,0,196,255);//item被选中时的颜色
     public final static String CHANNEL_ID = "com.jil.filexplorer.copy_action";
+    public final static int BULE_COLOR =Color.argb(255,21,143,197);//item被选中时的颜色
+    public final static int DARK_COLOR=Color.argb(255,53,53,53);
+    public final static int HALF_DARK_COLOR=Color.argb(125,66,66,66);
+    public final static int IMAGE_SELECTED_COLOR =Color.argb(255,21,143,197);//image被选中时的颜色
 
 }

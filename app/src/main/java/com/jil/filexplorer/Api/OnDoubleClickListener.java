@@ -73,7 +73,6 @@ public class OnDoubleClickListener implements View.OnTouchListener {
         if(MotionEvent.ACTION_UP ==event.getAction()&&count==1&&!moved){
             long clickUp = System.currentTimeMillis();//记录放开手指的时间
             if(clickUp-firstClick>=totalTime){
-                LogUtils.i(getClass().getName(),"long click");
                 return mCallback.onLongClick();
             }
         }

@@ -3,19 +3,24 @@ package com.jil.filexplorer.utils;
 import android.app.AlertDialog;
 import android.app.Service;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListPopupWindow;
 import android.widget.TextView;
 
 import com.jil.filexplorer.Api.FileInfo;
+import com.jil.filexplorer.Api.Item;
 import com.jil.filexplorer.R;
+import com.jil.filexplorer.adapter.ListPopupWindowAdapter;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 
 import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
 
@@ -77,21 +82,32 @@ public class DialogUtils {
 
     }
 
-    public static void showListPopupWindow(Context context, View view, FileInfo fileInfo) {
-        final String[] list = {"删除","复制"};//要填充的数据
-        final ListPopupWindow listPopupWindow;
+    public static ListPopupWindow showListPopupWindow(Context context, View view,int itemRes,Item[] list) {
+        ListPopupWindow listPopupWindow;
         listPopupWindow = new ListPopupWindow(context);
-        listPopupWindow.setAdapter(new ArrayAdapter<String>(context, R.layout.listpopup_window_item_layout, list));//用android内置布局，或设计自己的样式
+        ListPopupWindowAdapter adapter =new ListPopupWindowAdapter(context, itemRes, list);
+        listPopupWindow.setAdapter(adapter);//用android内置布局，或设计自己的样式
         listPopupWindow.setAnchorView(view);//以哪个控件为基准，在该处以mEditText为基准
         listPopupWindow.setModal(true);
+        return listPopupWindow;
+    }
 
-        listPopupWindow.setOnItemClickListener(new AdapterView.OnItemClickListener() {//设置项点击监听
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                //pageFragment.load(historyPath.get(i),true);
-                listPopupWindow.dismiss();//如果已经选择了，隐藏起来
-            }
-        });
-        listPopupWindow.show();//把ListPopWindow展示出来
+
+    public static AlertDialog.Builder showAlertDialog(Context context,String title){
+        AlertDialog.Builder builder=new AlertDialog.Builder(context);
+        builder.setIcon( R.mipmap.ic_launcher ).setTitle( title )
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        return builder;
     }
 }

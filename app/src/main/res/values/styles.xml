@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
@@ -7,16 +7,43 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="actionOverflowMenuStyle">@style/optionMenuBlue</item>
-        <item name="android:textColor">@android:color/white</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="MyThemeGray" parent="AppTheme.NoActionBar">
-        <item name="colorAccent">@color/colorPrimary_black</item>
+    <style name="textView_layout">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">38dp</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:textColor">@android:color/holo_red_dark</item>
+        <item name="android:textSize">15dp</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!--自定义switch的按钮和轨迹颜色theme-->
+    <style name="mySwitch" parent="Theme.AppCompat.DayNight">
+        <!-- switch 打开时的按钮的颜色 轨迹颜色默认为30%（看效果就明白30%是怎么回事了）这个颜色 -->
+        <item name="colorControlActivated">@color/colorPrimaryLight</item>
+        <!--  switch关闭时的按钮的颜色 -->
+        <item name="colorSwitchThumbNormal">@color/colorPrimaryDark_black</item>
+        <!-- switch关闭时的轨迹的颜色 30%这个颜色 -->
+        <item name="android:colorForeground">@android:color/white</item>
+        <item name="android:textColor">@android:color/white</item>
+
+    </style>
+
+    <style name="MyThemeGray" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorAccent">@color/colorPrimaryLight</item>
         <item name="colorPrimary">@color/colorPrimary_black</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark_black</item>
         <item name="actionOverflowMenuStyle">@style/optionMenuGray</item>
         <item name="android:textColor">@android:color/white</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
+
 
     <style name="optionMenuGray" parent="Widget.AppCompat.Light.ActionBar">
         <item name="android:popupBackground">@color/colorPrimary_black</item>

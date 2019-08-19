@@ -15,32 +15,35 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.jil.filexplorer.Api.FileOperation;
+import com.jil.filexplorer.Api.ProgressChangeListener;
 import com.jil.filexplorer.Api.ProgressMessage;
 import com.jil.filexplorer.R;
 
 /**
  * 接收AfterIntentService进度并显示
  */
-public class ProgressActivity extends AppCompatActivity implements AfterIntentService.UpdateUI{
+public class ProgressActivity extends AppCompatActivity implements ProgressChangeListener {
     @SuppressLint("HandlerLeak")
     private Handler handler=new Handler(){
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            if(msg.what>0) progressMessage= (ProgressMessage) msg.obj;
-            if(msg.what==-1){
-                onActionFinish.OnRefresh();
-                finish();
-            }
+            if(msg!=null)
+                progressMessage= (ProgressMessage) msg.obj;
             if(progressMessage!=null){
-                progressBar.setProgress(progressMessage.getProgress());
-                mTitle.setText(progressMessage.getTitle());
-                mMessage.setText(Html.fromHtml(progressMessage.getMessage()));
-                smallTitle.setText(progressMessage.getTitle());
-                speedText.setText(progressMessage.getSpeed());
-                projectName.setText(progressMessage.getNowProjectName());
-                remainTime.setText(progressMessage.getReMainTime());
-                remainCount.setText(progressMessage.getReMainCount());
+                if(progressMessage.getProgress()==100){
+                    if(onActionFinish!=null)onActionFinish.OnRefresh();
+                    finish();
+                }else {
+                    progressBar.setProgress(progressMessage.getProgress());
+                    mTitle.setText(progressMessage.getTitle());
+                    mMessage.setText(Html.fromHtml(progressMessage.getMessage()));
+                    smallTitle.setText(progressMessage.getTitle());
+                    speedText.setText(progressMessage.getSpeed());
+                    projectName.setText(progressMessage.getNowProjectName());
+                    remainTime.setText(progressMessage.getReMainTime());
+                    remainCount.setText(progressMessage.getReMainCount());
+                }
             }
         }
     };
@@ -50,16 +53,17 @@ public class ProgressActivity extends AppCompatActivity implements AfterIntentSe
     private ImageView close,smaller;
     private static OnActionFinish onActionFinish;
     private TextView mTitle,mMessage,smallTitle,speedText,projectName,remainTime,remainCount;
+    FileOperation fileOperation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //AfterIntentService.setUpdateUI(this);
-        Intent i =getIntent();
-        boolean b =i.getBooleanExtra("action_progress",false);
-        if(b){
+        fileOperation=FileOperation.getInstance();
+        if(fileOperation!=null){
+            fileOperation.setProgressChangeListener(this);
+            fileOperation.pushProgressMsg();
+        }else {
             finish();
         }
-        FileOperation.setUpdateUI(this);
         super.onCreate(savedInstanceState);
         requestWindowFeature( Window.FEATURE_LEFT_ICON);
         setContentView(R.layout.progress_dialog_layout);
@@ -82,11 +86,17 @@ public class ProgressActivity extends AppCompatActivity implements AfterIntentSe
         close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //AfterIntentService.stop();
-                FileOperation.stopAction();
+                fileOperation.stopAction();
                 finish();
             }
         });
+    }
+
+    @Override
+    public void progressChang(ProgressMessage ProgressMessage) {
+        Message msg =new Message();
+        msg.obj=ProgressMessage;
+        handler.sendMessage(msg);
     }
 
 
@@ -101,10 +111,5 @@ public class ProgressActivity extends AppCompatActivity implements AfterIntentSe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-    }
-
-    @Override
-    public void updateUI(Message message) {
-        handler.sendMessage(message);
     }
 }

@@ -2,11 +2,9 @@ package com.jil.filexplorer.Api;
 
 import android.app.NotificationManager;
 import android.content.Context;
-import android.os.Message;
 
 import androidx.core.app.NotificationCompat;
 
-import com.jil.filexplorer.Activity.AfterIntentService;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.NotificationUtils;
 
@@ -22,8 +20,6 @@ import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.jil.filexplorer.utils.ConstantUtils.CHANNEL_ID;
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
 import static com.jil.filexplorer.utils.FileUtils.closeAnyThing;
-import static com.jil.filexplorer.utils.FileUtils.deleteDirectory;
-import static com.jil.filexplorer.utils.FileUtils.deleteSingleFile;
 
 /**
  * 文件操作类
@@ -72,30 +68,52 @@ public class FileOperation {
      * 任务总数
      */
     private int projectCount;
+    /**
+     * 任务监听器
+     */
+    private ProgressChangeListener progressChangeListener;
 
-    private static AfterIntentService.UpdateUI updateUI;
+    /**
+     *是否准备完成
+     */
+    private boolean isReady;
+
+    private static String notifitionMsg ;
+
     private static NotificationCompat.Builder builder;
     private static NotificationManager notificationManager;
 
-    public static void setUpdateUI(AfterIntentService.UpdateUI updateui){
-        updateUI=updateui;
+    public void setProgressChangeListener(ProgressChangeListener progressChangeListener) {
+        this.progressChangeListener = progressChangeListener;
+    }
+
+    public ProgressMessage getProgressMessage() {
+        if(progressMessage==null){
+            //progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize, projectCount, mode);
+        }
+        return progressMessage;
     }
 
     private FileOperation(Context context) {
         this.context =context;
     }
 
-    public void addProgressChangeListener(ProgressChangeListener progressChangeListener) {
-        //this.progressChangeListener = progressChangeListener;
-    }
-
-
     public static FileOperation with(Context context) {
         fileOperation = new FileOperation(context);
         builder = new NotificationCompat.Builder(context, CHANNEL_ID);
         notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
-        NotificationUtils.setNotification(context, builder, notificationManager,"复制任务进行中...");
+        notifitionMsg="复制任务准备中...";
         return fileOperation;
+    }
+
+    public static FileOperation getInstance() {
+        if(fileOperation!=null){
+            return fileOperation;
+        }else {
+            return null;
+        }
+
+
     }
 
 
@@ -123,11 +141,12 @@ public class FileOperation {
     public FileOperation to(FileInfo toDir) {
         if (!toDir.isDir()) {
             LogUtils.e("FileOperation", "目标不是文件夹");
+            notifitionMsg="目标不是文件夹";
+            isReady=false;
             return null;
         } else {
             this.toDir = toDir;
-            progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize
-                    , projectCount, mode, toDir.getFilePath());
+            progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize, projectCount, mode, toDir.getFilePath());
             return this;
         }
     }
@@ -145,6 +164,15 @@ public class FileOperation {
             }
             actionSize = size;
         }
+        isReady=projectCount>0;
+        notifitionMsg="源文件不存在";
+
+    }
+
+    public void pushProgressMsg(){
+        if(progressMessage!=null&&progressChangeListener!=null){
+            progressChangeListener.progressChang(progressMessage);
+        }
     }
 
     /**
@@ -154,15 +182,15 @@ public class FileOperation {
      */
     public long getLength(File f) {
         long size = 0;
-        if (f.isDirectory()) {
+        if (f.isDirectory()&&f.exists()) {
+            projectCount++;
             File[] files = f.listFiles();
             if (files != null)
-                for (int z = 0; z < files.length; z++) {
-                    File file = files[z];
+                for (File file:files) {
                     size += getLength(file);
                 }
         }
-        if (f.isFile()) {
+        if (f.isFile()&&f.exists()) {
             projectCount++;
             return f.length();
         }
@@ -172,53 +200,78 @@ public class FileOperation {
 
     private void filesCopy() {
         for (FileInfo temp : inFiles) {
+            if(!running){
+                break;
+            }
+            if (toDir.getFilePath().startsWith(temp.getFilePath())) {
+                System.err.println("目标文件夹是源文件的子目录");
+                notifitionMsg="目标文件夹是源文件的子目录";
+                missionNotReady();
+                break;
+            }
             progressMessage.setIn(temp.getFilePath());
             File$DirCopy(new File(temp.getFilePath()), new File(toDir.getFilePath()));
         }
-//        progressMessage.setCopyOverCount(projectCount);
-//        progressChangeListener.progressChang(progressMessage);
     }
 
     private void File$DirCopy(File inFile, File toDir) {
-        if (toDir.getPath().startsWith(inFile.getPath())) {
-            System.err.println("目标文件夹是源文件的子目录");
-            return;
-        }
         if (!inFile.isDirectory()) {
             nioBufferCopy(inFile, new File(toDir, inFile.getName()));
         } else {
             copyDirWithFile(inFile, toDir);
         }
-
     }
 
     public void start() {
-        running = true;
-        //progressChangeListener.progressChang(progressMessage);
+        if(!isReady){
+            missionNotReady();
+            NotificationUtils.setNotification(context, builder, notificationManager,notifitionMsg);
+            return;
+        }else {
+            NotificationUtils.setNotification(context, builder, notificationManager,notifitionMsg);
+            notifitionMsg ="任务进行中-";
+            running = true;
+        }
         switch (mode) {
             case MODE_COPY:
+                if(progressChangeListener!=null)
+                progressChangeListener.progressChang(progressMessage);
                 filesCopy();
                 break;
             case MODE_MOVE:
+                if(progressChangeListener!=null)
+                progressChangeListener.progressChang(progressMessage);
                 filesMove();
                 break;
             case MODE_DELETE:
+                progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize, projectCount, mode);
                 filesDelete();
                 break;
         }
-        misstionFinish();
+        missionFinish();
+
     }
 
-    private void misstionFinish() {
-        Message finishMesssage = new Message();
-        finishMesssage.what = -1;
-        if (updateUI != null) updateUI.updateUI(finishMesssage);
+    private void missionFinish(){
+        progressMessage.setNowLoacation(actionSize);
+        progressMessage.setProjectCount(overCount);
+        if(progressChangeListener!=null)
+            progressChangeListener.progressChang(progressMessage);
         notificationManager.cancel(1410);
     }
 
+    private void missionNotReady(){
+        if(progressMessage==null){
+            progressMessage = new ProgressMessage(System.currentTimeMillis(), overSize, projectCount, mode);
+        }
+        progressMessage.setTitle(notifitionMsg);
+        if(progressChangeListener!=null)
+            progressChangeListener.progressChang(progressMessage);
+        notificationManager.cancel(1410);
+    }
+
+
     private void filesDelete() {
-        progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize
-                , projectCount, mode);
         for(FileInfo temp:inFiles){
             if(!running)
                 break;
@@ -230,28 +283,25 @@ public class FileOperation {
                 deleteSingleFile(loaction);
             }
         }
-        progressMessage.setNowLoacation(actionSize);
-        //progressChangeListener.progressChang(progressMessage);
     }
 
     private void filesMove() {
         for(FileInfo temp:inFiles){
             if(!running)
                 break;
-            if (toDir.getFileName().startsWith(temp.getFileName())) {
+            if (toDir.getFilePath().startsWith(temp.getFilePath())) {
                 System.err.println("目标文件夹是源文件的子目录");
-                continue;
+                notifitionMsg="目标文件夹是源文件的子目录";
+                missionNotReady();
+                break;
             }
             File f =new File(temp.getFilePath());
             if(moveFile(f)) {
                 overCount++;
-                progressMessage.setCopyOverCount(overCount);
+                progressMessage.setProjectOverCount(overCount);
             }
             refreshProgresss(f.length());
         }
-        progressMessage.setNowLoacation(actionSize);
-        //progressChangeListener.progressChang(progressMessage);
-
     }
 
     /**
@@ -265,8 +315,10 @@ public class FileOperation {
         return b;
     }
 
-    public static void stopAction() {
+    public void stopAction() {
         running = false;
+        notifitionMsg ="正在取消-";
+
     }
 
     /**
@@ -299,37 +351,23 @@ public class FileOperation {
             e.printStackTrace();
         } finally {
             overCount++;
-            progressMessage.setCopyOverCount(overCount);
+            progressMessage.setProjectOverCount(overCount);
             closeAnyThing(inStream, in, outStream, out);
         }
-    }
-
-    /**
-     *
-     * @param add
-     */
-    private void sendProgress(long add) {
-        overSize += add;
-        progressMessage.setNowLoacation(overSize);
-        //if (actionSize > 0 && progressChangeListener != null)
-           // progressChangeListener.progressChang(progressMessage);
-
     }
 
     /**
      * 复制文件时发送进度
      */
     private void refreshProgresss(long size) {
-        Message message = new Message();
-        LogUtils.i("已复制：", progressMessage.getProgress() + "%--" + overSize / MB);
-        progressMessage.setCopyOverCount(overCount);
+        progressMessage.setProjectOverCount(overCount);
         overSize += size;
         progressMessage.setNowLoacation(overSize);
         overSize=progressMessage.getNowLoacation();
-        message.obj = progressMessage;
-        message.what = progressMessage.getProgress();
-        if (updateUI != null) updateUI.updateUI(message);
+        if (progressChangeListener != null) progressChangeListener.progressChang(progressMessage);
+        LogUtils.i("任务已完成-", progressMessage.getProgress() + "%--" + overSize / MB);
         builder.setProgress(100, progressMessage.getProgress(), false);
+        builder.setContentTitle(notifitionMsg+progressMessage.getTitle());
         notificationManager.notify(1410, builder.build());
     }
 
@@ -365,7 +403,7 @@ public class FileOperation {
         // 如果文件路径所对应的文件存在，并且是一个文件，则直接删除
         if (file.exists() && file.isFile()) {
             overCount++;
-            progressMessage.setCopyOverCount(overCount);
+            progressMessage.setProjectOverCount(overCount);
             refreshProgresss(file.length());
             if (file.delete()) {
                 LogUtils.i("--Method--", "Copy_Delete.deleteSingleFile: 删除单个文件" + filePath$Name + "成功！");
@@ -426,6 +464,7 @@ public class FileOperation {
         }
     }
 
-
-
+    public ArrayList<FileInfo> getInFiles() {
+        return inFiles;
+    }
 }

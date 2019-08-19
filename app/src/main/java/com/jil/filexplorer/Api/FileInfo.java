@@ -1,6 +1,10 @@
 package com.jil.filexplorer.Api;
 
-public class FileInfo {
+import android.widget.Checkable;
+
+import static com.jil.filexplorer.utils.ConstantUtils.MB;
+
+public class FileInfo extends Item implements Checkable {
     //文件名
     private String fileName;
     //文件路径
@@ -14,7 +18,7 @@ public class FileInfo {
     //最后编辑时间
     private long ModifiedDate;
     //是否选中
-    private boolean Selected;
+    private boolean selected;
     //可读
     private boolean canRead;
     //可写
@@ -26,8 +30,12 @@ public class FileInfo {
     //文件后缀
     private String filetype;
 
-    public FileInfo(String fileName, String filePath,boolean isDir,long modifiedDate, boolean canRead, boolean canWrite, boolean isHidden) {
-        this.fileName = fileName;
+    public FileInfo() {
+    }
+
+    public FileInfo(String fileName, String filePath, boolean isDir, long modifiedDate, boolean canRead, boolean canWrite, boolean isHidden) {
+        super(fileName,(int)(modifiedDate/ MB));
+        //this.fileName = fileName;
         this.filePath = filePath;
         this.isDir = isDir;
         ModifiedDate = modifiedDate;
@@ -45,11 +53,13 @@ public class FileInfo {
     }
 
     public String getFileName() {
-        return fileName;
+        //return fileName;
+        return getName();
     }
 
     public void setFileName(String fileName) {
-        this.fileName = fileName;
+        //this.fileName = fileName;
+        setName(fileName);
     }
 
     public String getFilePath() {
@@ -93,11 +103,11 @@ public class FileInfo {
     }
 
     public boolean isSelected() {
-        return Selected;
+        return selected;
     }
 
     public void setSelected(boolean selected) {
-        Selected = selected;
+        this.selected = selected;
     }
 
     public boolean isCanRead() {
@@ -130,5 +140,20 @@ public class FileInfo {
 
     public void setFiletype(String filetype) {
         this.filetype = filetype;
+    }
+
+    @Override
+    public void setChecked(boolean checked) {
+        this.selected =checked;
+    }
+
+    @Override
+    public boolean isChecked() {
+        return selected;
+    }
+
+    @Override
+    public void toggle() {
+        this.selected =!selected;
     }
 }

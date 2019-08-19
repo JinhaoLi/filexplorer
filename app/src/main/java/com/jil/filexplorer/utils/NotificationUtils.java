@@ -69,7 +69,7 @@ public class NotificationUtils {
                 //.setVibrate(new long[]{100, 200, 200, 200})//震动
                 .setContentIntent(pendingIntent)
                 .build();
-        notification.flags=Notification.FLAG_ONGOING_EVENT; //如果此通知涉及正在进行的事情，请设置,用户无法移除
+        //notification.flags=Notification.FLAG_ONGOING_EVENT; //如果此通知涉及正在进行的事情，请设置,用户无法移除
         //notification.flags |= Notification.FLAG_NO_CLEAR;//点击才可以移除
         //启动activity
         //Intent intentOne = new Intent(context, MainActivity.class);
@@ -83,8 +83,7 @@ public class NotificationUtils {
         NotificationManager mNManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         localBuilder.setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class), 0))
                 .setAutoCancel(false)
-                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher))
-                .setSmallIcon( R.mipmap.ic_launcher)
+
                 .setTicker("Foreground Service Start")
                 .setContentTitle("任务进行中")
                 .setProgress(100,6,false)

@@ -1,13 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme.NoActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="actionOverflowMenuStyle">@style/optionMenuBlue</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
     </style>
 
-    <style name="item_style">
-        <item name="android:singleLine">true</item>
-        <item name="android:layout_gravity">center</item>
+    <style name="MyThemeGray" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorAccent">@color/colorPrimaryLight</item>
+        <item name="colorPrimary">@color/colorPrimary_black</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark_black</item>
+        <item name="actionOverflowMenuStyle">@style/optionMenuGray</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:statusBarColor">@color/colorPrimaryDark_black</item>
     </style>
 </resources>

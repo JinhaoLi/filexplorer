@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:m=".MainActivity">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -25,7 +26,8 @@
                     android:id="@+id/imageView4"
                     android:layout_width="24dp"
                     android:layout_height="match_parent"
-                    app:srcCompat="@mipmap/ic_launcher" />
+                    android:scaleType="fitCenter"
+                    app:srcCompat="@mipmap/list_ico_dir" />
 
                 <EditText
                     android:id="@+id/editText"
@@ -48,29 +50,13 @@
                     app:srcCompat="@drawable/ic_arrow_drop_down_black_24dp"
                     tools:ignore="VectorDrawableCompat" />
 
-                <ImageButton
+                <!--<ImageButton
                     android:id="@+id/imageButton2"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:background="@drawable/button_click_type"
                     app:srcCompat="@drawable/ic_arrow_upward_black_24dp"
-                    tools:ignore="VectorDrawableCompat" />
-
-                <ImageButton
-                    android:id="@+id/imageButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/button_click_type"
-                    app:srcCompat="@drawable/ic_arrow_back_black_24dp"
-                    tools:ignore="VectorDrawableCompat" />
-
-                <ImageButton
-                    android:id="@+id/imageButton1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/button_click_type"
-                    app:srcCompat="@drawable/ic_arrow_forward_black_24dp"
-                    tools:ignore="VectorDrawableCompat" />
+                    tools:ignore="VectorDrawableCompat" />-->
 
             </LinearLayout>
 
@@ -79,12 +65,14 @@
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
+            android:layout_height="30dp"
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/content_main" />
+    <include
+        android:id="@+id/include"
+        layout="@layout/content_main" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</LinearLayout>

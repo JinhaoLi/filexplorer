@@ -76,7 +76,7 @@
 
     <ImageView
         android:id="@+id/imageView5"
-        android:layout_width="26dp"
+        android:layout_width="24dp"
         android:layout_height="match_parent"
         app:srcCompat="@mipmap/liner_layout_show" />
 

@@ -14,14 +14,21 @@ import android.os.Build;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.MotionEvent;
+import android.webkit.MimeTypeMap;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.signature.MediaStoreSignature;
+import com.bumptech.glide.util.Util;
 import com.jil.filexplorer.BuildConfig;
 import com.jil.filexplorer.Api.FileInfo;
+import com.jil.filexplorer.ImageDisplayActivity;
 
 import java.io.Closeable;
 import java.io.DataOutputStream;
@@ -35,6 +42,8 @@ import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+
+import static com.jil.filexplorer.utils.DialogUtils.showAndMake;
 
 public class FileUtils {
 
@@ -80,6 +89,49 @@ public class FileUtils {
         }
 
     }
+
+    /**
+     * 刷新RequestOptions，解決Glide图片缓存导致不刷新问题
+     *
+     * @param options
+     * @param file       图片地址
+     * @param modified  图片修改时间
+     */
+    public static void updateOptions(RequestOptions options, File file, long modified){
+        if(!file.getPath().equals("")&&modified!=0){
+            try{
+                String tail = file.getName().toLowerCase();
+                String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(tail);
+                if(type!=null&&!type.equals(""))
+                options.signature(new MediaStoreSignature(type, modified, 0));
+            }catch (Exception e){}
+        }
+    }
+
+    public static RequestOptions getOptions(int imageCache,int width,int height){
+        //设置图片圆角角度
+        RoundedCorners roundedCorners= new RoundedCorners(10);
+        RequestOptions options;
+        if(imageCache>0){
+            options=RequestOptions.bitmapTransform(roundedCorners)
+                    //中心加载
+                    .centerCrop()
+                    //指定宽高
+                    .override(width, height);
+        }else {
+            options=RequestOptions.bitmapTransform(roundedCorners)
+                    //中心加载
+                    .centerCrop()
+                    .skipMemoryCache(true)//跳过缓存
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)//不缓存
+                    //指定宽高
+                    .override(width, height);
+        }
+        return options;
+
+
+    }
+
 
     public static FileInfo getFileInfoFromFile(File file){
         boolean isDir =file.isDirectory();
@@ -130,7 +182,7 @@ public class FileUtils {
         return df.format( date );
     }
     public static String getFormatData(long date) {
-        SimpleDateFormat df = new SimpleDateFormat( "yyyy/MM/dd" );//设置日期格式
+        SimpleDateFormat df = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" );//设置日期格式
         return df.format( date );
     }
 
@@ -139,7 +191,14 @@ public class FileUtils {
             installApk(filePath,context);
             return;
         }
-        Intent intent = new Intent();
+        Intent intent ;
+        if(type.startsWith("image/")){
+            intent = new Intent(context, ImageDisplayActivity.class);
+            intent.putExtra("image_path",filePath);
+            context.startActivity(intent);
+            return;
+        }
+        intent=new Intent();
         intent.addCategory("android.intent.category.DEFAULT");
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setAction(android.content.Intent.ACTION_VIEW);
@@ -158,38 +217,83 @@ public class FileUtils {
         context.startActivity(intent);
     }
 
+    /**
+     * 历遍目录获取总大小
+     *
+     * @param f
+     */
+    public static long getLength(File f) {
+        long size = 0;
+        if (f.isDirectory()&&f.exists()) {
+            File[] files = f.listFiles();
+            if (files != null)
+                for (File file:files) {
+                    size += getLength(file);
+                }
+        }
+        if (f.isFile()&&f.exists()) {
+            return f.length();
+        }
+        return size;
+    }
+
+    public static void shareImage(Context context,String filePath){
+        Intent intent=new Intent(Intent.ACTION_SEND);
+        intent.addCategory("android.intent.category.DEFAULT");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        //intent.setAction(android.content.Intent.ACTION_VIEW);
+        Uri uri;
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N){
+            LogUtils.i("FileUtils:",BuildConfig.APPLICATION_ID+".fileprovider");
+            uri=FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID+".fileprovider",new File(filePath));//authority要和AndroidManifest中的定义authorities的一致
+
+        }else {
+            uri=Uri.fromFile(new File(filePath));
+        }
+        intent.setType("image/*");
+        intent.putExtra(Intent.EXTRA_STREAM,uri);
+        //Intent.createChooser(intent, "请选择对应的软件打开该附件！");
+        context.startActivity(intent);
+    }
+
     public static void viewFile(final Context context, final String filePath) {
         String type = getMimeType(filePath);
         if (!TextUtils.isEmpty(type) && !TextUtils.equals(type, "*/*")) {
             viewFile(context,filePath,type);
         } else {
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
-            dialogBuilder.setTitle("选择文件类型");
-            String[] menuItemArray = {"文本","音频","视频","图片"};
-            dialogBuilder.setItems(menuItemArray,
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            String selectType = "*/*";
-                            switch (which) {
-                                case 0:
-                                    selectType = "text/plain";
-                                    break;
-                                case 1:
-                                    selectType = "audio/*";
-                                    break;
-                                case 2:
-                                    selectType = "video/*";
-                                    break;
-                                case 3:
-                                    selectType = "image/*";
-                                    break;
-                            }
-                            viewFile(context,filePath,selectType);
-                        }
-                    });
-            dialogBuilder.show();
+            chooseViewFile(context,filePath);
         }
+    }
+
+    public static void chooseViewFile(final Context context, final String filePath){
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
+        dialogBuilder.setTitle("选择文件类型");
+        String[] menuItemArray = {"文本","音频","视频","图片","其他"};
+        dialogBuilder.setItems(menuItemArray,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String selectType = "*/*";
+                        switch (which) {
+                            case 0:
+                                selectType = "text/plain";
+                                break;
+                            case 1:
+                                selectType = "audio/*";
+                                break;
+                            case 2:
+                                selectType = "video/*";
+                                break;
+                            case 3:
+                                selectType = "image/*";
+                                break;
+                            case 4:
+                                break;
+                        }
+                        viewFile(context,filePath,selectType);
+                    }
+                });
+        showAndMake(dialogBuilder.create());
     }
 
     private static void grantUriPermission(Context context, Uri fileUri, Intent intent) {
@@ -200,7 +304,7 @@ public class FileUtils {
         }
     }
 
-    private static String getMimeType(String filePath) {
+    public static String getMimeType(String filePath) {
         int dotPosition = filePath.lastIndexOf('.');
         if (dotPosition == -1)
             return "*/*";

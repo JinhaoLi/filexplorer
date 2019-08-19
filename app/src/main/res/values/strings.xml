@@ -33,4 +33,5 @@
     <string name="re_name">重命名</string>
     <string name="paste">粘贴</string>
     <string name="action">操作</string>
+    <string name="all_choose">全选</string>
 </resources>
