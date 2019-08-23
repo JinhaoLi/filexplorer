@@ -9,8 +9,11 @@ import java.io.FilenameFilter;
 public class ImageFilter implements FileFilter {
 
     @Override
-    public boolean accept(File pathname) {
-        String type = FileUtils.getMimeType(pathname.getPath());
+    public boolean accept(File file) {
+        if(file.isDirectory()){
+            return false;
+        }
+        String type = FileUtils.getMimeType(file.getPath());
         return type.startsWith("image");
     }
 }

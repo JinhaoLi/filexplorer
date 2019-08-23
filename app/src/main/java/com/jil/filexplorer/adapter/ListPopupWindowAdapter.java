@@ -15,18 +15,20 @@ import androidx.annotation.Nullable;
 
 import com.jil.filexplorer.Api.Item;
 import com.jil.filexplorer.R;
+import com.jil.filexplorer.utils.ConstantUtils;
+import com.jil.filexplorer.utils.LogUtils;
 
 import java.util.ArrayList;
 
 public class ListPopupWindowAdapter extends ArrayAdapter<Item> {
     Item[] itemArrayList;
-    private Context context;
 
     public ListPopupWindowAdapter(Context context,int layoutRes,Item[] itemArrayList) {
         super(context,layoutRes);
-        this.context=context;
         this.itemArrayList = itemArrayList;
     }
+
+
 
     @Override
     public long getItemId(int position) {
@@ -43,10 +45,15 @@ public class ListPopupWindowAdapter extends ArrayAdapter<Item> {
     public View getView(int position, View convertView,  ViewGroup parent) {
         ViewHolder holder=null;
         if(convertView == null){
-            convertView = LayoutInflater.from(context).inflate(R.layout.menu_simple_list_item,parent,false);
+
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.menu_simple_list_item,parent,false);
             holder = new ViewHolder();
             //holder.img_icon =convertView.findViewById(R.id.img_icon);
             holder.txt_content = convertView.findViewById(android.R.id.text1);
+            if(position==itemArrayList.length-1){
+                View view =convertView.findViewById(R.id.view9);
+                view.setBackgroundColor(ConstantUtils.IMAGE_SELECTED_COLOR);
+            }
             convertView.setTag(holder);
         }else{
             holder = (ViewHolder) convertView.getTag();
@@ -55,7 +62,7 @@ public class ListPopupWindowAdapter extends ArrayAdapter<Item> {
         return convertView;
     }
 
-    private class ViewHolder{
+    private static class ViewHolder{
         ImageView img_icon;
         TextView txt_content;
     }

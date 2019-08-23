@@ -2,6 +2,7 @@ package com.jil.filexplorer.adapter;
 
 import android.annotation.SuppressLint;
 import android.graphics.Matrix;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,22 +16,14 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.jil.filexplorer.Api.OnScaleListener;
 import com.jil.filexplorer.Activity.ImageDisplayActivity;
 import com.jil.filexplorer.R;
-
-import java.io.File;
 import java.util.ArrayList;
 
-public class ImageAdapter extends PagerAdapter {
-    private ArrayList<File> images;
+public class UriAdapter  extends PagerAdapter {
+    private ArrayList<Uri> images;
     private String path;
     private ImageDisplayActivity activity;
 
-
-    public ImageAdapter(String path,ImageDisplayActivity activity) {
-        images=new ArrayList<>();
-        this.activity=activity;
-    }
-
-    public ImageAdapter(ArrayList<File> images, ImageDisplayActivity activity) {
+    public UriAdapter(ArrayList<Uri> images, ImageDisplayActivity activity) {
         this.images = images;
         this.activity = activity;
     }
@@ -85,9 +78,9 @@ public class ImageAdapter extends PagerAdapter {
         return POSITION_NONE;
     }
 
-    public int findPositionByName(String namePath){
+    public int findPositionByName(Uri uri){
         for(int i =0;i<images.size();i++){
-            if(images.get(i).getPath().equals(namePath)){
+            if(images.get(i).equals(uri)){
                 return i;
             }
         }
@@ -98,6 +91,5 @@ public class ImageAdapter extends PagerAdapter {
         images.remove(position);
         notifyDataSetChanged();
     }
-
 
 }

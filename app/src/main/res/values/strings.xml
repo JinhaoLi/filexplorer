@@ -34,4 +34,5 @@
     <string name="paste">粘贴</string>
     <string name="action">操作</string>
     <string name="all_choose">全选</string>
+    <string name="system">系统</string>
 </resources>

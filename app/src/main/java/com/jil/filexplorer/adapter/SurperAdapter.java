@@ -2,6 +2,7 @@ package com.jil.filexplorer.adapter;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -124,6 +125,12 @@ public abstract class SurperAdapter<T> extends RecyclerView.Adapter<SurperAdapte
         }
 
         public void setPic(int id, File pic, Context mContext){
+            ImageView view =getView(id);
+            RequestOptions options= FileUtils.getOptions(SettingParam.ImageCacheSwitch,100,140);
+            Glide.with( mContext ).load( pic ).apply(options).into( view );
+        }
+
+        public void setPic(int id, Uri pic, Context mContext){
             ImageView view =getView(id);
             RequestOptions options= FileUtils.getOptions(SettingParam.ImageCacheSwitch,100,140);
             Glide.with( mContext ).load( pic ).apply(options).into( view );

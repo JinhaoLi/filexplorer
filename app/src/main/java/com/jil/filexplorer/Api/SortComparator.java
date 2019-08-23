@@ -32,9 +32,11 @@ public class SortComparator implements Comparator<FileInfo> {
     }
 
     private static int sortTypeMenth(int sortType, FileInfo f1, FileInfo f2){
+        String s1 =f1.getFileName().toLowerCase();
+        String s2 =f2.getFileName().toLowerCase();
         switch (sortType){
             case SORT_BY_NAME:
-                return f1.getFileName().compareTo(f2.getFileName());
+                return s1.compareTo(s2);
             case SORT_BY_SIZE:
                 return (int) (f1.getFileSize()-f2.getFileSize());
             case SORT_BY_DATE:
@@ -46,7 +48,7 @@ public class SortComparator implements Comparator<FileInfo> {
                 }
                 return f1.getFiletype().compareTo(f2.getFiletype());
             case SORT_BY_NAME_REV:
-                return f2.getFileName().compareTo(f1.getFileName());
+                return s2.compareTo(s1);
             case SORT_BY_SIZE_REV:
                 return (int) (f2.getFileSize()-f1.getFileSize());
             case SORT_BY_DATE_REV:

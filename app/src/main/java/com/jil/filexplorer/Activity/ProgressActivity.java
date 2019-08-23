@@ -111,5 +111,6 @@ public class ProgressActivity extends AppCompatActivity implements ProgressChang
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        onActionFinish=null;
     }
 }

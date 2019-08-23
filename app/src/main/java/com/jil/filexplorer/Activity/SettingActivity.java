@@ -1,4 +1,4 @@
-package com.jil.filexplorer;
+package com.jil.filexplorer.Activity;
 
 
 import android.annotation.SuppressLint;
@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -22,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.jil.filexplorer.Api.ActivityManager;
 import com.jil.filexplorer.Api.SettingItem;
 import com.jil.filexplorer.Api.SettingParam;
+import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.SurperAdapter;
 import com.jil.filexplorer.ui.MyItemDecoration;
 import com.jil.filexplorer.utils.FileUtils;

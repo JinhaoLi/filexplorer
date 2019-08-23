@@ -3,70 +3,32 @@ package com.jil.filexplorer.ui;
 import android.annotation.SuppressLint;
 ;
 import android.app.Activity;
-import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.ListPopupWindow;
-import android.widget.TextView;
+
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.jil.filexplorer.Activity.ProgressActivity;
 import com.jil.filexplorer.Api.FileInfo;
-import com.jil.filexplorer.Api.FileOperation;
-import com.jil.filexplorer.Api.OnItemTouchListener;
-import com.jil.filexplorer.Api.ProgressMessage;
-import com.jil.filexplorer.MainActivity;
+import com.jil.filexplorer.Activity.MainActivity;
 import com.jil.filexplorer.R;
-import com.jil.filexplorer.SettingActivity;
 import com.jil.filexplorer.adapter.FileListAdapter;
 import com.jil.filexplorer.Api.SortComparator;
+import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
-import com.jil.filexplorer.utils.MenuUtils;
-import com.jil.filexplorer.utils.ToastUtils;
-import com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView;
-import com.yanzhenjie.recyclerview.swipe.touch.OnItemStateChangedListener;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 
-import static com.jil.filexplorer.Activity.ProgressActivity.setOnActionFinish;
-import static com.jil.filexplorer.Api.FileOperation.MODE_COPY;
-import static com.jil.filexplorer.Api.FileOperation.MODE_DELETE;
-import static com.jil.filexplorer.Api.FileOperation.MODE_MOVE;
 import static com.jil.filexplorer.Api.SettingParam.saveSharedPreferences;
-import static com.jil.filexplorer.Api.SortComparator.SORT_BY_DATE;
-import static com.jil.filexplorer.Api.SortComparator.SORT_BY_DATE_REV;
 import static com.jil.filexplorer.Api.SortComparator.SORT_BY_NAME;
-import static com.jil.filexplorer.Api.SortComparator.SORT_BY_NAME_REV;
-import static com.jil.filexplorer.Api.SortComparator.SORT_BY_SIZE;
-import static com.jil.filexplorer.Api.SortComparator.SORT_BY_SIZE_REV;
-import static com.jil.filexplorer.Api.SortComparator.SORT_BY_TYPE;
-import static com.jil.filexplorer.Api.SortComparator.SORT_BY_TYPE_REV;
 import static com.jil.filexplorer.utils.ConstantUtils.CAN_MOVE_COLOR;
-import static com.jil.filexplorer.utils.ConstantUtils.DARK_COLOR;
-import static com.jil.filexplorer.utils.ConstantUtils.GB;
-import static com.jil.filexplorer.utils.ConstantUtils.GIRD_LINER_LAYOUT;
-import static com.jil.filexplorer.utils.ConstantUtils.KB;
-import static com.jil.filexplorer.utils.ConstantUtils.MB;
 import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.CANT_SELECTED_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
-import static com.jil.filexplorer.utils.FileUtils.getDistance;
-import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
 
 public abstract class CustomViewFragment extends Fragment {
     protected final static String TAG = "CustomViewFragment";
@@ -110,7 +72,10 @@ public abstract class CustomViewFragment extends Fragment {
     //grid下一行多少个
     protected int spanCount = 4;
 
-    public CustomViewFragment(Activity activity,String filePath) {
+    public CustomViewFragment() {
+    }
+
+    public CustomViewFragment(Activity activity, String filePath) {
         this.mMainActivity =(MainActivity)activity;
         this.filePath = filePath;
     }
@@ -119,8 +84,10 @@ public abstract class CustomViewFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = initView(inflater, container);
-        if(!isRecovery)
-        initAction();
+        if(!isRecovery){
+            initAction();
+        }
+
         return v;
     }
 
@@ -137,21 +104,7 @@ public abstract class CustomViewFragment extends Fragment {
 
     @SuppressLint("ClickableViewAccessibility")
     protected void initAction() {
-        //setHasOptionsMenu(true);//onCreateOptionsMenu生效条件
 
-        //fileList.setLongPressDragEnabled(true);// 开启长按拖拽
-        //item拖动状态改变时调用
-//        fileList.setOnItemStateChangedListener(new OnItemStateChangedListener() {
-//            @Override
-//            public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int i) {
-//                LogUtils.i(getClass().getName() + ":167", i + "");
-//                if (i == 2) { //i == 2选项被选中
-//                    fingerDownState(viewHolder.itemView);
-//                } else if (i == 0) { //i == 0 选中项被释放
-//                    fingerUpState(viewHolder.itemView);
-//                }
-//            }
-//        });
     }
 
 
@@ -332,7 +285,7 @@ public abstract class CustomViewFragment extends Fragment {
      */
     public boolean selectAllPosition() {
         boolean isAll;
-        if (getSelectedList().size()==fileInfos.size()) {
+        if (FileUtils.getSelectedList(fileInfos).size()==fileInfos.size()) {
             for (int i = 0; i < fileInfos.size(); i++) {
                 fileInfos.get(i).setSelected(false);
                 View selectItem = fileList.getChildAt(i);
@@ -364,20 +317,8 @@ public abstract class CustomViewFragment extends Fragment {
     }
 
 
-    /**
-     * 获取选中的列表
-     *
-     * @return
-     */
     public ArrayList<FileInfo> getSelectedList() {
-        ArrayList<FileInfo> selectList = new ArrayList<>();//储存删除对象
-        for (int i = 0; i < fileInfos.size(); i++) {
-            FileInfo fileInfo = fileInfos.get(i);
-            if (fileInfo.isSelected()) {
-                selectList.add(fileInfo);
-            }
-        }
-        return selectList;
+        return FileUtils.getSelectedList(fileInfos);
     }
 
     /**
@@ -387,7 +328,7 @@ public abstract class CustomViewFragment extends Fragment {
      */
     private int[] getSelectStartAndEndPosition() {
         int[] SelectStartAndEndPosition = new int[2];//储存位置
-        ArrayList<FileInfo> selectList = getSelectedList();
+        ArrayList<FileInfo> selectList = FileUtils.getSelectedList(fileInfos);
         if (selectList.size() != 0) {
             SelectStartAndEndPosition[0] = fileInfos.indexOf(selectList.get(0));
             SelectStartAndEndPosition[1] = fileInfos.indexOf(selectList.get(selectList.size() - 1));
@@ -429,7 +370,7 @@ public abstract class CustomViewFragment extends Fragment {
 
     @SuppressLint("SetTextI18n")
     public int refreshUnderBar() {
-        ArrayList<FileInfo> selectList = getSelectedList();
+        ArrayList<FileInfo> selectList = FileUtils.getSelectedList(fileInfos);
 
         long size = 0L;
         boolean haveDir = false;

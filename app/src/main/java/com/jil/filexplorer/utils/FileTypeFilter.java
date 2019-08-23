@@ -9,6 +9,12 @@ public class FileTypeFilter{
     private final static String[] IMAGE = {"jpg", "png", "gif"};
     private final static String[] TEXT = {"txt", "doc", "lrc"};
 
+    /**
+     *
+     * @param name image/jpeg
+     * @param fileSize
+     * @return
+     */
     public static int getIconRes(String name, long fileSize) {
         if (fileSize < 2*MB) {//小于2M
             if (imageIf(name)) return R.mipmap.list_ico_image;
@@ -35,6 +41,7 @@ public class FileTypeFilter{
     }
 
     private static boolean textIf(String name) {
+        if(name.startsWith("text"))return true;
         boolean isType = false;
         int i = 0;
         while (!isType && i < TEXT.length) {
@@ -45,6 +52,7 @@ public class FileTypeFilter{
     }
 
     public static boolean imageIf(String name) {
+        if(name.startsWith("image"))return true;
         boolean isType = false;
         int i = 0;
         while (!isType && i < IMAGE.length) {
@@ -55,6 +63,7 @@ public class FileTypeFilter{
     }
 
     private static boolean musicIf(String name) {
+        if(name.startsWith("audio"))return true;
         boolean isType = false;
         int i = 0;
         while (!isType && i < MUSIC.length) {
@@ -65,58 +74,15 @@ public class FileTypeFilter{
     }
 
     private static boolean videoIf(String name) {
+        if(name.startsWith("video"))return true;
         boolean isType = false;
         int i = 0;
         while (!isType && i < VIDEO.length) {
             isType = name.equals(VIDEO[i]);
             i++;
         }
+
         return isType;
     }
 
-
-   /* public FileTypeFilter(String name, long fileSize) {
-        this.name = name;
-        this.fileSize = fileSize;
-    }
-
-    @Override
-    public boolean accept(File file, String s) {
-
-
-        return false;
-    }*/
-
-   /* class CodeFilter implements Filter {
-
-
-        @Override
-        public boolean accept(String name) {
-            return false;
-        }
-    }
-
-    class ImageFilter implements Filter {
-
-        @Override
-        public boolean accept(String name) {
-            return false;
-        }
-    }
-
-    class VideoFilter implements Filter {
-
-        @Override
-        public boolean accept(String name) {
-            return false;
-        }
-    }
-
-    class MusicFilter implements Filter {
-
-        @Override
-        public boolean accept(String name) {
-            return false;
-        }
-    }*/
 }

@@ -10,11 +10,11 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.jil.filexplorer.utils.LogUtils;
 
-public class MyViewPager extends ViewPager {
-    public MyViewPager(@NonNull Context context) {
+public class ImagesPager extends ViewPager {
+    public ImagesPager(@NonNull Context context) {
         super(context);
     }
-    public MyViewPager(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public ImagesPager(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
     }
 

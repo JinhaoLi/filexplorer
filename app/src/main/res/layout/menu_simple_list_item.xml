@@ -38,13 +38,13 @@
     <TextView
         android:id="@android:id/text1"
         android:layout_width="match_parent"
-        android:layout_height="44dp"
+        android:layout_height="43dp"
         android:layout_below="@+id/view10"
         android:layout_marginTop="0dp"
         android:gravity="center_vertical"
+        android:minHeight="?android:attr/listPreferredItemHeightSmall"
         android:paddingStart="?android:attr/listPreferredItemPaddingStart"
         android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
-        android:minHeight="?android:attr/listPreferredItemHeightSmall"
         android:textSize="16sp" />
 
     <View
@@ -56,4 +56,13 @@
         android:layout_marginTop="0dp"
         android:layout_marginEnd="0dp"
         android:background="@color/colorAccent" />
+
+    <View
+        android:id="@+id/view9"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="44dp"
+        android:layout_marginEnd="0dp" />
 </RelativeLayout>

@@ -135,11 +135,11 @@ public class FileInfo extends Item implements Checkable {
     }
 
     public String getFiletype() {
-        return filetype;
+            return filetype;
     }
 
     public void setFiletype(String filetype) {
-        this.filetype = filetype;
+            this.filetype = filetype;
     }
 
     @Override

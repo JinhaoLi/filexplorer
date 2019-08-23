@@ -51,28 +51,6 @@ public class OnScaleListener implements View.OnTouchListener{
         ImageView view = (ImageView) v;
         switch (event.getAction()& MotionEvent.ACTION_MASK){
             case MotionEvent.ACTION_DOWN:
-//                long time = System.currentTimeMillis();
-//                long timeD = time - last;
-//                if ( 0 < timeD && timeD <250&&over) {
-//                    matrix.set(saveMatrix);
-//                    float scale;
-//                    if(max){
-//                        max=false;
-//                        scale = 3;
-//                    }else{
-//                        scale = (float) 1/3;
-//                        max=true;
-//                    }
-//                    matrix.postScale(scale, scale, event.getX(), event.getY());
-//                    over=false;
-//                }else {
-//                    over=true;
-//                    matrix.set(view.getImageMatrix());
-//                    saveMatrix.set( matrix );
-//                    startPoint.set( event.getX(),event.getY() );
-//                    mode=DRAG;
-//                }
-//                last=time;
                 matrix.set(view.getImageMatrix());
                 saveMatrix.set( matrix );
                 startPoint.set( event.getX(),event.getY() );

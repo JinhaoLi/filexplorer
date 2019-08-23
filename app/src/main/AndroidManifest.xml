@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission  android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission
         android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"
         tools:ignore="ProtectedPermissions" />
@@ -24,22 +25,27 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".ImageDisplayActivity"
+
+        <activity android:name=".Activity.ImageDisplayActivity"
+            android:icon="@mipmap/image_brower"
+            android:label="图片查看器"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
-            <data
-                android:mimeType="image/jpeg"
-                android:scheme="file" />
+                <data android:mimeType="image/*"/>
+                <data android:scheme="file"/>
+                <data android:scheme="content"/>
             </intent-filter>
         </activity>
         <!-- android:name="android.support.multidex.MultiDexApplication"> -->
-        <activity android:name=".SettingActivity"
+        <activity android:name=".Activity.SettingActivity"
             android:theme="@style/MyThemeGray"/>
         <activity
-            android:name=".MainActivity"
+            android:name=".Activity.MainActivity"
             android:label="@string/title_activity_main"
+            android:launchMode="singleTask"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:theme="@style/AppTheme">
             <intent-filter>
@@ -52,7 +58,8 @@
             android:theme="@style/AppTheme.jilNoActionBar" />
         <activity
             android:name=".Activity.ProgerssDialogActivity"
-            android:theme="@style/AppTheme.jilNoActionBar" /> <!-- 安卓api大于23使用外部应用程序打开文件必须使用次方法 -->
+            android:theme="@style/AppTheme.jilNoActionBar" />
+        <!-- 安卓api大于23使用外部应用程序打开文件必须使用次方法 -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.jil.filexplorer.fileprovider"

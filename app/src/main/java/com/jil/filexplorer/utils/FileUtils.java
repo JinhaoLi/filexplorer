@@ -6,15 +6,23 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.PointF;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.MotionEvent;
+import android.view.View;
 import android.webkit.MimeTypeMap;
+import android.widget.AdapterView;
+import android.widget.ListPopupWindow;
+import android.widget.ListView;
+import android.widget.PopupWindow;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
@@ -25,10 +33,10 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.signature.MediaStoreSignature;
-import com.bumptech.glide.util.Util;
-import com.jil.filexplorer.BuildConfig;
 import com.jil.filexplorer.Api.FileInfo;
-import com.jil.filexplorer.ImageDisplayActivity;
+import com.jil.filexplorer.BuildConfig;
+import com.jil.filexplorer.R;
+import com.jil.filexplorer.adapter.BoxAdapter;
 
 import java.io.Closeable;
 import java.io.DataOutputStream;
@@ -40,10 +48,13 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import static com.jil.filexplorer.utils.DialogUtils.showAndMake;
+import static com.jil.filexplorer.utils.DialogUtils.showListPopupWindow;
+import static com.jil.filexplorer.utils.UiUtils.getScreenHeight;
 
 public class FileUtils {
 
@@ -155,9 +166,10 @@ public class FileUtils {
                 fileInfo.setCount(lCount);
             }
         } else {
-            fileInfo.setFiletype(getFileType(file.getName()));
+            String mimeType =getMimeType(file.getPath()); //image/jpeg
+            fileInfo.setFiletype(mimeType);
             size =file.length();
-            icon =FileTypeFilter.getIconRes(fileInfo.getFiletype(),size);
+            icon =FileTypeFilter.getIconRes(mimeType,size);
             fileInfo.setFileSize(size);
             fileInfo.setIcon(icon);
         }
@@ -177,6 +189,23 @@ public class FileUtils {
         return false;
     }
 
+    public static Drawable getApkIcon(Context context, String apkPath) {
+        PackageManager pm = context.getPackageManager();
+        PackageInfo info = pm.getPackageArchiveInfo(apkPath,
+                PackageManager.GET_ACTIVITIES);
+        if (info != null) {
+            ApplicationInfo appInfo = info.applicationInfo;
+            appInfo.sourceDir = apkPath;
+            appInfo.publicSourceDir = apkPath;
+            try {
+                return appInfo.loadIcon(pm);
+            } catch (OutOfMemoryError e) {
+                LogUtils.e("获取apkIco失败", e.toString());
+            }
+        }
+        return null;
+    }
+
     public static String getFormatData(Date date) {
         SimpleDateFormat df = new SimpleDateFormat( "yyyy/MM/dd" );//设置日期格式
         return df.format( date );
@@ -191,13 +220,13 @@ public class FileUtils {
             installApk(filePath,context);
             return;
         }
-        Intent intent ;
-        if(type.startsWith("image/")){
-            intent = new Intent(context, ImageDisplayActivity.class);
-            intent.putExtra("image_path",filePath);
-            context.startActivity(intent);
-            return;
-        }
+        Intent intent;
+//        if(type.startsWith("image/")){
+//            intent = new Intent(context, ImageDisplayActivity.class);
+//            intent.putExtra("image_path",filePath);
+//            context.startActivity(intent);
+//            return;
+//        }
         intent=new Intent();
         intent.addCategory("android.intent.category.DEFAULT");
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -212,9 +241,28 @@ public class FileUtils {
         }else {
             uri=Uri.fromFile(new File(filePath));
         }
+        LogUtils.i("URI" ,uri.getPath());
         intent.setDataAndType(uri, type);
+//        /storage/emulated/0/Pictures/64476669_p0.jpg
+//            /external_storage_root/Pictures/00000001.jpg
         //Intent.createChooser(intent, "请选择对应的软件打开该附件！");
         context.startActivity(intent);
+    }
+
+    /**
+     * 获取选中的列表
+     *
+     * @return
+     */
+    public static ArrayList<FileInfo> getSelectedList(ArrayList<FileInfo> fileInfos) {
+        ArrayList<FileInfo> selectList = new ArrayList<>();//储存删除对象
+        for (int i = 0; i < fileInfos.size(); i++) {
+            FileInfo fileInfo = fileInfos.get(i);
+            if (fileInfo.isSelected()) {
+                selectList.add(fileInfo);
+            }
+        }
+        return selectList;
     }
 
     /**
@@ -256,12 +304,22 @@ public class FileUtils {
         context.startActivity(intent);
     }
 
-    public static void viewFile(final Context context, final String filePath) {
+    public static void viewFileWithPath(final Context context, final String filePath) {
         String type = getMimeType(filePath);
         if (!TextUtils.isEmpty(type) && !TextUtils.equals(type, "*/*")) {
             viewFile(context,filePath,type);
         } else {
             chooseViewFile(context,filePath);
+        }
+    }
+
+    public static void viewFile(final Context context, FileInfo fileInfo,View view) {
+        String type = fileInfo.getFiletype();
+        if (!TextUtils.isEmpty(type) && !TextUtils.equals(type, "*/*")) {
+            viewFile(context,fileInfo.getFilePath(),type);
+        } else {
+            //chooseViewFile(context,fileInfo.getFilePath());
+            chooseViewFile(context,view,fileInfo.getFilePath());
         }
     }
 
@@ -288,6 +346,7 @@ public class FileUtils {
                                 selectType = "image/*";
                                 break;
                             case 4:
+
                                 break;
                         }
                         viewFile(context,filePath,selectType);
@@ -296,11 +355,143 @@ public class FileUtils {
         showAndMake(dialogBuilder.create());
     }
 
+    public static void chooseViewFile(final Context context, View view , final String filePath){
+        ListPopupWindow listPopupWindow =showListPopupWindow(context,view);
+        String[] menuItemArray = {"文本","音频","视频","图片","其他"};
+        BoxAdapter<String> adapter =new BoxAdapter<String>(context,R.layout.menu_simple_list_item,menuItemArray) {
+            @Override
+            public long getItemId(int position) {
+                return position;
+            }
+            @Override
+            public void setData(ViewHolder holder, String data) {
+                holder.txt_content.setText(data);
+            }
+        };
+        listPopupWindow.setAdapter(adapter);
+        listPopupWindow.setWidth(300);
+        final ListPopupWindow finalListPopupWindow = listPopupWindow;
+        listPopupWindow.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String selectType = "*/*";
+                switch (position) {
+                    case 0:
+                        selectType = "text/plain";
+                        break;
+                    case 1:
+                        selectType = "audio/*";
+                        break;
+                    case 2:
+                        selectType = "video/*";
+                        break;
+                    case 3:
+                        selectType = "image/*";
+                        break;
+                    case 4:
+                        break;
+                }
+                viewFile(context,filePath,selectType);
+                finalListPopupWindow.dismiss();
+            }
+        });
+        ListView l =listPopupWindow.getListView();
+        listPopupWindow.show();
+        if(l!=null){
+            l.setOverScrollMode(ListView.OVER_SCROLL_NEVER);
+        }
+    }
+
+    public static void chooseViewFile(final Context context, View view , final String filePath, final ListPopupWindow upPopupWindow){
+        ListPopupWindow listPopupWindow =showListPopupWindow(context,view);
+
+        listPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                upPopupWindow.dismiss();
+            }
+        });
+        String[] menuItemArray = {"文本","音频","视频","图片","其他"};
+        BoxAdapter<String> adapter =new BoxAdapter<String>(context,R.layout.menu_simple_list_item,menuItemArray) {
+            @Override
+            public long getItemId(int position) {
+                return position;
+            }
+            @Override
+            public void setData(ViewHolder holder, String data) {
+                holder.txt_content.setText(data);
+            }
+        };
+        listPopupWindow.setAdapter(adapter);
+        listPopupWindow.setWidth(300);
+        final ListPopupWindow finalListPopupWindow = listPopupWindow;
+        listPopupWindow.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String selectType = "*/*";
+                switch (position) {
+                    case 0:
+                        selectType = "text/plain";
+                        break;
+                    case 1:
+                        selectType = "audio/*";
+                        break;
+                    case 2:
+                        selectType = "video/*";
+                        break;
+                    case 3:
+                        selectType = "image/*";
+                        break;
+                    case 4:
+
+                        break;
+                }
+                viewFile(context,filePath,selectType);
+                finalListPopupWindow.dismiss();
+            }
+        });
+        int[] location = new  int[2] ;
+        view.getLocationOnScreen(location);
+        listPopupWindow.getVerticalOffset();
+        if(location[0]<540){
+            listPopupWindow.setHorizontalOffset(listPopupWindow.getWidth()+3);
+        }else {
+            listPopupWindow.setHorizontalOffset(-(listPopupWindow.getWidth()+3));
+        }
+        ListView l =listPopupWindow.getListView();
+        if(location[1]>=getScreenHeight(context)-(menuItemArray.length*115)){
+            listPopupWindow.setVerticalOffset(115);
+        }else {
+            listPopupWindow.setVerticalOffset(-115);
+        }
+        try{
+            listPopupWindow.show();
+            if(l!=null){
+                l.setOverScrollMode(ListView.OVER_SCROLL_NEVER);
+            }
+        }catch (Exception e){
+            listPopupWindow=null;
+            upPopupWindow.dismiss();
+            chooseViewFile(context,filePath);
+            LogUtils.i(e.getMessage(),"无法显示窗口");
+        }
+
+    }
+
+
     private static void grantUriPermission(Context context, Uri fileUri, Intent intent) {
         List<ResolveInfo> resInfoList = context.getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
         for (ResolveInfo resolveInfo : resInfoList) {
             String packageName = resolveInfo.activityInfo.packageName;
             context.grantUriPermission(packageName, fileUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+    }
+
+    public static String hideMax(String string,int i){
+        if(string.length()>i){
+            return "..."+string.substring(string.length()-(i-5));
+        }else {
+           return string;
         }
     }
 

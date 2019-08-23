@@ -15,6 +15,8 @@ import android.view.ViewGroup;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.jil.filexplorer.Activity.ImageDisplayActivity;
+import com.jil.filexplorer.Api.FileChangeListenter;
 import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.Api.SettingParam;
 import com.jil.filexplorer.R;
@@ -31,7 +33,7 @@ import static com.jil.filexplorer.Api.SettingParam.saveSharedPreferences;
 import static com.jil.filexplorer.utils.DialogUtils.showAndMake;
 import static com.jil.filexplorer.utils.FileUtils.getDistance;
 
-public class FileShowFragment extends CustomViewFragment {
+public class FileShowFragment extends CustomViewFragment implements FileChangeListenter {
     @SuppressLint("HandlerLeak")
     private Handler handler=new Handler(){
         @Override
@@ -45,6 +47,11 @@ public class FileShowFragment extends CustomViewFragment {
             }
         }
     };
+
+
+    public FileShowFragment() {
+
+    }
 
     public FileShowFragment(Activity activity, String filePath) {
         super(activity,filePath);
@@ -245,5 +252,10 @@ public class FileShowFragment extends CustomViewFragment {
                 return false;
             }
         });
+    }
+
+    @Override
+    public void change() {
+        load(filePath,true);
     }
 }

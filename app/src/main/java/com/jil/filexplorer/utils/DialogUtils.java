@@ -6,11 +6,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListPopupWindow;
 import android.widget.TextView;
 
@@ -20,31 +18,18 @@ import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.ListPopupWindowAdapter;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 
-import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
+import static com.jil.filexplorer.utils.FileUtils.hideMax;
 
 public class DialogUtils {
 
-    /**
-     * 获取density
-     * @param context
-     * @return
-     */
-    public static float getDensity(Context context){
-        DisplayMetrics metrics = new DisplayMetrics();
-        WindowManager manager = (WindowManager) context.getSystemService(Service.WINDOW_SERVICE);
-        if (manager != null) {
-            manager.getDefaultDisplay().getMetrics(metrics);
-        }
-        return metrics.density;
-    }
 
     public static void showAlerDialog(Context context, FileInfo fileInfo){
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
         dialogBuilder.setTitle("文件详细信息");
+        String path =hideMax(fileInfo.getFilePath(),35);
         String string = ("文件名：" + fileInfo.getFileName() + "\n"
-                + "路径：" + fileInfo.getFilePath() + "\n"
+                + "路径：" + path + "\n"
                 + "最后修改日期：" + FileUtils.getFormatData(fileInfo.getModifiedDate()) + "\n"
                 + "文件大小：" + fileInfo.getFileSize() / 1024 + "kb" + "\n"
                 + "是否可读：" + fileInfo.isCanRead() + "\n"
@@ -84,13 +69,20 @@ public class DialogUtils {
 
     public static ListPopupWindow showListPopupWindow(Context context, View view,int itemRes,Item[] list) {
         ListPopupWindow listPopupWindow;
-        listPopupWindow = new ListPopupWindow(context);
+        listPopupWindow = showListPopupWindow(context,view);
         ListPopupWindowAdapter adapter =new ListPopupWindowAdapter(context, itemRes, list);
         listPopupWindow.setAdapter(adapter);//用android内置布局，或设计自己的样式
+        return listPopupWindow;
+    }
+
+    public static ListPopupWindow showListPopupWindow(Context context, View view) {
+        ListPopupWindow listPopupWindow;
+        listPopupWindow = new ListPopupWindow(context);
         listPopupWindow.setAnchorView(view);//以哪个控件为基准，在该处以mEditText为基准
         listPopupWindow.setModal(true);
         return listPopupWindow;
     }
+
 
 
     public static AlertDialog.Builder showAlertDialog(Context context,String title){

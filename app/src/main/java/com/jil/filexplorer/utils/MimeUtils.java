@@ -333,6 +333,7 @@ public final class MimeUtils {
         add("video/dv", "dif");
         add("video/dv", "dv");
         add("video/fli", "fli");
+        add("video/flv", "flv");
         add("video/m4v", "m4v");
         add("video/mpeg", "mpeg");
         add("video/mpeg", "mpg");

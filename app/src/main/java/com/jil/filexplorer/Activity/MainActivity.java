@@ -1,4 +1,4 @@
-package com.jil.filexplorer;
+package com.jil.filexplorer.Activity;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -26,24 +26,21 @@ import android.widget.ListPopupWindow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.navigation.NavigationView;
-import com.jil.filexplorer.Activity.ClearActivity;
-import com.jil.filexplorer.Activity.ProgressActivity;
 import com.jil.filexplorer.Api.ActivityManager;
 import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.Api.FileOperation;
 import com.jil.filexplorer.Api.ProgressMessage;
 import com.jil.filexplorer.Api.SettingParam;
+import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.FragmentAdapter;
 import com.jil.filexplorer.ui.CustomViewFragment;
 import com.jil.filexplorer.ui.FileShowFragment;
@@ -77,6 +74,7 @@ import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.DialogUtils.showAlertDialog;
 import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromFile;
 import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;
+import static com.jil.filexplorer.utils.FileUtils.hideMax;
 import static com.jil.filexplorer.utils.FileUtils.requestPermission;
 import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
 import static com.jil.filexplorer.utils.NotificationUtils.registerNotifty;
@@ -206,16 +204,6 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                 return false;
             }
         });
-//        upDir.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                File file = new File(mPath);
-//                String path = file.getParent();
-//                if (path != null && !path.equals(""))
-//                    customViewFragment.load(path, false);
-//                else ToastUtils.showToast(MainActivity.this, "空路径无法访问", 1000);
-//            }
-//        });
         if (customViewFragment != null) {
             refresh(customViewFragment.getFilePath());
         }
@@ -387,7 +375,8 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         }
         missionList.add(fileInfo);
     }
-
+    private FrameLayout leftView;
+    private ImageView fragment_small;
     @Override
     protected void initView() {
         setContentView(R.layout.activity_main);
@@ -405,19 +394,21 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         sortSize = topBar.findViewById(R.id.textView5);
         sortType = topBar.findViewById(R.id.textView4);
 
+        leftView =findViewById(R.id.left_fragment_show);
+        fragment_small=findViewById(R.id.fragment_small_view);
+
         pageRound = findViewById(R.id.fragment_page);
-        pathEdit = (EditText) findViewById(R.id.editText);
-        //upDir = findViewById(R.id.imageButton2);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        pathEdit = findViewById(R.id.editText);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        ActionBar actionBar = getSupportActionBar();
-        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        drawer = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.nav_view);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
+
     }
 
     public void slideToPager(String path){
@@ -435,7 +426,6 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        fragmentTransaction = fragmentManager.beginTransaction();
         int id = item.getItemId();
         switch (id) {
             case R.id.nav_phone:
@@ -443,8 +433,6 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                 break;
             case R.id.nav_gallery:
                 slideToPager(Environment.getExternalStorageDirectory().getPath()+File.separator+"Pictures");
-                //FileShowFragment fileShowFragment=(FileShowFragment) fragments.get(fragmentPager.getCurrentItem());
-                //fileShowFragment.load(Environment.getExternalStorageDirectory().getPath()+File.separator+"Pictures",false);
                 break;
             case R.id.nav_fast_entry:
                 break;
@@ -462,12 +450,20 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                 startActivity(i);
                 break;
             default:
-
         }
-
-        fragmentTransaction.commit();
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public boolean openParentDir(){
+        if (!mPath.equals("/") && !mPath.equals(Environment.getExternalStorageDirectory().getPath())) {
+            File file1 = new File(mPath);
+            String path = file1.getParent();
+            customViewFragment.load(path, true);
+            return true;
+        }else {
+            return false;
+        }
     }
 
 
@@ -476,19 +472,16 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else if (!mPath.equals("/") && !mPath.equals(Environment.getExternalStorageDirectory().getPath())) {
-            File file1 = new File(mPath);
-            String path = file1.getParent();
-            customViewFragment.load(path, true);
-        } else if(fragments.size()>1){
-            for(Fragment fragment:fragments){
-                FileShowFragment f=(FileShowFragment) fragment;
-                LogUtils.i("当前的界面有",f.getFilePath());
-            }
-            removeFragmentPage();
-        }else {
-            super.onBackPressed();
+            return;
         }
+
+        if(openParentDir())return;
+
+        if(fragments.size()>1){
+            removeFragmentPage();
+            return;
+        }
+        super.onBackPressed();
     }
 
     /**
@@ -582,10 +575,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
 
     public void setCustomViewFragment(CustomViewFragment customViewFragment) {
-        //this.customViewFragment = customViewFragment;
-        //fragmentManager.putFragment(savedInstanceState,customViewFragment.getFragmentTitle(),customViewFragment);
         if(fragments==null){
-            //fragments=fragmentManager.getFragments();
             fragments=new ArrayList<>();
         }
         fragments.add(customViewFragment);
@@ -593,18 +583,12 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         fragmentPager.setAdapter(fragmentAdapter);
         fragmentPager.setCurrentItem(0);
         fragmentPager.addOnPageChangeListener(this);
-
     }
 
     public void refresh(String path) {
         if (pathEdit != null && path != null && !path.equals("")) {
             mPath = path;
-            String s;
-            if(path.length()>55){
-                s ="..."+path.substring(path.length()-50);
-            }else {
-                s=path;
-            }
+            String s=hideMax(path,55);
             pathEdit.setText(s);
             setTitle(customViewFragment.getFragmentTitle());
         }

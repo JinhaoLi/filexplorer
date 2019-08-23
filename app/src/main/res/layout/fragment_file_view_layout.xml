@@ -4,35 +4,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!--<FrameLayout
-        android:id="@+id/top_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
 
-        <include
-            layout="@layout/sort_title_bar_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </FrameLayout>-->
-
-    <com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/file_list_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
-    </com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView>
-
-   <!-- <FrameLayout
-        android:id="@+id/under_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#EBEBEB">
-
-        <include
-            layout="@layout/under_bar_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white" />
-    </FrameLayout>-->
+    </androidx.recyclerview.widget.RecyclerView>
 </LinearLayout>
