@@ -32,6 +32,8 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.navigation.NavigationView;
@@ -42,8 +44,11 @@ import com.jil.filexplorer.Api.ProgressMessage;
 import com.jil.filexplorer.Api.SettingParam;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.FragmentAdapter;
+import com.jil.filexplorer.adapter.SurperAdapter;
 import com.jil.filexplorer.ui.CustomViewFragment;
 import com.jil.filexplorer.ui.FileShowFragment;
+import com.jil.filexplorer.ui.MyItemDecoration;
+import com.jil.filexplorer.utils.ConstantUtils;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.MenuUtils;
 import com.jil.filexplorer.utils.ToastUtils;
@@ -52,6 +57,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static com.jil.filexplorer.Activity.ProgressActivity.setOnActionFinish;
 import static com.jil.filexplorer.Api.FileOperation.MODE_COPY;
@@ -90,9 +96,13 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     private FileShowFragment customViewFragment;
     private String mPath;
     private ArrayList<String> historyPath = new ArrayList<>();
+    LinearLayoutManager linearLayoutManager;
+    private int smallViewSelectePosition;
     private ImageButton upDir;
     NavigationView navigationView;
-    DrawerLayout drawer;
+    DrawerLayout drawerLayout;
+    RecyclerView smallViewList;
+    SurperAdapter<CustomViewFragment> smallViewAdapter;
     //顶部排序栏,底部操作栏
     private FrameLayout topBar;
     protected FrameLayout underBar;
@@ -375,8 +385,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         }
         missionList.add(fileInfo);
     }
-    private FrameLayout leftView;
-    private ImageView fragment_small;
+    private FrameLayout right;
     @Override
     protected void initView() {
         setContentView(R.layout.activity_main);
@@ -394,18 +403,35 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         sortSize = topBar.findViewById(R.id.textView5);
         sortType = topBar.findViewById(R.id.textView4);
 
-        leftView =findViewById(R.id.left_fragment_show);
-        fragment_small=findViewById(R.id.fragment_small_view);
+//        right =findViewById(R.id.left_fragment_show);
+//        right.setBackgroundColor(SettingParam.MainColor);
 
         pageRound = findViewById(R.id.fragment_page);
         pathEdit = findViewById(R.id.editText);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        drawer = findViewById(R.id.drawer_layout);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        smallViewList =findViewById(R.id.small_fragment_view_list_layout);
         navigationView = findViewById(R.id.nav_view);
 
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close){
+            @Override
+            public void onDrawerStateChanged(int newState) {
+                super.onDrawerStateChanged(newState);
+//                if(newState==1){
+//                    smallViewLoadOrRefresh();
+//                }
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                if(drawerView.getId()==R.id.left_fragment_show){
+                    smallViewLoadOrRefresh();
+                }
+            }
+        };
+        drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
 
@@ -413,14 +439,22 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     public void slideToPager(String path){
         int position=fragmentAdapter.findPositionByFilePath(path);
-        if(position>=0){
+        if(position>=0){//已经有此页面
             fragmentPager.setCurrentItem(position);
-        }else {
-            FileShowFragment fileShow1=new FileShowFragment(this,path);
-            fragments.add(fileShow1);
-            fragmentAdapter.notifyDataSetChanged();
-            fragmentPager.setCurrentItem(fragments.size());
+        }else {//没有此页面
+            createNewFragment(path);
         }
+    }
+
+    /**
+     * 创建一个新页面并移动到此页面
+     * @param path
+     */
+    public void createNewFragment(String path){
+        FileShowFragment fileShow1=new FileShowFragment(this,path);
+        fragments.add(fileShow1);
+        fragmentAdapter.notifyDataSetChanged();
+        fragmentPager.setCurrentItem(fragments.size());
     }
 
 
@@ -451,7 +485,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                 break;
             default:
         }
-        drawer.closeDrawer(GravityCompat.START);
+        drawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
@@ -489,14 +523,22 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
      */
     public void removeFragmentPage(){
         int p=fragmentPager.getCurrentItem();
+        removeFragmentPage(p);
+    }
 
-        if(p==0){
-            fragmentPager.setCurrentItem(p+1);
-        }else {
-            fragmentPager.setCurrentItem(p-1);
+    /**
+     * 移除fragment
+     */
+    public void removeFragmentPage(int position){
+        if(position==fragmentPager.getCurrentItem()) {
+            if (position == 0) {
+                fragmentPager.setCurrentItem(position + 1);
+            } else {
+                fragmentPager.setCurrentItem(position - 1);
+            }
         }
-        LogUtils.i("销毁第"+(p+1)+"个",fragments.get(p)+"");
-        fragmentAdapter.removePager(p);
+        LogUtils.i("销毁第"+(position+1)+"个",fragments.get(position)+"");
+        fragmentAdapter.removePager(position);
     }
 
     /**
@@ -579,10 +621,59 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
             fragments=new ArrayList<>();
         }
         fragments.add(customViewFragment);
-        fragmentAdapter =new FragmentAdapter(fragmentManager,fragments,this,savedInstanceState);
+        fragmentAdapter =new FragmentAdapter(fragmentManager,fragments);
         fragmentPager.setAdapter(fragmentAdapter);
         fragmentPager.setCurrentItem(0);
         fragmentPager.addOnPageChangeListener(this);
+    }
+
+
+    public void smallViewLoadOrRefresh(){
+        if(smallViewAdapter==null){
+            smallViewAdapter =new SurperAdapter<CustomViewFragment>(fragments, this, new SurperAdapter.OnItemClickListener<CustomViewFragment>() {
+                @Override
+                public void onItemClick(SurperAdapter.VH holder, CustomViewFragment data,int position) {
+                    holder.itemView.setBackgroundColor(ConstantUtils.SELECTED_COLOR);
+                    if(position!=fragmentPager.getCurrentItem()&&linearLayoutManager.findViewByPosition(fragmentPager.getCurrentItem())!=null){
+                        Objects.requireNonNull(linearLayoutManager.findViewByPosition(fragmentPager.getCurrentItem())).setBackgroundColor(NORMAL_COLOR);
+                        fragmentPager.setCurrentItem(position);
+                    }
+
+
+                }
+            }) {
+                @Override
+                public int getLayoutId(int viewType, CustomViewFragment data) {
+                    return R.layout.small_fragment_view_item_layout;
+                }
+
+                @Override
+                public void convert(VH holder, CustomViewFragment data, final int position, Context mContext) {
+                    holder.setText(R.id.textView7,data.getFragmentTitle());
+                    holder.setPic(R.id.imageView6,data.getSmallView(),mContext);
+                    if(position==fragmentPager.getCurrentItem()){
+                        holder.itemView.setBackgroundColor(ConstantUtils.SELECTED_COLOR);
+                    }else {
+                        holder.itemView.setBackgroundColor(NORMAL_COLOR);
+                    }
+                    holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                        @Override
+                        public boolean onLongClick(View v) {
+                            removeFragmentPage(position);
+                            smallViewAdapter.notifyDataSetChanged();
+                            return false;
+                        }
+                    });
+                }
+            };
+            linearLayoutManager = new LinearLayoutManager(this);
+            smallViewList.setLayoutManager(linearLayoutManager);
+            smallViewList.addItemDecoration(new MyItemDecoration(this, 1));
+            smallViewList.setAdapter(smallViewAdapter);
+        }else {
+            smallViewAdapter.notifyDataSetChanged();
+            //smallViewAdapter.notifyItemRangeChanged(0,fragments.size());
+        }
     }
 
     public void refresh(String path) {
@@ -759,14 +850,13 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                     }
                 });
             } else if(values[0]!=null&&values[0].getProgress()==100){
-                //load(filePath,true);
                 if(values[0].getmType()== MODE_COPY||values[0].getmType()== MODE_MOVE){
                     customViewFragment.addFileInfos(fileOperation.getInFiles());
                 }else {
                     customViewFragment.removeFileInfos(fileOperation.getInFiles());
                 }
             }else {
-
+                LogUtils.e(getClass().getName(),"获取的进度values是否为空");
             }
         }
 

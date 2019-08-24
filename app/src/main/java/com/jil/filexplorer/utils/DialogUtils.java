@@ -19,25 +19,42 @@ import com.jil.filexplorer.adapter.ListPopupWindowAdapter;
 
 import java.lang.reflect.Field;
 
+import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;
+import static com.jil.filexplorer.utils.FileUtils.getPicWidthAndHeight;
 import static com.jil.filexplorer.utils.FileUtils.hideMax;
 
 public class DialogUtils {
 
 
-    public static void showAlerDialog(Context context, FileInfo fileInfo){
+    public static void showFileInfoMsg(Context context, FileInfo fileInfo){
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
         dialogBuilder.setTitle("文件详细信息");
         String path =hideMax(fileInfo.getFilePath(),35);
-        String string = ("文件名：" + fileInfo.getFileName() + "\n"
-                + "路径：" + path + "\n"
-                + "最后修改日期：" + FileUtils.getFormatData(fileInfo.getModifiedDate()) + "\n"
-                + "文件大小：" + fileInfo.getFileSize() / 1024 + "kb" + "\n"
-                + "是否可读：" + fileInfo.isCanRead() + "\n"
-                + "是否可写：" + fileInfo.isCanWrite());
-        dialogBuilder.setMessage(string);
+        StringBuilder msg =new StringBuilder();
+        msg.     append("名称：").append(fileInfo.getFileName()).append("\n")
+                .append("路径：").append(path).append("\n")
+                .append("最后修改日期：").append(FileUtils.getFormatData(fileInfo.getModifiedDate())).append("\n")
+                .append("大小：").append(fileInfo.getFileSize() / 1024).append("kb").append("\n")
+                .append("可读：").append(fileInfo.isCanRead()).append("\n")
+                .append("可写：").append(fileInfo.isCanWrite());
+
+        if(fileInfo.isDir()){
+
+        }else {
+            if(fileInfo.getFiletype().startsWith("image")){
+                int[] wh =getPicWidthAndHeight(fileInfo.getFilePath());
+                msg.append("\n宽度：").append(wh[0]).append("\n")
+                        .append("高度：").append(wh[1]);
+            }
+        }
+        dialogBuilder.setMessage(msg.toString());
         dialogBuilder.setInverseBackgroundForced(true);
         AlertDialog dialog = dialogBuilder.create();
         showAndMake(dialog);
+    }
+
+    public static void showFileInfoMsg(Context context,String path){
+        showFileInfoMsg(context,getFileInfoFromPath(path));
     }
 
     /**

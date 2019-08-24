@@ -10,6 +10,8 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -44,6 +46,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -177,8 +180,8 @@ public class FileUtils {
     }
 
     public static FileInfo getFileInfoFromPath(String path){
-        File file =new File(path);
-        return getFileInfoFromFile(file);
+        SoftReference<File> softReference =new SoftReference<File>(new File(path));
+        return getFileInfoFromFile(softReference.get());
     }
 
     public static boolean reNameFile(File file,String name){
@@ -285,22 +288,40 @@ public class FileUtils {
         return size;
     }
 
-    public static void shareImage(Context context,String filePath){
+    /**
+     * bitmap.options类为bitmap的裁剪类，通过他可以实现bitmap的裁剪；
+     *         如果不设置裁剪后的宽高和裁剪比例，返回的bitmap对象将为空，
+     *         但是这个对象存储了原bitmap的宽高信息。
+     * @param imagePath
+     * @return i[0] =width i[1]=height
+     */
+    public static int[]  getPicWidthAndHeight(String imagePath){
+        int[] i =new int[2];
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;//这个参数设置为true才有效，
+        Bitmap bmp = BitmapFactory.decodeFile(imagePath, options);//这里的bitmap是个空
+        if(bmp == null){
+            LogUtils.e(FileUtils.class.getName(),"通过options获取到的bitmap为空 ===");
+        }
+        i[0]= options.outWidth;
+        i[1]= options.outHeight;
+        LogUtils.i(FileUtils.class.getName(),"通过Options获取到的图片大小"+ "width:"+ i[0] +" height: " + i[1]);
+        return i;
+    }
+
+    public static void shareFile(Context context, String filePath, String type){
         Intent intent=new Intent(Intent.ACTION_SEND);
         intent.addCategory("android.intent.category.DEFAULT");
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        //intent.setAction(android.content.Intent.ACTION_VIEW);
         Uri uri;
         if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N){
             LogUtils.i("FileUtils:",BuildConfig.APPLICATION_ID+".fileprovider");
             uri=FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID+".fileprovider",new File(filePath));//authority要和AndroidManifest中的定义authorities的一致
-
         }else {
             uri=Uri.fromFile(new File(filePath));
         }
-        intent.setType("image/*");
+        intent.setType(type);
         intent.putExtra(Intent.EXTRA_STREAM,uri);
-        //Intent.createChooser(intent, "请选择对应的软件打开该附件！");
         context.startActivity(intent);
     }
 

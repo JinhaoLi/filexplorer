@@ -73,7 +73,7 @@ public class FileTypeFilter{
         return isType;
     }
 
-    private static boolean videoIf(String name) {
+    public static boolean videoIf(String name) {
         if(name.startsWith("video"))return true;
         boolean isType = false;
         int i = 0;

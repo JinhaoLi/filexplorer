@@ -42,15 +42,4 @@
         </menu>
     </item>
 
-    <item
-        android:title="@string/windows">
-        <menu>
-
-            <item
-                android:id="@+id/windows"
-                android:icon="@mipmap/list_ico_dir"
-                android:title="windows -1" />
-        </menu>
-    </item>
-
 </menu>

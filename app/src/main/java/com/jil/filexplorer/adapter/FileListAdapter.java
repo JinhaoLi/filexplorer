@@ -45,13 +45,15 @@ import static com.jil.filexplorer.utils.ConstantUtils.KB;
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
 import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
-import static com.jil.filexplorer.utils.DialogUtils.showAlerDialog;
+import static com.jil.filexplorer.utils.DialogUtils.showFileInfoMsg;
 import static com.jil.filexplorer.utils.DialogUtils.showAlertDialog;
 import static com.jil.filexplorer.utils.DialogUtils.showListPopupWindow;
 import static com.jil.filexplorer.utils.FileTypeFilter.imageIf;
+import static com.jil.filexplorer.utils.FileTypeFilter.videoIf;
 import static com.jil.filexplorer.utils.FileUtils.chooseViewFile;
 import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromFile;
 import static com.jil.filexplorer.utils.FileUtils.getOptions;
+import static com.jil.filexplorer.utils.FileUtils.shareFile;
 import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
 import static com.jil.filexplorer.utils.FileUtils.viewFile;
 
@@ -187,6 +189,9 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                         clickId=143;
                         chooseViewFile(mMainActivity,view,fileInfo.getFilePath(),listPopupWindow);
                         break;
+                    case 128:
+                        shareFile(mMainActivity,fileInfo.getFilePath(),fileInfo.getFiletype());
+                        break;
                     case 732://删除
                         mfileShowFragment.refreshMissionList(fileInfo);
 
@@ -231,7 +236,7 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                         break;
                     case 813:
                         //clickId=813;
-                        showAlerDialog(mMainActivity,fileInfo);
+                        showFileInfoMsg(mMainActivity,fileInfo);
                         //chooseViewFile(mMainActivity,view,fileInfo.getFilePath(),listPopupWindow);
                         break;
 
@@ -258,26 +263,31 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                         .placeholder(R.mipmap.list_ico_dir)
                         .into(holder.icon);
 
-            } else {
-                Glide.with(mMainActivity).load(R.mipmap.list_ico_dir).into(holder.icon);
+            }else {
+                Glide.with(mMainActivity).load(R.mipmap.list_ico_dir).placeholder(R.mipmap.list_ico_dir).into(holder.icon);
             }
         }else {
             File f=new File(fileInfo.getFilePath());
-            if (imageIf(fileInfo.getFiletype())) {
+            if (imageIf(fileInfo.getFiletype())) {//加载图片缩略图
                 Glide.with(mMainActivity).load(f).apply(options)
                         .error(fileInfo.getIcon())
                         .signature(new MediaStoreSignature("image/*", f.length(), 2))
                         .placeholder(fileInfo.getIcon())
                         .into(holder.icon);
-            } else if(fileInfo.getFileName().endsWith(".apk")){
+            } else if(fileInfo.getFileName().endsWith(".apk")){//加载apk缩略图
                 Glide.with(mMainActivity).load(FileUtils.getApkIcon(mMainActivity,f.getPath()))
                         .error(R.drawable.ic_android_black_24dp)
                         .placeholder(R.mipmap.list_ico_unknow)
                         .into(holder.icon);
-            }else {
+            }else if(videoIf(fileInfo.getFiletype())){//加载视频缩略图
+                Glide.with(mMainActivity).load(fileInfo.getFilePath())
+                        .error(fileInfo.getIcon())
+                        .placeholder(fileInfo.getIcon())
+                        .into(holder.icon);
+            }else {//不加载缩略图
                 Glide.with(mMainActivity).load(fileInfo.getIcon())
                         .error(R.mipmap.list_ico_unknow)
-                        .placeholder(R.mipmap.list_ico_unknow)
+                        .placeholder(fileInfo.getIcon())
                         .into(holder.icon);
             }
         }
@@ -330,8 +340,6 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                 this.icon = itemView.findViewById(R.id.imageView2);
             }else {
                 this.fileName = itemView.findViewById(R.id.textView7);
-                //if(Build.VERSION.SDK_INT>=android.os.Build.VERSION_CODES.M)
-                //this.fileName.setTextAppearance(R.style.textView_layout);
                 this.icon = itemView.findViewById(R.id.imageView6);
             }
 

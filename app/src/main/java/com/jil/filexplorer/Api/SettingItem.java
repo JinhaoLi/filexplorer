@@ -4,30 +4,25 @@ import android.view.View;
 
 import com.jil.filexplorer.R;
 
-public abstract class SettingItem {
-    private String name;
+public abstract class SettingItem extends Item{
     private String description;
     private int itemLayout;
     private boolean switchOpen;
-    private int id;
 
     public SettingItem(String name, int id) {
-        this.name = name;
-        this.id = id;
+        super(name,id);
     }
 
     public SettingItem(String name, String description, int id) {
-        this.name = name;
+        super(name,id);
         this.description = description;
-        this.id = id;
     }
 
     public SettingItem(String name, String description, boolean switchOpen, int id) {
-        this.name = name;
+        super(name,id);
         this.description = description;
         this.itemLayout = R.layout.setting_item_switch_layout;
         this.switchOpen = switchOpen;
-        this.id = id;
     }
 
     public String getDescription() {
@@ -40,18 +35,6 @@ public abstract class SettingItem {
 
     public abstract void click(View v);
 
-    public String getName() {
-        return name;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public int getItemLayout() {
         return itemLayout;
     }
@@ -60,9 +43,6 @@ public abstract class SettingItem {
         this.itemLayout = itemLayout;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public boolean isSwitchOpen() {
         return switchOpen;

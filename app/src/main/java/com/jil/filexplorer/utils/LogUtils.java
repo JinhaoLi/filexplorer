@@ -58,14 +58,15 @@ public final class LogUtils {
 			writer.write(date+log);
 			writer.append("\n");
 			writer.flush();
-
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}finally {
 			try {
-				writer.close();
+				if (writer != null) {
+					writer.close();
+				}
 			} catch (IOException e) {
 				// TODO 自动生成的 catch 块
 				e.printStackTrace();

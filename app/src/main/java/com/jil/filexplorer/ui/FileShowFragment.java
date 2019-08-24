@@ -15,7 +15,6 @@ import android.view.ViewGroup;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.jil.filexplorer.Activity.ImageDisplayActivity;
 import com.jil.filexplorer.Api.FileChangeListenter;
 import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.Api.SettingParam;
@@ -26,6 +25,7 @@ import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.ToastUtils;
 
 import java.io.File;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -127,9 +127,11 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
             @Override
             public void run() {
                 fragmentTitle = file.getName();
+
                 File[] files = file.listFiles();
+                SoftReference<File[]> softReference =new SoftReference<>(files);
                 fileInfos = new ArrayList<>();
-                for (File temp : files) {
+                for (File temp : softReference.get()) {
                     fileInfos.add(FileUtils.getFileInfoFromFile(temp));
                 }
                 try {

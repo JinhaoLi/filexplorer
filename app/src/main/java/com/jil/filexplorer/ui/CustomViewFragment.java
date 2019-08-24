@@ -3,6 +3,9 @@ package com.jil.filexplorer.ui;
 import android.annotation.SuppressLint;
 ;
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,6 +44,7 @@ public abstract class CustomViewFragment extends Fragment {
     protected FileListAdapter fileListAdapter;
     protected RecyclerView fileList;
     public boolean menuVisible;
+    public Bitmap smallView;
     //全选按钮可见状态
     public boolean allSelect=false;
 
@@ -96,6 +100,7 @@ public abstract class CustomViewFragment extends Fragment {
             isRecovery=false;
             rootView = inflater.inflate(R.layout.fragment_file_view_layout, container, false);
             fileList = rootView.findViewById(R.id.file_list_view);
+
         }else {
             isRecovery=true;
         }
@@ -103,13 +108,34 @@ public abstract class CustomViewFragment extends Fragment {
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    protected void initAction() {
+    protected abstract void initAction();
 
+    public static Bitmap bitMapScale(Bitmap bitmap , float scale) {
+        Matrix matrix = new Matrix();
+        matrix.postScale( scale , scale ); //长和宽放大缩小的比例
+        return Bitmap.createBitmap( bitmap , 0 , 0 , bitmap.getWidth() , bitmap.getHeight() , matrix , true );
     }
 
+    public static Bitmap createViewBitmap(Bitmap bitmap,View v) {
 
+        if(bitmap!=null){
+            bitmap.recycle();
+        }
+        bitmap = Bitmap.createBitmap(v.getWidth(), v.getHeight(), Bitmap.Config.ARGB_4444);
+        Canvas canvas = new Canvas(bitmap);
+        v.draw(canvas);
+        return bitmap;
+    }
 
+    public void refreshSmallView(){
+        if(fileList!=null)
+        smallView=createViewBitmap(smallView,fileList);
+    }
 
+    public Bitmap getSmallView(){
+        refreshSmallView();
+        return smallView;
+    }
 
     protected abstract void deleteItem(int adapterPosition);
 

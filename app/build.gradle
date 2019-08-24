@@ -1,13 +1,17 @@
 apply plugin: 'com.android.application'
 
 static def releaseTime() {
+    delete()
+    return new Date().format("yyyy-MM-dd HH-mm-ss")
+}
+
+static def delete(){
     File f =new File("D:\\ASProject\\filexplorer\\app\\build\\outputs\\apk\\debug")
     File[] files =f.listFiles()
     for(File temp:files){
         if(temp.getName().endsWith("apk"))
             temp.delete()
     }
-    return new Date().format("yyyy-MM-dd HH-mm-ss")
 }
 
 android {
@@ -44,18 +48,15 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'com.android.support:design:28.0.0'
-
-    //RecyclerView侧滑菜单，滑动删除，长按拖拽，下拉刷新上拉加载
-    //implementation 'com.yanzhenjie:recyclerview-swipe:1.0.3'
     //加载图片框架
     implementation 'com.github.bumptech.glide:glide:4.9.0'
     //解决dex方法数超过65535的问题
-    implementation 'com.android.support:multidex:1.0.3'
+    //implementation 'com.android.support:multidex:1.0.3'
 
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.google.android.material:material:1.0.0'
+    //它是React组件，实现了谷歌Material Design设计规范
+    //implementation 'com.google.android.material:material:1.0.0'
 }

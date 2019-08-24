@@ -10,9 +10,9 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListPopupWindow;
-import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,6 +20,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 import com.jil.filexplorer.Api.FileChangeListenter;
 import com.jil.filexplorer.Api.ImageFilter;
 import com.jil.filexplorer.Api.Item;
@@ -37,6 +41,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static com.jil.filexplorer.utils.DialogUtils.showFileInfoMsg;
 import static com.jil.filexplorer.utils.DialogUtils.showListPopupWindow;
 import static com.jil.filexplorer.utils.UiUtils.NavigationBarStatusBar;
 import static com.jil.filexplorer.utils.UiUtils.setNavigationBar;
@@ -208,7 +213,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
         if(isThisAppRes){
             fileSurperAdapter =new SurperAdapter<File>(images, this, new SurperAdapter.OnItemClickListener<File>() {
                 @Override
-                public void onItemClick(SurperAdapter.VH holder, File data) {
+                public void onItemClick(SurperAdapter.VH holder, File data,int position) {
                     viewPager.setCurrentItem(holder.getLayoutPosition(),true);
                 }
             }) {
@@ -229,7 +234,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
         }else {
             uriSurperAdapter =new SurperAdapter<Uri>(uris, this, new SurperAdapter.OnItemClickListener<Uri>() {
                 @Override
-                public void onItemClick(SurperAdapter.VH holder, Uri data) {
+                public void onItemClick(SurperAdapter.VH holder, Uri data,int position) {
                     viewPager.setCurrentItem(holder.getLayoutPosition(),true);
                 }
             }) {
@@ -266,7 +271,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
             public void run() {
                 File file =new File(imageDirPath);
                 ImageFilter imageFilter =new ImageFilter();
-                File image[] = file.getParentFile().listFiles(imageFilter);
+                File[] image = file.getParentFile().listFiles(imageFilter);
                 images=new ArrayList<>(Arrays.asList(image));
                 if(!FileUtils.getMimeType(imageDirPath).startsWith("image")){
                     images.add(file);
@@ -284,7 +289,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
         if(menu ==null){
             Item[] menuList;
             if(isThisAppRes){
-               menuList = new Item[]{new Item("删除", 0), new Item("分享", 1), new Item("属性", 2), new Item("打开为", 3)};//要填充的数据
+               menuList = new Item[]{new Item("删除", 0), new Item("分享", 1), new Item("属性", 2), new Item("打开为", 3),new Item("加载大图",4)};//要填充的数据
             }else {
                 menuList = new Item[]{new Item("属性", 2)};//要填充的数据
             }
@@ -314,15 +319,20 @@ public class ImageDisplayActivity extends AppCompatActivity {
                         break;
                     case 1:
                         File file1=images.get(selectPosition);
-                        FileUtils.shareImage(ImageDisplayActivity.this,file1.getPath());
+                        FileUtils.shareFile(ImageDisplayActivity.this,file1.getPath(),"image/*");
                         break;
                     case 2:
+                        showFileInfoMsg(ImageDisplayActivity.this,images.get(selectPosition).getPath());
                         break;
                     case 3:
                         clickId=3;
                         File file2=images.get(selectPosition);
                         FileUtils.chooseViewFile(ImageDisplayActivity.this,view,file2.getPath(),menu);
-
+                        break;
+                    case 4:
+                        imageAdapter.width=1440;
+                        imageAdapter.height=2560;
+                        imageAdapter.notifyDataSetChanged();
                         break;
                 }
                 if(clickId!=3)

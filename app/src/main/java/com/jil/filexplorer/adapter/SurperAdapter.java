@@ -1,6 +1,7 @@
 package com.jil.filexplorer.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.Log;
@@ -35,7 +36,7 @@ public abstract class SurperAdapter<T> extends RecyclerView.Adapter<SurperAdapte
     protected OnItemClickListener<T> listener;
 
     public interface OnItemClickListener<T> {
-        void onItemClick(VH holder, T data);
+        void onItemClick(VH holder, T data,int position);
     }
 
     public SurperAdapter(List <T> mDatas, Context context){
@@ -75,12 +76,12 @@ public abstract class SurperAdapter<T> extends RecyclerView.Adapter<SurperAdapte
     }
 
     @Override
-    public void onBindViewHolder(final SurperAdapter.VH vh , int i) {
+    public void onBindViewHolder(final SurperAdapter.VH vh , final int i) {
         vh.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (listener != null) {
-                    listener.onItemClick(vh, mDatas.get(vh.getLayoutPosition()));
+                    listener.onItemClick(vh, mDatas.get(vh.getLayoutPosition()),i);
                 }
             }
         });
@@ -137,8 +138,14 @@ public abstract class SurperAdapter<T> extends RecyclerView.Adapter<SurperAdapte
         }
         public void setPic(int id, Drawable pic, Context mContext){
             ImageView view =getView(id);
-            RequestOptions options= FileUtils.getOptions(SettingParam.ImageCacheSwitch,100,140);
-            Glide.with( mContext ).load( pic ).apply(options).into( view );
+            //RequestOptions options= FileUtils.getOptions(SettingParam.ImageCacheSwitch,100,140);
+            Glide.with( mContext ).load( pic ).override(400,400).centerInside().into( view );
+        }
+
+        public void setPic(int id, Bitmap pic, Context mContext){
+            ImageView view =getView(id);
+            //RequestOptions options= FileUtils.getOptions(SettingParam.ImageCacheSwitch,250,400);
+            Glide.with( mContext ).load( pic ).override(250,400).into( view );
         }
     }
 
@@ -166,9 +173,6 @@ public abstract class SurperAdapter<T> extends RecyclerView.Adapter<SurperAdapte
             }
         }
         //notifyDataSetChanged();
-
-
-
     }
 
     public List <T> getmDatas() {

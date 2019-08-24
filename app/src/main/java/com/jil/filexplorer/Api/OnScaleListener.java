@@ -38,15 +38,17 @@ public class OnScaleListener implements View.OnTouchListener{
     float oldRotation = 0;
 
     public interface OnScalceCallBack {
-        void scaleTouch(Matrix matrix);
+        //开始触摸就调用
         void scaleType(ImageView.ScaleType scaleType);
+        //动作结束调用
+        void scaleTouch(Matrix matrix);
+        //点击调用
         void onClick(View view);
     }
 
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-
         onScalceCallBack.scaleType(ImageView.ScaleType.MATRIX );
         ImageView view = (ImageView) v;
         switch (event.getAction()& MotionEvent.ACTION_MASK){
