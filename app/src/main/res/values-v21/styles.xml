@@ -20,6 +20,15 @@
         <item name="android:textColor">@android:color/white</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:statusBarColor">@color/colorPrimaryDark_black</item>
+        <item name="android:statusBarColor">@color/colorPrimary_black</item>
+    </style>
+
+    <style name="SettingTheme" parent="Theme.AppCompat">
+        <item name="colorAccent">@color/colorPrimaryLight</item>
+        <item name="colorPrimary">@color/colorPrimary_black</item>
+        <item name="colorPrimaryDark">@color/colorPrimary_black</item>
+        <item name="actionOverflowMenuStyle">@style/optionMenuGray</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:statusBarColor">@color/colorPrimary_black</item>
     </style>
 </resources>

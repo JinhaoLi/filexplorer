@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -64,27 +65,35 @@ public abstract class SurperAdapter<T> extends RecyclerView.Adapter<SurperAdapte
 
     @Override
     public void onViewDetachedFromWindow(VH holder) {
-        //Log.e("SurperAdapter--","onViewDetachedFromWindow"+holder.getAdapterPosition());
+        Log.e("SurperAdapter--","onViewDetachedFromWindow"+holder.getAdapterPosition());
         super.onViewDetachedFromWindow( holder );
     }
 
     @Override
+    public void onViewAttachedToWindow(@NonNull VH holder) {
+        Log.e("SurperAdapter--","onViewAttachedToWindow"+holder.getAdapterPosition());
+        //onBindViewHolder(holder,holder.getAdapterPosition());
+        super.onViewAttachedToWindow(holder);
+    }
+
+    @Override
     public void onViewRecycled(VH holder) {
-        //Log.e("SurperAdapter--","onViewRecycled"+holder.getAdapterPosition());
+        Log.e("SurperAdapter--","onViewRecycled"+holder.getAdapterPosition());
         super.onViewRecycled( holder );
 
     }
 
     @Override
     public void onBindViewHolder(final SurperAdapter.VH vh , final int i) {
-        vh.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
+        if (listener != null) {
+            vh.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
                     listener.onItemClick(vh, mDatas.get(vh.getLayoutPosition()),i);
                 }
-            }
-        });
+            });
+
+        }
         convert(vh, mDatas.get(i), i,mContext);
     }
 

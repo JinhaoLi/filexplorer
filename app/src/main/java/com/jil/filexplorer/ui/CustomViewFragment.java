@@ -22,6 +22,7 @@ import com.jil.filexplorer.adapter.FileListAdapter;
 import com.jil.filexplorer.Api.SortComparator;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
+import com.jil.filexplorer.utils.UiUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,11 +71,9 @@ public abstract class CustomViewFragment extends Fragment {
     protected boolean selectPositionChange = true;
     protected LinearLayoutManager linearLayoutManager;
     protected SortComparator comparator = new SortComparator(SORT_BY_NAME);
-
     protected int longClickPosition;
-
-    //grid下一行多少个
-    protected int spanCount = 4;
+    //网格布局计数
+    int spanCount = 4;
 
     public CustomViewFragment() {
     }
@@ -110,26 +109,9 @@ public abstract class CustomViewFragment extends Fragment {
     @SuppressLint("ClickableViewAccessibility")
     protected abstract void initAction();
 
-    public static Bitmap bitMapScale(Bitmap bitmap , float scale) {
-        Matrix matrix = new Matrix();
-        matrix.postScale( scale , scale ); //长和宽放大缩小的比例
-        return Bitmap.createBitmap( bitmap , 0 , 0 , bitmap.getWidth() , bitmap.getHeight() , matrix , true );
-    }
-
-    public static Bitmap createViewBitmap(Bitmap bitmap,View v) {
-
-        if(bitmap!=null){
-            bitmap.recycle();
-        }
-        bitmap = Bitmap.createBitmap(v.getWidth(), v.getHeight(), Bitmap.Config.ARGB_4444);
-        Canvas canvas = new Canvas(bitmap);
-        v.draw(canvas);
-        return bitmap;
-    }
-
-    public void refreshSmallView(){
+    private void refreshSmallView(){
         if(fileList!=null)
-        smallView=createViewBitmap(smallView,fileList);
+        smallView= UiUtils.createViewBitmap(smallView,fileList);
     }
 
     public Bitmap getSmallView(){
@@ -157,10 +139,6 @@ public abstract class CustomViewFragment extends Fragment {
      */
     public abstract void load(String filePath, boolean isBack);
 
-    public MainActivity getmMainActivity() {
-        return mMainActivity;
-    }
-
     public int getSortType(){
         return comparator.getSortType();
     }
@@ -175,8 +153,6 @@ public abstract class CustomViewFragment extends Fragment {
         }
         fileListAdapter.notifyItemRangeChanged(0, fileInfos.size());
     }
-
-
     /**
      * 手指抬起-拖动状态改变
      *

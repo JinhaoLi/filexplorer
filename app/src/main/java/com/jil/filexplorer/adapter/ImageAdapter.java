@@ -84,7 +84,7 @@ public class ImageAdapter extends PagerAdapter {
 
         }));
         container.addView(v);
-        if(width==1440){
+        if(width!=720){
             width=720;
             height=1280;
         }

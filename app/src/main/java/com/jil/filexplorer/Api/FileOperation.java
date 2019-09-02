@@ -258,6 +258,7 @@ public class FileOperation {
         if(progressChangeListener!=null)
             progressChangeListener.progressChang(progressMessage);
         notificationManager.cancel(1410);
+
     }
 
     private void missionNotReady(){
@@ -268,6 +269,9 @@ public class FileOperation {
         if(progressChangeListener!=null)
             progressChangeListener.progressChang(progressMessage);
         notificationManager.cancel(1410);
+        builder.setContentTitle(notifitionMsg);
+        builder.setProgress(100,100,false);
+        notificationManager.notify(39,builder.build());
     }
 
 

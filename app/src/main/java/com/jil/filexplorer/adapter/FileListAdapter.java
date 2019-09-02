@@ -20,18 +20,17 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.signature.MediaStoreSignature;
 import com.jil.filexplorer.Activity.ImageDisplayActivity;
+import com.jil.filexplorer.Activity.MainActivity;
 import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.Api.Item;
-import com.jil.filexplorer.Api.SettingParam;
-import com.jil.filexplorer.Activity.MainActivity;
-import com.jil.filexplorer.R;
 import com.jil.filexplorer.Api.OnDoubleClickListener;
+import com.jil.filexplorer.Api.SettingParam;
+import com.jil.filexplorer.R;
 import com.jil.filexplorer.ui.FileShowFragment;
 import com.jil.filexplorer.utils.ConstantUtils;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.ToastUtils;
-
 
 import java.io.File;
 import java.util.ArrayList;
@@ -45,14 +44,17 @@ import static com.jil.filexplorer.utils.ConstantUtils.KB;
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
 import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
-import static com.jil.filexplorer.utils.DialogUtils.showFileInfoMsg;
 import static com.jil.filexplorer.utils.DialogUtils.showAlertDialog;
+import static com.jil.filexplorer.utils.DialogUtils.showFileInfoMsg;
 import static com.jil.filexplorer.utils.DialogUtils.showListPopupWindow;
 import static com.jil.filexplorer.utils.FileTypeFilter.imageIf;
 import static com.jil.filexplorer.utils.FileTypeFilter.videoIf;
+import static com.jil.filexplorer.utils.FileUtils.addFastToDesk;
 import static com.jil.filexplorer.utils.FileUtils.chooseViewFile;
+import static com.jil.filexplorer.utils.FileUtils.deleteFileToSystem;
 import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromFile;
 import static com.jil.filexplorer.utils.FileUtils.getOptions;
+import static com.jil.filexplorer.utils.FileUtils.moveFileToSystem;
 import static com.jil.filexplorer.utils.FileUtils.shareFile;
 import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
 import static com.jil.filexplorer.utils.FileUtils.viewFile;
@@ -69,7 +71,7 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
     Item[] fileMenu = {new Item("打开方式",143),new Item("分享",128),new Item("剪切",321)
             ,new Item("复制",44),new Item("发送到桌面",52)
             ,new Item("重命名",623),new Item("删除",732)
-            ,new Item("属性",813)};//要填充的数据
+            ,new Item("属性",813)/*new Item("shell删除",418)*/};//要填充的数据
 
     public FileListAdapter(ArrayList<FileInfo> mData, FileShowFragment mFileListFragment, MainActivity m,int itemLayoutRes) {
         this.mData = mData;
@@ -239,6 +241,17 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                         showFileInfoMsg(mMainActivity,fileInfo);
                         //chooseViewFile(mMainActivity,view,fileInfo.getFilePath(),listPopupWindow);
                         break;
+                    case 52:
+                        addFastToDesk(mMainActivity,fileInfo.getFileName(),fileInfo.getFilePath(), android.os.Build.VERSION.SDK_INT );
+                        break;
+                    case 418:
+//                        new Thread(){
+//                            @Override
+//                            public void run() {
+//                                deleteFileToSystem(fileInfo.getFilePath());
+//                            }
+//                        }.start();
+                        break;
 
                 }
                 if(clickId!=143&&clickId!=813)
@@ -268,7 +281,7 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
             }
         }else {
             File f=new File(fileInfo.getFilePath());
-            if (imageIf(fileInfo.getFiletype())) {//加载图片缩略图
+            if (imageIf(fileInfo.getFiletype())&&SettingParam.SmallViewSwitch>0) {//加载图片缩略图
                 Glide.with(mMainActivity).load(f).apply(options)
                         .error(fileInfo.getIcon())
                         .signature(new MediaStoreSignature("image/*", f.length(), 2))
@@ -279,7 +292,7 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                         .error(R.drawable.ic_android_black_24dp)
                         .placeholder(R.mipmap.list_ico_unknow)
                         .into(holder.icon);
-            }else if(videoIf(fileInfo.getFiletype())){//加载视频缩略图
+            }else if(videoIf(fileInfo.getFiletype())&&SettingParam.SmallViewSwitch>0){//加载视频缩略图
                 Glide.with(mMainActivity).load(fileInfo.getFilePath())
                         .error(fileInfo.getIcon())
                         .placeholder(fileInfo.getIcon())

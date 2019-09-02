@@ -43,6 +43,7 @@ import java.util.Arrays;
 
 import static com.jil.filexplorer.utils.DialogUtils.showFileInfoMsg;
 import static com.jil.filexplorer.utils.DialogUtils.showListPopupWindow;
+import static com.jil.filexplorer.utils.FileUtils.getPicWidthAndHeight;
 import static com.jil.filexplorer.utils.UiUtils.NavigationBarStatusBar;
 import static com.jil.filexplorer.utils.UiUtils.setNavigationBar;
 
@@ -289,9 +290,9 @@ public class ImageDisplayActivity extends AppCompatActivity {
         if(menu ==null){
             Item[] menuList;
             if(isThisAppRes){
-               menuList = new Item[]{new Item("删除", 0), new Item("分享", 1), new Item("属性", 2), new Item("打开为", 3),new Item("加载大图",4)};//要填充的数据
+               menuList = new Item[]{new Item("删除", 0), new Item("分享", 1), new Item("属性", 2), new Item("打开为", 3),new Item("加载原图",4)};//要填充的数据
             }else {
-                menuList = new Item[]{new Item("属性", 2)};//要填充的数据
+                menuList = new Item[]{new Item("属性", 2),new Item("加载大图",4)};//要填充的数据
             }
             menu =showListPopupWindow(ImageDisplayActivity.this,v,R.layout.menu_simple_list_item, menuList);
             menu.setWidth(300);
@@ -330,8 +331,9 @@ public class ImageDisplayActivity extends AppCompatActivity {
                         FileUtils.chooseViewFile(ImageDisplayActivity.this,view,file2.getPath(),menu);
                         break;
                     case 4:
-                        imageAdapter.width=1440;
-                        imageAdapter.height=2560;
+                        int[] wh =getPicWidthAndHeight(images.get(selectPosition).getAbsolutePath());
+                        imageAdapter.width=wh[0];
+                        imageAdapter.height=wh[1];
                         imageAdapter.notifyDataSetChanged();
                         break;
                 }

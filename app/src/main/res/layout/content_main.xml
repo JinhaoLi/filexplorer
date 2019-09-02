@@ -2,14 +2,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fragment_page"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:m=".MainActivity"
-    android:orientation="vertical"
-    tools:showIn="@layout/app_bar_main"
-    android:id="@+id/fragment_page"
-    android:background="@android:color/white">
+    tools:showIn="@layout/app_bar_main">
 
     <!--<fragment
         android:id="@+id/fragment"
@@ -20,7 +20,8 @@
     <FrameLayout
         android:id="@+id/top_bar"
         android:layout_width="match_parent"
-        android:layout_height="26dp">
+        android:layout_height="26dp"
+        android:background="#EBEBEB">
 
         <include
             layout="@layout/sort_title_bar_layout"
@@ -32,8 +33,8 @@
         android:id="@+id/fragment_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:overScrollMode="never"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:overScrollMode="never">
 
     </androidx.viewpager.widget.ViewPager>
 

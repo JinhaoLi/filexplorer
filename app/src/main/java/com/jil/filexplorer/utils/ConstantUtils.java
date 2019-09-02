@@ -16,5 +16,6 @@ public class ConstantUtils {
     public final static int DARK_COLOR=Color.argb(255,53,53,53);
     public final static int HALF_DARK_COLOR=Color.argb(125,66,66,66);
     public final static int IMAGE_SELECTED_COLOR =Color.argb(255,21,143,197);//image被选中时的颜色
-
+    public final static int MAX_SPAN_COUNT=6;
+    public final static int MIN_SPAN_COUNT=3;
 }

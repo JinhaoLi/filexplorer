@@ -9,15 +9,16 @@ import com.bumptech.glide.GlideBuilder;
 import com.bumptech.glide.Registry;
 import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory;
 import com.bumptech.glide.load.engine.cache.InternalCacheDiskCacheFactory;
+import com.bumptech.glide.module.AppGlideModule;
 import com.bumptech.glide.module.GlideModule;
 
 import java.io.File;
 
-public class DiskCacheMode implements GlideModule {
+public final class DiskCacheMode extends AppGlideModule {
+
     @Override
     public void applyOptions(@NonNull Context context, @NonNull GlideBuilder builder) {
-        builder.setDiskCache(
-                new InternalCacheDiskCacheFactory(context, "glide_cache", 100 * 1024 * 1024));
+        builder.setDiskCache(new InternalCacheDiskCacheFactory(context, "glide_cache", 100 * 1024 * 1024));
     }
 
     @Override

@@ -49,6 +49,7 @@ public class SettingParam {
         setColumn(sp.getInt("Column",1));
         setRecycleBin(sp.getInt("RecycleBin",-1));
         setImageCacheSwitch(sp.getInt("ImageCacheSwitch",1));
+        setSmallViewSwitch(sp.getInt("SmallViewSwitch",1));
     }
     /**
      * 主题资源
@@ -71,7 +72,7 @@ public class SettingParam {
     /**
      * 布局列数
      */
-    public static int Column=1;
+    public static int Column;
 
     public static void setColumn(int i){
         if(i>0&&i<8){
@@ -82,7 +83,7 @@ public class SettingParam {
     /**
      * 是否开启回收站
      */
-    public static int RecycleBin=1;
+    public static int RecycleBin;
 
     public static void setRecycleBin(int i){
         RecycleBin=i;
@@ -95,5 +96,14 @@ public class SettingParam {
 
     public static void setImageCacheSwitch(int parm){
         ImageCacheSwitch=parm;
+    }
+
+    /**
+     * 是否开启图片缓存
+     */
+    public static int SmallViewSwitch;
+
+    public static void setSmallViewSwitch(int parm){
+        SmallViewSwitch=parm;
     }
 }

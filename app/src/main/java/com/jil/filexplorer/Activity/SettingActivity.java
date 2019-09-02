@@ -15,9 +15,11 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NavUtils;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.jil.filexplorer.Api.ActivityManager;
 import com.jil.filexplorer.Api.SettingItem;
 import com.jil.filexplorer.Api.SettingParam;
@@ -32,6 +34,7 @@ import static com.jil.filexplorer.Api.SettingParam.readSharedPreferences;
 import static com.jil.filexplorer.Api.SettingParam.saveSharedPreferences;
 import static com.jil.filexplorer.Api.SettingParam.setImageCacheSwitch;
 import static com.jil.filexplorer.Api.SettingParam.setRecycleBin;
+import static com.jil.filexplorer.Api.SettingParam.setSmallViewSwitch;
 import static com.jil.filexplorer.utils.ConstantUtils.BULE_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.DARK_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
@@ -91,6 +94,9 @@ public class SettingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.settting_layout);
+        if(NavUtils.getParentActivityName(SettingActivity.this)!=null){
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
         activityManager = ActivityManager.getInstance();
         itemArrayList = new ArrayList<>();
         createSettingItem();
@@ -198,9 +204,24 @@ public class SettingActivity extends AppCompatActivity {
                 setImageCacheSwitch(check ? 1 : -1);
             }
         };
+
+        SettingItem smallViewSwitch = new SettingItem("显示缩略图", "开启后可以显示视频或图片的预览图标", (SettingParam.SmallViewSwitch > 0), 4485) {
+            @Override
+            public void click(View v) {
+                CompoundButton s = (CompoundButton) v;
+                boolean check = s.isChecked();
+                setSwitchOpen(s.isChecked());
+                int i = check ? 1 : -1;
+                saveSharedPreferences(SettingActivity.this, "SmallViewSwitch", i);
+                setSmallViewSwitch(check ? 1 : -1);
+            }
+        };
+
+
         itemArrayList.add(theme);
         itemArrayList.add(recycleBin);
         itemArrayList.add(imageCache);
+        itemArrayList.add(smallViewSwitch);
         countCacheSize.run();
     }
 

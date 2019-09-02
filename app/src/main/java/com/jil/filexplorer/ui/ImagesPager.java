@@ -18,7 +18,8 @@ public class ImagesPager extends ViewPager {
         super(context, attrs);
     }
 
-    @Override public boolean onInterceptTouchEvent(MotionEvent ev) {
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
         if(ev.getPointerCount()==2){
             return false;
         }else if(ev.getPointerCount()==1){

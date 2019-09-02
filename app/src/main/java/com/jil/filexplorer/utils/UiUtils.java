@@ -3,6 +3,8 @@ package com.jil.filexplorer.utils;
 import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -27,8 +29,23 @@ public class UiUtils {
                             | View.SYSTEM_UI_FLAG_FULLSCREEN
                             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             );
-
         }
+    }
+
+    /**
+     * 获取view缩略图
+     * @param bitmap
+     * @param v
+     * @return
+     */
+    public static Bitmap createViewBitmap(Bitmap bitmap, View v) {
+        if(bitmap!=null){
+            bitmap.recycle();
+        }
+        bitmap = Bitmap.createBitmap(v.getWidth(), v.getHeight(), Bitmap.Config.ARGB_4444);
+        Canvas canvas = new Canvas(bitmap);
+        v.draw(canvas);
+        return bitmap;
     }
 
     /**

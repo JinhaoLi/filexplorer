@@ -20,6 +20,7 @@ import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.Api.SettingParam;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.FileListAdapter;
+import com.jil.filexplorer.utils.ConstantUtils;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.ToastUtils;
@@ -162,14 +163,14 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
         return false;
     }
 
-    public void screenToView(String filePath,boolean isBack){
+    private void screenToView(String filePath,boolean isBack){
         if (fileListAdapter == null) {
             //第一次加载
-            int i =SettingParam.Column;
-            if(i<2){
+            int column =SettingParam.Column;
+            if(column<2){
                 makeLinerLayout();
             }else {
-                makeGridLayout(i,makeItemLayoutRes(i));
+                makeGridLayout(column,makeItemLayoutRes(column));
             }
             mMainActivity.getHistoryPath().add(filePath);
         } else {
@@ -187,7 +188,8 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
 
     @Override
     public void load(String filePath, boolean isBack) {
-        getFileListFromDir(filePath,isBack);
+        boolean result=getFileListFromDir(filePath,isBack);
+        if(!result)return;
         outOfFromPosition = 0;
         mMainActivity.refresh(filePath);
         clearUnderBar();
@@ -235,15 +237,17 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
                         if (event.getPointerCount() == 2 && linearLayoutManager instanceof GridLayoutManager) {
                             float newDistance = getDistance(event);
                             if (newDistance > 100f && newDistance >= distance * 1.3) {
-                                if (spanCount > 2) {
+                                if (spanCount > ConstantUtils.MIN_SPAN_COUNT) {
                                     spanCount--;
                                     makeGridLayout(spanCount, makeItemLayoutRes(spanCount));
+                                    SettingParam.setColumn(spanCount);
                                 }
                                 distance = newDistance;
                             } else if (newDistance > 100f && newDistance <= distance / 1.3) {
-                                if (spanCount < 7) {
+                                if (spanCount < ConstantUtils.MAX_SPAN_COUNT) {
                                     spanCount++;
                                     makeGridLayout(spanCount, makeItemLayoutRes(spanCount));
+                                    SettingParam.setColumn(spanCount);
                                 }
                                 distance = newDistance;
                             }

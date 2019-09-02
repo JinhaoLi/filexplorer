@@ -77,33 +77,4 @@ public class NotificationUtils {
     }
 
 
-    public static void MyNotiy(Context context, int time, LinearLayout toucherLayout, CopyProgressDialog c1){
-        Notification.Builder localBuilder = new Notification.Builder(context);
-        NotificationManager mNManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
-        localBuilder.setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class), 0))
-                .setAutoCancel(false)
-
-                .setTicker("Foreground Service Start")
-                .setContentTitle("任务进行中")
-                .setProgress(100,6,false)
-                .setAutoCancel(false)
-                .setContentText("正在运行...");
-        Notification notification=localBuilder.build();
-        mNManager.notify(1, notification);
-        while (time<100){
-            time++;
-            localBuilder.setProgress(100,time,false).setContentText("已完成"+time+"%");
-            ProgressBar progressBar=toucherLayout.findViewById(R.id.progressBar);
-            progressBar.setProgress(time);
-            mNManager.notify(1,localBuilder.build());
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-        }
-        mNManager.cancel(1);
-    }
-
 }

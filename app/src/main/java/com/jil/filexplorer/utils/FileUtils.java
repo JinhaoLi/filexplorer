@@ -1,8 +1,10 @@
 package com.jil.filexplorer.utils;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,10 +12,13 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.ShortcutInfo;
+import android.content.pm.ShortcutManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
@@ -35,12 +40,14 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.signature.MediaStoreSignature;
+import com.jil.filexplorer.Activity.MainActivity;
 import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.BuildConfig;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.BoxAdapter;
 
 import java.io.Closeable;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -72,34 +79,143 @@ public class FileUtils {
         }
     }
 
-    public static boolean RootCommand(String command){
-        Process process =null;
-        DataOutputStream os =null;
 
+    //移动文件
+    public static void moveFileToSystem(String filePath, String sysFilePath) {
+//        exusecmd("mount -o rw,remount /system");
+//        exusecmd("chmod 777 /system");
+//        exusecmd("cp  " + filePath + " " + sysFilePath);
+    }
+
+    public static void deleteFileToSystem(String filePath){
+//        exusecmd("mount -o rw,remount /system");
+//        exusecmd("chmod 777 /system");
+//        exusecmd("rm "+filePath);
+    }
+
+    public static void readFileToSystem(){
+//        exusecmd("chmod 777 data");
+    }
+
+
+    /**
+     * 应用程序运行命令获取 Root权限，设备必须已破解(获得ROOT权限)
+     *
+     * @param command 命令：String apkRoot="chmod 777 "+getPackageCodePath(); RootCommand(apkRoot);
+     * @return 应用程序是/否获取Root权限
+     */
+    public static boolean RootCommand(String command) {
+        Process process = null;
+        DataOutputStream os = null;
+        DataInputStream is = null;
         try {
-            process =Runtime.getRuntime().exec("su");
-            //process = Runtime.getRuntime().exec("sudo"); //切换到root帐号
-            os =new DataOutputStream(process.getOutputStream());
-            os.writeBytes(command+"\n");
+            process = Runtime.getRuntime().exec("su");
+            os = new DataOutputStream(process.getOutputStream());
+            os.writeBytes(command + "\n");
             os.writeBytes("exit\n");
             os.flush();
-            process.waitFor();
-        } catch (IOException | InterruptedException e) {
+            int aa = process.waitFor();
+            LogUtils.w("waitFor():",aa+"");
+            is = new DataInputStream(process.getInputStream());
+            byte[] buffer = new byte[is.available()];
+            LogUtils.d("大小",buffer.length+"");
+            is.read(buffer);
+            String out = new String(buffer);
+            LogUtils.e("返回:",out);
+        } catch (Exception e) {
             e.printStackTrace();
-            LogUtils.d("*** DEBUG ***", "ROOT REE" + e.getMessage());
+            LogUtils.e("错误" , "205:\n" + e);
             return false;
-        }finally {
-            if(os!=null){
-                try {
+        } finally {
+            try {
+                if (os != null) {
                     os.close();
-                    process.destroy();
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
+                if (is != null) {
+                    is.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                LogUtils.e("错误", "217:\n" + e);
             }
+            process.destroy();
+        }
+        LogUtils.d("成功", "222 SUCCESS");
+        return true;
+    }
 
-            LogUtils.d("*** DEBUG ***", "Root SUC ");
-            return true;
+    //翻译并执行相应的adb命令
+    public static boolean exusecmd(String command) {
+        Process process = null;
+        DataOutputStream os = null;
+        try {
+            process = Runtime.getRuntime().exec("su");
+            os = new DataOutputStream(process.getOutputStream());
+            os.writeBytes(command + "\n");
+            os.writeBytes("exit\n");
+            os.flush();
+            LogUtils.e("updateFile", "======000==writeSuccess======");
+            process.waitFor();
+        } catch (Exception e) {
+            LogUtils.e("updateFile", "======111=writeError======" + e.toString());
+            return false;
+        } finally {
+            try {
+                if (os != null) {
+                    os.close();
+                }
+                if (process != null) {
+                    process.destroy();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 安卓8.0及以上，发送图标到桌面
+     * @param context
+     */
+    @TargetApi(Build.VERSION_CODES.O)
+    public static void addFastToDesk(Context context,String name,String id){
+        ShortcutManager shortcutManager = (ShortcutManager) context.getSystemService(Context.SHORTCUT_SERVICE);//获取shortcutManager
+        //如果默认桌面支持requestPinShortcut（ShortcutInfo，IntentSender）方法，则返回TRUE。
+        if(shortcutManager != null && shortcutManager.isRequestPinShortcutSupported()){
+            Intent shortCutIntent = new Intent(context, MainActivity.class);//快捷方式启动页面
+            shortCutIntent.setAction(Intent.ACTION_VIEW);
+            shortCutIntent.putExtra("file_path",id);
+            //快捷方式创建相关信息。图标名字 id
+            ShortcutInfo shortcutInfo = null;
+            shortcutInfo = new ShortcutInfo.Builder(context,id)
+                    .setIcon(Icon.createWithResource(context,R.mipmap.ic_launcher))
+                    .setShortLabel(name)
+                    .setIntent(shortCutIntent)
+                    .build();
+            //创建快捷方式时候回调
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(context,0,new
+                    Intent(context,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT);
+            shortcutManager.requestPinShortcut(shortcutInfo,pendingIntent.getIntentSender());
+        }
+    }
+
+    public static void addFastToDesk(Context context,String name,String id,int version){
+        if(version<26){
+            Intent addShortIntent = new Intent("com.android.launcher.action.INSTALL_SHORTCUT");
+            addShortIntent.putExtra("duplicate", false); //禁止重复添加。 小米系统无效果
+            addShortIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME,name);//快捷方式的名字
+            Intent.ShortcutIconResource shortcutIconResource = Intent.ShortcutIconResource.fromContext(context,R.mipmap.ic_launcher);
+            addShortIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE,shortcutIconResource); //快捷方式的图标
+            //点击快捷方式打开的页面
+            Intent actionIntent = new Intent(Intent.ACTION_MAIN);
+            actionIntent.setClass(context,MainActivity.class);
+            actionIntent.putExtra("file_path",id);
+            actionIntent.addCategory(Intent.CATEGORY_LAUNCHER);//添加categoryCATEGORY_LAUNCHER 应用被卸载时快捷方式也随之删除
+            addShortIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT,actionIntent);
+            context.sendBroadcast(addShortIntent); //设置完毕后发送广播给系统。
+        }else {
+            addFastToDesk(context,name,id);
         }
 
     }

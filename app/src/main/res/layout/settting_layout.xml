@@ -6,16 +6,6 @@
     tools:context=".Activity.SettingActivity"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/appbar_title"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="@color/colorPrimary_black"
-        android:gravity="center_vertical"
-        android:text="  资源管理器设置"
-        android:textColor="@android:color/background_light"
-        android:textSize="18sp" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/set_list"
         android:layout_width="match_parent"

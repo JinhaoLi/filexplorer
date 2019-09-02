@@ -26,7 +26,7 @@
                     android:id="@+id/imageView4"
                     android:layout_width="24dp"
                     android:layout_height="match_parent"
-                    android:scaleType="fitCenter"
+                    android:scaleType="centerInside"
                     app:srcCompat="@mipmap/list_ico_dir" />
 
                 <EditText
@@ -40,7 +40,7 @@
                     android:textSize="15sp"
                     android:inputType="textPersonName"
                     android:text="/sdcard"
-                    android:textColor="@android:color/black" />
+                    android:textColor="@drawable/text_color_state" />
 
                 <ImageButton
                     android:id="@+id/imageButton3"

@@ -2,9 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.jil.filexplorer">
-
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -41,7 +41,15 @@
         </activity>
         <!-- android:name="android.support.multidex.MultiDexApplication"> -->
         <activity android:name=".Activity.SettingActivity"
-            android:theme="@style/MyThemeGray"/>
+            android:theme="@style/SettingTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".Activity.MainActivity"/>
+
+        </activity >
+
+            <!--android:theme="@style/MyThemeGray"-->
+
         <activity
             android:name=".Activity.MainActivity"
             android:label="@string/title_activity_main"
