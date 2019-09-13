@@ -2,11 +2,17 @@ package com.jil.filexplorer.Api;
 
 import android.app.NotificationManager;
 import android.content.Context;
+import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.NotificationUtils;
+
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.util.Zip4jConstants;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,19 +21,23 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.List;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.jil.filexplorer.utils.ConstantUtils.CHANNEL_ID;
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
 import static com.jil.filexplorer.utils.FileUtils.closeAnyThing;
+import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromFile;
+import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;
 
 /**
  * 文件操作类
  * 必须在非UI线程调用
  */
-public class FileOperation {
-    public final static int MODE_COPY   = -4;
-    public final static int MODE_MOVE   = -5;
+public class FileOperation implements Runnable{
+    public final static int MODE_COMPRESS =-8;
+    public final static int MODE_COPY = -4;
+    public final static int MODE_MOVE = -5;
     public final static int MODE_DELETE = -6;
     public final static int MODE_RENAME = -7;
     private Context context;
@@ -74,11 +84,15 @@ public class FileOperation {
     private ProgressChangeListener progressChangeListener;
 
     /**
-     *是否准备完成
+     * 是否准备完成
      */
     private boolean isReady;
+    /***
+     * 压缩文件参数
+     */
+    private ZipParameters zipParameters;
 
-    private static String notifitionMsg ;
+    private static String notifitionMsg;
 
     private static NotificationCompat.Builder builder;
     private static NotificationManager notificationManager;
@@ -88,34 +102,40 @@ public class FileOperation {
     }
 
     public ProgressMessage getProgressMessage() {
-        if(progressMessage==null){
+        if (progressMessage == null) {
             //progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize, projectCount, mode);
         }
         return progressMessage;
     }
 
     private FileOperation(Context context) {
-        this.context =context;
+        this.context = context;
     }
 
     public static FileOperation with(Context context) {
         fileOperation = new FileOperation(context);
         builder = new NotificationCompat.Builder(context, CHANNEL_ID);
         notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
-        notifitionMsg="复制任务准备中...";
+        notifitionMsg = "复制任务准备中...";
         return fileOperation;
     }
 
     public static FileOperation getInstance() {
-        if(fileOperation!=null){
+        if (fileOperation != null) {
             return fileOperation;
-        }else {
+        } else {
             return null;
         }
 
 
     }
 
+    public FileOperation compress(ArrayList<FileInfo> inFiles){
+        this.inFiles =inFiles;
+        this.mode =MODE_COMPRESS;
+        initialization();
+        return this;
+    }
 
     public FileOperation move(ArrayList<FileInfo> inFiles) {
         this.inFiles = inFiles;
@@ -138,17 +158,48 @@ public class FileOperation {
         return this;
     }
 
-    public FileOperation to(FileInfo toDir) {
-        if (!toDir.isDir()) {
-            LogUtils.e("FileOperation", "目标不是文件夹");
-            notifitionMsg="目标不是文件夹";
-            isReady=false;
-            return null;
-        } else {
-            this.toDir = toDir;
-            progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize, projectCount, mode, toDir.getFilePath());
-            return this;
+    public FileOperation to(FileInfo to$Path) {
+        if(mode==MODE_MOVE||mode==MODE_COPY){
+            if (!to$Path.isDir()) {
+                LogUtils.i("FileOperation", "目标不是文件夹");
+                notifitionMsg = "目标不是文件夹";
+                isReady = false;
+                return null;
+            }
+        }else if(mode==MODE_COMPRESS){
+            File f =new File(to$Path.getFilePath());
+            if(f.exists()){
+                LogUtils.i("FileOperation.to():mode==MODE_COMPRESS", "存在同名文件");
+                notifitionMsg="存在同名文件";
+                isReady = false;
+                return null;
+            }
         }
+        this.toDir = to$Path;
+        progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize, projectCount, mode, to$Path.getFilePath());
+        return this;
+    }
+
+    public FileOperation to(String to$Path) {
+        File to =new File(to$Path);
+        if(mode==MODE_MOVE||mode==MODE_COPY){
+            if (!to.isDirectory()) {
+                LogUtils.i("FileOperation", "目标不是文件夹");
+                notifitionMsg = "目标不是文件夹";
+                isReady = false;
+                return null;
+            }
+        }else if(mode==MODE_COMPRESS){
+            if(to.exists()){
+                LogUtils.i("FileOperation.to():mode==MODE_COMPRESS", "存在同名文件");
+                notifitionMsg="存在同名文件";
+                isReady = false;
+                return null;
+            }
+        }
+        this.toDir = getFileInfoFromPath(to$Path);
+        progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize, projectCount, mode, to$Path);
+        return this;
     }
 
 
@@ -164,34 +215,49 @@ public class FileOperation {
             }
             actionSize = size;
         }
-        isReady=projectCount>0;
-        notifitionMsg="源文件不存在";
+        isReady = projectCount > 0;
+        notifitionMsg = "源文件不存在";
 
     }
 
-    public void pushProgressMsg(){
-        if(progressMessage!=null&&progressChangeListener!=null){
+    public void pushProgressMsg() {
+        if (progressMessage != null && progressChangeListener != null) {
             progressChangeListener.progressChang(progressMessage);
         }
     }
 
     /**
      * 历遍目录获取总大小
-     *
      * @param f
      */
     public long getLength(File f) {
         long size = 0;
-        if (f.isDirectory()&&f.exists()) {
+        if (f.isDirectory() && f.exists()) {
             projectCount++;
             File[] files = f.listFiles();
             if (files != null)
-                for (File file:files) {
+                for (File file : files) {
                     size += getLength(file);
                 }
         }
-        if (f.isFile()&&f.exists()) {
+        if (f.isFile() && f.exists()) {
             projectCount++;
+            return f.length();
+        }
+        return size;
+    }
+
+    private long onlyGetLength(File f) {
+        long size = 0;
+        if (f.isDirectory() && f.exists()) {
+            File[] files = f.listFiles();
+            if (files != null)
+                for (File file : files) {
+                    size += onlyGetLength(file);
+                }
+        }
+        if (f.isFile() && f.exists()) {
+            overCount++;
             return f.length();
         }
         return size;
@@ -200,12 +266,12 @@ public class FileOperation {
 
     private void filesCopy() {
         for (FileInfo temp : inFiles) {
-            if(!running){
+            if (!running) {
                 break;
             }
             if (toDir.getFilePath().startsWith(temp.getFilePath())) {
                 System.err.println("目标文件夹是源文件的子目录");
-                notifitionMsg="目标文件夹是源文件的子目录";
+                notifitionMsg = "目标文件夹是源文件的子目录";
                 missionNotReady();
                 break;
             }
@@ -222,85 +288,56 @@ public class FileOperation {
         }
     }
 
-    public void start() {
-        if(!isReady){
-            missionNotReady();
-            NotificationUtils.setNotification(context, builder, notificationManager,notifitionMsg);
-            return;
-        }else {
-            NotificationUtils.setNotification(context, builder, notificationManager,notifitionMsg);
-            notifitionMsg ="任务进行中-";
-            running = true;
-        }
-        switch (mode) {
-            case MODE_COPY:
-                if(progressChangeListener!=null)
-                progressChangeListener.progressChang(progressMessage);
-                filesCopy();
-                break;
-            case MODE_MOVE:
-                if(progressChangeListener!=null)
-                progressChangeListener.progressChang(progressMessage);
-                filesMove();
-                break;
-            case MODE_DELETE:
-                progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize, projectCount, mode);
-                filesDelete();
-                break;
-        }
-        missionFinish();
 
-    }
-
-    private void missionFinish(){
+    private void missionFinish() {
         progressMessage.setNowLoacation(actionSize);
         progressMessage.setProjectCount(overCount);
-        if(progressChangeListener!=null)
+        if (progressChangeListener != null)
             progressChangeListener.progressChang(progressMessage);
         notificationManager.cancel(1410);
 
     }
 
-    private void missionNotReady(){
-        if(progressMessage==null){
+    private void missionNotReady() {
+        if (progressMessage == null) {
             progressMessage = new ProgressMessage(System.currentTimeMillis(), overSize, projectCount, mode);
         }
         progressMessage.setTitle(notifitionMsg);
-        if(progressChangeListener!=null)
+        if (progressChangeListener != null)
             progressChangeListener.progressChang(progressMessage);
         notificationManager.cancel(1410);
         builder.setContentTitle(notifitionMsg);
-        builder.setProgress(100,100,false);
-        notificationManager.notify(39,builder.build());
+        builder.setProgress(100, 100, false);
+        notificationManager.notify(39, builder.build());
     }
 
 
     private void filesDelete() {
-        for(FileInfo temp:inFiles){
-            if(!running)
+        for (FileInfo temp : inFiles) {
+            if (!running)
                 break;
-            String loaction =temp.getFilePath();
+            String loaction = temp.getFilePath();
             progressMessage.setNowProjectName(temp.getFileName());
-            if(temp.isDir()){
+            if (temp.isDir()) {
                 deleteDirectory(loaction);
-            }else {
+            } else {
                 deleteSingleFile(loaction);
             }
         }
     }
 
     private void filesMove() {
-        for(FileInfo temp:inFiles){
-            if(!running)
+        for (FileInfo temp : inFiles) {
+            if (!running)
                 break;
             if (toDir.getFilePath().startsWith(temp.getFilePath())) {
                 System.err.println("目标文件夹是源文件的子目录");
-                notifitionMsg="目标文件夹是源文件的子目录";
+                notifitionMsg = "目标文件夹是源文件的子目录";
                 missionNotReady();
                 break;
             }
-            File f =new File(temp.getFilePath());
-            if(moveFile(f)) {
+            File f = new File(temp.getFilePath());
+            if (moveFile(f)) {
                 overCount++;
                 progressMessage.setProjectOverCount(overCount);
             }
@@ -308,21 +345,84 @@ public class FileOperation {
         }
     }
 
+    public FileOperation applyZipParameters(ZipParameters zipParameters){
+        if(mode==MODE_COMPRESS){
+            this.zipParameters=zipParameters;
+        }else {
+            this.zipParameters=null;
+        }
+        return this;
+    }
+
+    private boolean compressFiles(){
+        List<File> fs =new ArrayList<>();
+        for(int i = 0;i<inFiles.size();i++){
+            File f =new File(inFiles.get(i).getFilePath());
+            fs.add(f);
+        }
+        try {
+            zipEncryptMulti(fs,new File(toDir.getFilePath()));
+        } catch (ZipException e) {
+            LogUtils.e("压缩文件出错:",e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public void zipEncryptMulti(List<File> files, File outFile) throws ZipException {
+        zipEncryptMulti(files,outFile,null);
+    }
+
+    /**
+     * 压缩一组文件
+     * @param files
+     * @param outFile
+     * @param pass
+     * @throws ZipException
+     */
+    public void zipEncryptMulti(List<File> files, File outFile, String pass) throws ZipException {
+        if(files==null||files.size()==0)return;
+        if(zipParameters==null){
+            ZipParameters parameters = new ZipParameters();
+            parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE); // 压缩方式
+            parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL); // 压缩级别
+            if(pass!=null){
+                parameters.setEncryptFiles(true);
+                parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD); // 加密方式
+                parameters.setPassword(pass);//密码
+            }
+        }
+        //parameters.setIncludeRootFolder(true);
+        //压缩文件,并生成压缩文件
+        ZipFile zipFile  =new ZipFile(outFile);
+        for (File temp : files) {
+            if (temp.isFile()) {
+                zipFile.addFile(temp, zipParameters);
+            } else {
+                zipFile.addFolder(temp, zipParameters);
+            }
+            refreshProgresss(onlyGetLength(temp));
+        }
+        missionFinish();
+    }
+
     /**
      * 移动文件
+     *
      * @param file
+     *
      * @return
      */
-    private boolean moveFile(File file){
-        File result =new File(toDir.getFilePath(),file.getName());
-        boolean b=file.renameTo(result);
+    private boolean moveFile(File file) {
+        File result = new File(toDir.getFilePath(), file.getName());
+        boolean b = file.renameTo(result);
         return b;
     }
 
     public void stopAction() {
         running = false;
-        notifitionMsg ="正在取消-";
-
+        notifitionMsg = "正在取消-";
     }
 
     /**
@@ -367,11 +467,10 @@ public class FileOperation {
         progressMessage.setProjectOverCount(overCount);
         overSize += size;
         progressMessage.setNowLoacation(overSize);
-        overSize=progressMessage.getNowLoacation();
+        overSize = progressMessage.getNowLoacation();
         if (progressChangeListener != null) progressChangeListener.progressChang(progressMessage);
-        LogUtils.i("任务已完成-", progressMessage.getProgress() + "%--" + overSize / MB);
         builder.setProgress(100, progressMessage.getProgress(), false);
-        builder.setContentTitle(notifitionMsg+progressMessage.getTitle());
+        builder.setContentTitle(notifitionMsg + progressMessage.getTitle());
         notificationManager.notify(1410, builder.build());
     }
 
@@ -398,8 +497,11 @@ public class FileOperation {
         }
     }
 
-    /** 删除单个文件
+    /**
+     * 删除单个文件
+     *
      * @param filePath$Name 要删除的文件的文件名
+     *
      * @return 单个文件删除成功返回true，否则返回false
      */
     private boolean deleteSingleFile(String filePath$Name) {
@@ -410,20 +512,23 @@ public class FileOperation {
             progressMessage.setProjectOverCount(overCount);
             refreshProgresss(file.length());
             if (file.delete()) {
-                LogUtils.i("--Method--", "Copy_Delete.deleteSingleFile: 删除单个文件" + filePath$Name + "成功！");
+                LogUtils.i("删除进程：", "Copy_Delete.deleteSingleFile: 删除单个文件" + filePath$Name + "成功！");
                 return true;
             } else {
-                LogUtils.i("删除进程：", "删除单个文件" + filePath$Name + "失败！");
+                LogUtils.i("删除进程：", "删除单个文件-" + filePath$Name + "-失败！");
                 return false;
             }
         } else {
-            LogUtils.i("删除进程：", "删除单个文件失败：" + filePath$Name + "不存在！");
+            LogUtils.i("删除进程：", "删除单个文件失败-" + filePath$Name + "-不存在！");
             return false;
         }
     }
 
-    /** 删除目录及目录下的文件
+    /**
+     * 删除目录及目录下的文件
+     *
      * @param filePath 要删除的目录的文件路径
+     *
      * @return 目录删除成功返回true，否则返回false
      */
     private boolean deleteDirectory(String filePath) {
@@ -460,7 +565,7 @@ public class FileOperation {
         }
         // 删除当前目录
         if (dirFile.delete()) {
-            LogUtils.i("--Method--", "Copy_Delete.deleteDirectory: 删除目录" + filePath + "成功！");
+            LogUtils.i("删除进程", "Copy_Delete.deleteDirectory: 删除目录" + filePath + "成功！");
             return true;
         } else {
             LogUtils.i("删除进程：", "删除目录：" + filePath + "失败！");
@@ -470,5 +575,44 @@ public class FileOperation {
 
     public ArrayList<FileInfo> getInFiles() {
         return inFiles;
+    }
+
+    public FileInfo getToDir() {
+        return toDir;
+    }
+
+    @Override
+    public void run() {
+        if (!isReady) {
+            missionNotReady();
+            NotificationUtils.setNotification(context, builder, notificationManager, notifitionMsg);
+            return;
+        } else {
+            NotificationUtils.setNotification(context, builder, notificationManager, notifitionMsg);
+            notifitionMsg = "任务进行中-";
+            running = true;
+        }
+        switch (mode) {
+            case MODE_COPY:
+                if (progressChangeListener != null)
+                    progressChangeListener.progressChang(progressMessage);
+                filesCopy();
+                break;
+            case MODE_MOVE:
+                if (progressChangeListener != null)
+                    progressChangeListener.progressChang(progressMessage);
+                filesMove();
+                break;
+            case MODE_DELETE:
+                progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize, projectCount, mode);
+                filesDelete();
+                break;
+            case MODE_COMPRESS:
+                if (progressChangeListener != null)
+                    progressChangeListener.progressChang(progressMessage);
+                compressFiles();
+                break;
+        }
+        missionFinish();
     }
 }

@@ -116,7 +116,7 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
             fileList.setAdapter(fileListAdapter);
             fileList.setLayoutManager(linearLayoutManager);
         }catch (Exception e){
-            LogUtils.e("页面被吃了,发生错误",e.getMessage());
+            LogUtils.e(e.getMessage(),e.getMessage()+getString(R.string.eat_err));
         }
 
     }
@@ -138,7 +138,7 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
                 try {
                     Collections.sort(fileInfos, comparator);
                 }catch (Exception e){
-                    LogUtils.e(getClass().getName(),"排序的时候产生一个错误，未知错误");
+                    LogUtils.e(getClass().getName(),e.getMessage()+getString(R.string.sort_err));
                 }
                 Message message =new Message();
                 message.obj =filePath;
@@ -152,15 +152,15 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
             }
         };
         if (!file.exists()) {
-            ToastUtils.showToast(mMainActivity, "无效路径", 1000);
+            ToastUtils.showToast(mMainActivity, mMainActivity.getString(R.string.Invalid_path), 1000);
             return false;
         }
         if(!file.canRead()){
-            ToastUtils.showToast(mMainActivity, "无法访问", 1000);
+            ToastUtils.showToast(mMainActivity, mMainActivity.getString(R.string.unable_to_access), 1000);
             return false;
         }
         loadFile.run();
-        return false;
+        return true;
     }
 
     private void screenToView(String filePath,boolean isBack){
@@ -201,8 +201,8 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
     protected void moveDir(FileInfo dir){
         String name = dir.getFileName();
         AlertDialog.Builder builder = new AlertDialog.Builder(mMainActivity);
-        AlertDialog alertDialog = builder.setTitle("文件操作").setMessage("确定移动到" + name + "吗？")
-                .setNegativeButton("移动", new DialogInterface.OnClickListener() {
+        AlertDialog alertDialog = builder.setTitle(getString(R.string.File_operations)).setMessage(getString(R.string.Determine_to_move_to) + name + "？")
+                .setNegativeButton(getString(R.string.move), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         fileInfos.remove(longClickPosition);  //移除选中项
@@ -214,7 +214,7 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
                         refreshUnderBar();
                     }
                 })
-                .setPositiveButton("取消", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.cancle), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
 

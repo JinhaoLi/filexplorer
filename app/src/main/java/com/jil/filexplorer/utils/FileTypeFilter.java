@@ -2,41 +2,27 @@ package com.jil.filexplorer.utils;
 
 import com.jil.filexplorer.R;
 
+import static com.jil.filexplorer.utils.ConstantUtils.MB;
+
 public class FileTypeFilter{
-    private final static long MB =1024*1024;
+
     private final static String[] VIDEO = {"mp4", "avi", "flv"};
     private final static String[] MUSIC = {"mp3", "wav", "fla"};
     private final static String[] IMAGE = {"jpg", "png", "gif"};
     private final static String[] TEXT = {"txt", "doc", "lrc"};
-
+    private final static String[] PAGKE ={"zip","rar","7z","jar","iso"};
     /**
      *
-     * @param name image/jpeg
+     * @param mineType image/jpeg
      * @param fileSize
      * @return
      */
-    public static int getIconRes(String name, long fileSize) {
-        if (fileSize < 2*MB) {//小于2M
-            if (imageIf(name)) return R.mipmap.list_ico_image;
-            if (textIf(name)) return R.mipmap.list_ico_text;
-            if (musicIf(name)) return R.mipmap.list_ico_music;
-            if (videoIf(name)) return R.mipmap.list_ico_video;
-        } else if (fileSize < 12*MB) {//小于12M
-            if (musicIf(name)) return R.mipmap.list_ico_music;
-            if (videoIf(name)) return R.mipmap.list_ico_video;
-            if (imageIf(name)) return R.mipmap.list_ico_image;
-            if (textIf(name)) return R.mipmap.list_ico_text;
-        } else if (fileSize < 50*MB) {//小于50M
-            if (videoIf(name)) return R.mipmap.list_ico_video;
-            if (musicIf(name)) return R.mipmap.list_ico_music;
-            if (imageIf(name)) return R.mipmap.list_ico_image;
-            if (textIf(name)) return R.mipmap.list_ico_text;
-        }else {
-            if (videoIf(name)) return R.mipmap.list_ico_video;
-            if (musicIf(name)) return R.mipmap.list_ico_music;
-            if (imageIf(name)) return R.mipmap.list_ico_image;
-            if (textIf(name)) return R.mipmap.list_ico_text;
-        }
+    public static int getIconRes(String mineType, long fileSize) {
+        if (imageIf(mineType)) return R.mipmap.list_ico_image;
+        if (textIf(mineType)) return R.mipmap.list_ico_text;
+        if (musicIf(mineType)) return R.mipmap.list_ico_music;
+        if (videoIf(mineType)) return R.mipmap.list_ico_video;
+        if(pagkeIf(mineType)) return R.mipmap.ico_pagke;
         return R.mipmap.list_ico_unknow;
     }
 
@@ -82,6 +68,16 @@ public class FileTypeFilter{
             i++;
         }
 
+        return isType;
+    }
+
+    public static boolean pagkeIf(String name) {
+        boolean isType = false;
+        int i = 0;
+        while (!isType && i < PAGKE.length) {
+            isType = name.contains(PAGKE[i]);
+            i++;
+        }
         return isType;
     }
 

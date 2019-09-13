@@ -1,10 +1,7 @@
 <resources>
     <string name="app_name">资源管理器</string>
-    <string name="title_activity_main">资源管理器</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_subtitle">android.studio@android.com</string>
-    <string name="nav_header_desc">Navigation header</string>
 
     <string name="menu_this_phone">手机</string>
     <string name="menu_gallery">相册</string>
@@ -35,4 +32,15 @@
     <string name="action">操作</string>
     <string name="all_choose">全选</string>
     <string name="system">系统</string>
+    <string name="interval">区间选择</string>
+    <string name="Invalid_path">无效路径</string>
+    <string name="unable_to_access">无法访问</string>
+    <string name="File_operations">文件操作</string>
+    <string name="Determine_to_move_to">确定移动到</string>
+    <string name="move">移动</string>
+    <string name="cancle">取消</string>
+    <string name="sort_err"><![CDATA[排序的时候产生一个错误~%?…#*☆&℃$︿★?未知错误]]></string>
+    <string name="eat_err">页面被吃了(　o=^•ェ•)o　┏━┓,发生错误</string>
+    <string name="nav_header_desc">nav_header</string>
+    <string name="compress">压缩</string>
 </resources>

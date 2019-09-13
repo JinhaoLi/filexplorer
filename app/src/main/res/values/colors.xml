@@ -3,7 +3,7 @@
     <color name="colorPrimary">#1586C6</color>
     <color name="colorPrimaryDark">#1586C6</color>
     <color name="colorAccent">#1586C6</color>
-    <color name="alp">#00000000</color>
+    <color name="alp">#00FFFFFF</color>
     <color name="alp1">#7C45C6FF</color>
     <color name="not_dir">#72FF4D4D</color>
     <color name="delete">#85FD0000</color>

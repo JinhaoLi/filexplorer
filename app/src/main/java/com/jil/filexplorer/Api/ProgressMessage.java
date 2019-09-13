@@ -1,5 +1,6 @@
 package com.jil.filexplorer.Api;
 
+import static com.jil.filexplorer.Api.FileOperation.MODE_COMPRESS;
 import static com.jil.filexplorer.Api.FileOperation.MODE_COPY;
 import static com.jil.filexplorer.Api.FileOperation.MODE_DELETE;
 import static com.jil.filexplorer.Api.FileOperation.MODE_MOVE;
@@ -32,22 +33,11 @@ public class ProgressMessage {
 
     //进度标题
     private String title;
-    //剩余时间
-    private long reMainTime;
-    //速度
-    private float speed;
 
     public int getmType() {
         return mType;
     }
 
-    public long getEndLoacation() {
-        return endLoacation;
-    }
-
-    public int getProjectCount() {
-        return projectCount;
-    }
 
     public ProgressMessage(long startTime, long endLoacation, int projectCount, int mType) {
         this.startTime = startTime;
@@ -66,26 +56,6 @@ public class ProgressMessage {
 
     public void setIn(String in) {
         this.in = in;
-    }
-
-    public void setTo(String to) {
-        this.to = to;
-    }
-
-    public ProgressMessage(long startTime) {
-        this.startTime = startTime;
-    }
-
-    public ProgressMessage(long startTime, int projectCount, int mType, String in, String to) {
-        this.startTime = startTime;
-        this.projectCount = projectCount;
-        this.mType = mType;
-        this.in = in;
-        this.to = to;
-    }
-
-    public ProgressMessage() {
-
     }
 
     public void setNowLoacation(long nowLoacation) {
@@ -135,6 +105,8 @@ public class ProgressMessage {
         }
         if(mType== MODE_COPY&&projectCount!=0){
             return (int) (nowLoacation*100/endLoacation);
+        }else if(projectCount!=0&&mType==MODE_COMPRESS){
+            return (int) (nowLoacation*100/endLoacation);
         }else if(projectCount!=0){
             return (projectOverCount*100)/projectCount;
         }else {
@@ -169,6 +141,8 @@ public class ProgressMessage {
         }else if(mType==MODE_DELETE){
             type="删除";
             to ="";
+        }else if(mType==MODE_COMPRESS){
+            type="压缩到";
         }else {
             type="";
         }
@@ -183,7 +157,7 @@ public class ProgressMessage {
         long nowTime =(System.currentTimeMillis()-startTime)/1000;
         //nowTime= nowTime==0? 1:nowTime;
         if(nowTime!=0){
-            if(mType== MODE_COPY){
+            if(mType== MODE_COPY||mType==MODE_COMPRESS){
                 return "速度："+ (nowLoacation/(nowTime))/MB+"Mb/秒";
             }else if(mType==MODE_MOVE) {
                 return "速度："+ projectOverCount /(nowTime)+"个项目/秒";
@@ -195,7 +169,7 @@ public class ProgressMessage {
     }
 
     public String getReMainCount(){
-        if(mType== MODE_COPY){
+        if(mType== MODE_COPY||mType==MODE_COMPRESS){
             return "剩余项目："+(projectCount- projectOverCount)+"("+(endLoacation-nowLoacation)/MB+"MB)";
         }else {
             return "剩余项目："+(projectCount- projectOverCount);
@@ -207,7 +181,7 @@ public class ProgressMessage {
         long nowTime =System.currentTimeMillis()-startTime;
         nowTime= nowTime==0 ? 1:nowTime;
         float s= (endLoacation-nowLoacation) / (nowLoacation/(nowTime/1000f));
-        if(mType== MODE_COPY){
+        if(mType== MODE_COPY||mType==MODE_COMPRESS){
             return "剩余时间：大约"+s+"秒";
         }else {
             float speed_1 =(projectOverCount /(nowTime/1000f));
@@ -216,13 +190,9 @@ public class ProgressMessage {
         }
     }
 
-
     public String getfileName(){
         return "名称："+ nowProjectName;
     }
 
-    public int getOverCount(){
-        return projectOverCount;
-    }
 
 }

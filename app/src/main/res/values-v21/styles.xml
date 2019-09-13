@@ -8,6 +8,7 @@
         <item name="colorAccent">@color/colorPrimary</item>
         <item name="actionOverflowMenuStyle">@style/optionMenuBlue</item>
         <item name="windowActionBar">false</item>
+        <item name="editTextBackground">@drawable/edittext_background</item>
         <item name="windowNoTitle">true</item>
         <item name="android:statusBarColor">@color/colorPrimaryDark</item>
     </style>
@@ -18,6 +19,7 @@
         <item name="colorPrimaryDark">@color/colorPrimary_black</item>
         <item name="actionOverflowMenuStyle">@style/optionMenuGray</item>
         <item name="android:textColor">@android:color/white</item>
+        <item name="editTextBackground">@drawable/edittext_background</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:statusBarColor">@color/colorPrimary_black</item>

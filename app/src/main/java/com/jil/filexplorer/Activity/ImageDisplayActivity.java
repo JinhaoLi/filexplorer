@@ -10,7 +10,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListPopupWindow;
 import android.widget.TextView;
@@ -20,16 +19,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
-import com.bumptech.glide.request.RequestOptions;
 import com.jil.filexplorer.Api.FileChangeListenter;
 import com.jil.filexplorer.Api.ImageFilter;
 import com.jil.filexplorer.Api.Item;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.ImageAdapter;
-import com.jil.filexplorer.adapter.SurperAdapter;
+import com.jil.filexplorer.adapter.SupperAdapter;
 import com.jil.filexplorer.adapter.UriAdapter;
 import com.jil.filexplorer.ui.ImagesPager;
 import com.jil.filexplorer.utils.ConstantUtils;
@@ -58,8 +53,8 @@ public class ImageDisplayActivity extends AppCompatActivity {
     private TextView imageTitle;
     private LinearLayout titleTopBar;
     private ListPopupWindow menu;
-    private SurperAdapter<File> fileSurperAdapter;
-    private SurperAdapter<Uri> uriSurperAdapter;
+    private SupperAdapter<File> imageFileSupperAdapter;
+    private SupperAdapter<Uri> uriSupperAdapter;
     private Button menuButton;
     private String imageDirPath;
     private boolean isThisAppRes;
@@ -163,7 +158,6 @@ public class ImageDisplayActivity extends AppCompatActivity {
 
             @Override
             public void onPageSelected(int position) {
-                LogUtils.i("onPageSelected",selectPosition+"-->"+position);
                 if(selectPosition!=-1){
                     if(linearLayoutManager.findViewByPosition(selectPosition)!=null)
                         linearLayoutManager.findViewByPosition(selectPosition).setBackgroundColor(ConstantUtils.HALF_DARK_COLOR);
@@ -185,7 +179,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
                     try{
                         linearLayoutManager.findViewByPosition(selectPosition).setBackgroundColor(ConstantUtils.IMAGE_SELECTED_COLOR);
                     }catch (Exception e ){
-                        LogUtils.e("设置选中颜色时发生的错误","由于被设置的view不可见，view==null");
+                        LogUtils.e("设置选中颜色时发生的错误",e.getMessage()+"由于被设置的view不可见，view==null");
                     }
                     stateStopSelect=false;
                 }
@@ -196,9 +190,9 @@ public class ImageDisplayActivity extends AppCompatActivity {
 
     private void setSmallListAdapter() {
         if(isThisAppRes){
-            small_image_list.setAdapter(fileSurperAdapter);
+            small_image_list.setAdapter(imageFileSupperAdapter);
         }else {
-            small_image_list.setAdapter(uriSurperAdapter);
+            small_image_list.setAdapter(uriSupperAdapter);
         }
 
     }
@@ -212,9 +206,9 @@ public class ImageDisplayActivity extends AppCompatActivity {
 
     private void makeAdapter() {
         if(isThisAppRes){
-            fileSurperAdapter =new SurperAdapter<File>(images, this, new SurperAdapter.OnItemClickListener<File>() {
+            imageFileSupperAdapter =new SupperAdapter<File>(images, this, new SupperAdapter.OnItemClickListener<File>() {
                 @Override
-                public void onItemClick(SurperAdapter.VH holder, File data,int position) {
+                public void onItemClick(SupperAdapter.VH holder, File data, int position) {
                     viewPager.setCurrentItem(holder.getLayoutPosition(),true);
                 }
             }) {
@@ -233,9 +227,9 @@ public class ImageDisplayActivity extends AppCompatActivity {
                 }
             };
         }else {
-            uriSurperAdapter =new SurperAdapter<Uri>(uris, this, new SurperAdapter.OnItemClickListener<Uri>() {
+            uriSupperAdapter =new SupperAdapter<Uri>(uris, this, new SupperAdapter.OnItemClickListener<Uri>() {
                 @Override
-                public void onItemClick(SurperAdapter.VH holder, Uri data,int position) {
+                public void onItemClick(SupperAdapter.VH holder, Uri data, int position) {
                     viewPager.setCurrentItem(holder.getLayoutPosition(),true);
                 }
             }) {
@@ -308,7 +302,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
                         boolean deleteSuccess=file.delete();
                         if(deleteSuccess){
                             imageAdapter.remove(selectPosition);
-                            fileSurperAdapter.notifyDataSetChanged();
+                            imageFileSupperAdapter.notifyDataSetChanged();
                             if(selectPosition!=images.size()){
                                 setTopBarTitle(selectPosition);
                             }

@@ -49,6 +49,6 @@
         android:layout_gravity="center"
         android:layout_weight="7"
         android:text="大小"
-        android:textAlignment="textEnd"
+        android:gravity="end"
         android:textColor="@android:color/primary_text_light" />
 </LinearLayout>

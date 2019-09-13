@@ -1,9 +1,7 @@
 package com.jil.filexplorer.Activity;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -17,6 +15,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -25,6 +24,7 @@ import android.widget.ListPopupWindow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
@@ -42,23 +42,29 @@ import com.jil.filexplorer.Api.ProgressMessage;
 import com.jil.filexplorer.Api.SettingParam;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.FragmentAdapter;
-import com.jil.filexplorer.adapter.SurperAdapter;
+import com.jil.filexplorer.adapter.SupperAdapter;
+import com.jil.filexplorer.ui.CompressDialog;
 import com.jil.filexplorer.ui.CustomViewFragment;
 import com.jil.filexplorer.ui.FileShowFragment;
 import com.jil.filexplorer.ui.MyItemDecoration;
+import com.jil.filexplorer.ui.NewNameDialog;
 import com.jil.filexplorer.utils.ConstantUtils;
+import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.MenuUtils;
 import com.jil.filexplorer.utils.ToastUtils;
 
 
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.util.Zip4jConstants;
+
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import static com.jil.filexplorer.Activity.ProgressActivity.setOnActionFinish;
+import static com.jil.filexplorer.Api.FileOperation.MODE_COMPRESS;
 import static com.jil.filexplorer.Api.FileOperation.MODE_COPY;
 import static com.jil.filexplorer.Api.FileOperation.MODE_DELETE;
 import static com.jil.filexplorer.Api.FileOperation.MODE_MOVE;
@@ -75,15 +81,15 @@ import static com.jil.filexplorer.utils.ConstantUtils.GIRD_LINER_LAYOUT;
 import static com.jil.filexplorer.utils.ConstantUtils.KB;
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
 import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
-import static com.jil.filexplorer.utils.DialogUtils.showAlertDialog;
 import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromFile;
 import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;
+import static com.jil.filexplorer.utils.FileUtils.getFormatData;
 import static com.jil.filexplorer.utils.FileUtils.hideMax;
 import static com.jil.filexplorer.utils.FileUtils.requestPermission;
 import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
 
 
-public class MainActivity extends ClearActivity implements NavigationView.OnNavigationItemSelectedListener,ViewPager.OnPageChangeListener,View.OnClickListener {
+public class MainActivity extends ClearActivity implements NavigationView.OnNavigationItemSelectedListener, ViewPager.OnPageChangeListener, View.OnClickListener {
     private EditText pathEdit;                                  //路径输入框
     private FileShowFragment customViewFragment;                //当前fragment
     private String mPath;                                       //当前fragment的路径
@@ -92,13 +98,13 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     //private ImageButton upDir;
     private DrawerLayout drawerLayout;
     private RecyclerView smallFragmentList;
-    private SurperAdapter<CustomViewFragment> smallFragmentViewAdapter;
+    private SupperAdapter<CustomViewFragment> smallFragmentViewAdapter;
     protected FrameLayout underBar;
     protected TextView underBarInfo;
     protected ImageView liner, grid;                        //排列方式按钮
     private TextView sortName, sortDate, sortType, sortSize; //列名
-    private boolean pasteVisible =false;                    //粘贴按钮可见状态
-    private boolean operationGroupVisible=false;            //操作按钮可见状态
+    private boolean pasteVisible = false;                    //粘贴按钮可见状态
+    private boolean operationGroupVisible = false;            //操作按钮可见状态
     private FileOperation fileOperation;
     public int fileOperationType;
     private ViewPager fragmentPager;
@@ -108,7 +114,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     private int refuseCount;
     private Menu menu;
     private ArrayList<FileInfo> missionList;
-
+    private int startPosition, endPsoition;
 
 
     @Override
@@ -118,7 +124,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     public void setPasteVisible(boolean pasteVisible) {
         this.pasteVisible = pasteVisible;
-        if(menu!=null){
+        if (menu != null) {
             menu.getItem(3).setVisible(pasteVisible);
         }
 
@@ -126,9 +132,9 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     public void setOperationGroupVisible(boolean operationGroupVisible) {
         this.operationGroupVisible = operationGroupVisible;
-        if(menu!=null){
-            menu.setGroupVisible(1,operationGroupVisible);
-            menu.setGroupVisible(2,!operationGroupVisible);
+        if (menu != null) {
+            menu.setGroupVisible(1, operationGroupVisible);
+            menu.setGroupVisible(2, !operationGroupVisible);
         }
     }
 
@@ -153,7 +159,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     protected void initView() {
         setContentView(R.layout.activity_main);
         fragments = new ArrayList<>();
-        fragmentPager=findViewById(R.id.fragment_pager);
+        fragmentPager = findViewById(R.id.fragment_pager);
         fragmentManager = getSupportFragmentManager();
         //顶部排序栏,底部操作栏
         FrameLayout topBar = findViewById(R.id.top_bar);
@@ -169,24 +175,24 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         drawerLayout = findViewById(R.id.drawer_layout);
-        smallFragmentList =findViewById(R.id.small_fragment_view_list_layout);
+        smallFragmentList = findViewById(R.id.small_fragment_view_list_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
 
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close){
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
             @Override
-            public void onDrawerStateChanged(int newState) {
+            public void onDrawerStateChanged(int newState) {//用户不可见的刷新
                 super.onDrawerStateChanged(newState);
-//                if(newState==1){
-//                    smallViewLoadOrRefresh();
-//                }
+                if(newState==1){
+                    smallViewLoadOrRefresh();
+                }
             }
 
             @Override
-            public void onDrawerOpened(View drawerView) {
+            public void onDrawerOpened(View drawerView) {//用户可见的刷新
                 super.onDrawerOpened(drawerView);
-                if(drawerView.getId()==R.id.left_fragment_show){
-                    smallViewLoadOrRefresh();
-                }
+//                if (drawerView.getId() == R.id.left_fragment_show) {
+//                    smallViewLoadOrRefresh();
+//                }
             }
         };
         drawerLayout.addDrawerListener(toggle);
@@ -203,12 +209,12 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         sortDate.setOnClickListener(this);
         sortSize.setOnClickListener(this);
         sortType.setOnClickListener(this);
-        Intent shortCutIntent =getIntent();
-        String path =shortCutIntent.getStringExtra("file_path");
-        if(path!=null&&!path.equals("")){
-            customViewFragment=new FileShowFragment(this,path);
-        }else {
-            customViewFragment=new FileShowFragment(this,Environment.getExternalStorageDirectory().getPath());
+        Intent shortCutIntent = getIntent();
+        String path = shortCutIntent.getStringExtra("file_path");
+        if (path != null && !path.equals("")) {
+            customViewFragment = new FileShowFragment(this, path);
+        } else {
+            customViewFragment = new FileShowFragment(this, Environment.getExternalStorageDirectory().getPath());
         }
 
         setCustomViewFragment(customViewFragment);
@@ -247,8 +253,9 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuUtils.addMenu(menu);
-        this.menu=menu;
+        this.menu = menu;
         setOperationGroupVisible(operationGroupVisible);
+        setSelectIntervalIco(false, -1, -1);
         setPasteVisible(pasteVisible);
         setAllSelectIco(customViewFragment.allSelect);
         return super.onCreateOptionsMenu(menu);
@@ -256,11 +263,95 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     public void deleteFile() {
         //使用AsyncTask
-        if(missionList.size()>0){
-            ActionThread acthread=new ActionThread();
+        if (missionList.size() > 0) {
+            ActionThread acthread = new ActionThread();
             acthread.execute(missionList);
         }
         clearUnderBar();
+    }
+
+    public void copySelectFile(){
+        missionList = customViewFragment.getSelectedList();
+        fileOperationType = MODE_COPY;
+        setPasteVisible(true);
+        customViewFragment.unSelectAll();
+    }
+
+    public void delecteSelectFile(){
+        ArrayList<FileInfo> deleteList = customViewFragment.getSelectedList();//储存删除对象
+        ArrayList<Integer> deletePosition = customViewFragment.getSelectPosition(deleteList);//储存位置
+        if (deleteList.size() != 0 && deletePosition.size() != 0) {
+            customViewFragment.removeFileInfos(deleteList);
+        }
+        fileOperationType = MODE_DELETE;
+        missionList = deleteList;
+        deleteFile();
+    }
+
+    public void createNewFile(){
+        NewNameDialog newFileOrDir =new NewNameDialog(this,R.layout.dialog_new_file_or_dir_layout,"生成") {
+            private Button dir;
+            @Override
+            public void queryButtonClick(View v, String nameInputStr) {
+            }
+
+            @Override
+            public void customView() {
+                super.customView();
+                dir=findViewById(R.id.button4);
+                dir.setText("文件夹");
+                dir.setOnClickListener(this);
+            }
+
+            @Override
+            public void onClick(View v) {
+                String s = nameInput.getText().toString();
+                String path = customViewFragment.getFilePath() + File.separator + s;
+                String successful=null;
+                switch (v.getId()){
+                    case R.id.button3:
+                        successful =FileUtils.newFile(path);
+                        break;
+                    case R.id.button4:
+                        successful =FileUtils.newFolder(path);
+                        break;
+                }
+                if(successful!=null) customViewFragment.addFileInfo(getFileInfoFromPath(customViewFragment.getFilePath() + File.separator +successful));
+                ToastUtils.showToast(MainActivity.this, successful!=null?"成功":"失败", 1000);
+                dismiss();
+            }
+
+            @Override
+            public void setTitle(@Nullable CharSequence title) {
+                super.setTitle(title);
+                query.setText("文件");
+
+            }
+        };
+        newFileOrDir.showAndSetName("新项目");
+    }
+
+    public void moveSelectFile(){
+        fileOperationType = MODE_MOVE;
+        missionList = customViewFragment.getSelectedList();
+        setPasteVisible(true);
+        customViewFragment.unSelectAll();
+    }
+
+
+    public void load(){
+        String s = pathEdit.getText().toString();
+        if (s.startsWith("...")) {
+            customViewFragment.load();
+        } else {
+            customViewFragment.load(s, false);
+        }
+    }
+
+    public void selectAllOrNot(){
+        boolean isAll = customViewFragment.isAllSelect();
+        customViewFragment.selectAllPositionOrNot(!isAll);
+        setAllSelectIco(isAll);
     }
 
     @Override
@@ -269,156 +360,135 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
         //path.setFocusable(false);
         switch (id) {
             case 1:
-                missionList =customViewFragment.getSelectedList();
-                fileOperationType =MODE_COPY;
-                setPasteVisible(true);
-                customViewFragment.unSelectAll();
+                copySelectFile();
                 break;
             case 2:
-                pasteMenuClick();
+                pasteFileHere();
                 break;
             case 3:
-                ArrayList<FileInfo> deleteList = customViewFragment.getSelectedList();//储存删除对象
-                ArrayList<Integer> deletePosition = customViewFragment.getSelectPosition(deleteList);//储存位置
-                if (deleteList.size() != 0 && deletePosition.size() != 0) {
-                    customViewFragment.removeFileInfos(deleteList);
-                }
-                fileOperationType=MODE_DELETE;
-                missionList=deleteList;
-                deleteFile();
+                delecteSelectFile();
                 break;
             case 4:
                 //添加
-                final EditText et = new EditText(this);
-                AlertDialog.Builder builder =showAlertDialog(this,"请输入名字").setView(et)
-                        .setPositiveButton("生成文件", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                String s =et.getText().toString();
-                                File f =new File(customViewFragment.getFilePath()+File.separator+s);
-                                if(!f.exists()){
-                                    try {
-                                        f.createNewFile();
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                        ToastUtils.showToast(MainActivity.this,"生成文件失败",1000);
-                                        return;
-                                    }
-                                    customViewFragment.addFileInfo(getFileInfoFromFile(f));
-                                }else {
-                                    ToastUtils.showToast(MainActivity.this,"生成文件失败",1000);
-                                }
-
-                            }
-                        })
-                        .setNegativeButton("生成文件夹", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                String s =et.getText().toString();
-                                File f =new File(customViewFragment.getFilePath()+File.separator+s);
-                                if(!f.exists()){
-                                    f.mkdir();
-                                    customViewFragment.addFileInfo(getFileInfoFromFile(f));
-                                }else {
-                                    ToastUtils.showToast(MainActivity.this,"生成文件夹失败",1000);
-                                }
-
-                            }
-                        })
-                        .setNeutralButton("取消", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        });
-                AlertDialog alertDialog=builder.create();
-                alertDialog.show();
-                //CopyProgressDialog c1 = new CopyProgressDialog(mMainActivity);
-                //c1.show();
+                createNewFile();
                 break;
             case 5:
                 //剪切
-                fileOperationType =MODE_MOVE;
-                missionList=customViewFragment.getSelectedList();
-                setPasteVisible(true);
-                customViewFragment.unSelectAll();
+                moveSelectFile();
                 break;
             case 6:
                 //刷新
-                String s =pathEdit.getText().toString();
-                if(s.startsWith("...")){
-                    customViewFragment.load();
-                }else {
-                    customViewFragment.load(s, false);
-                }
+                load();
                 break;
             case 7:
-                //退出
-                if(fragments.size()>1){
+                //close fragment
+                if (fragments.size() > 1) {
                     removeFragmentPage();
-                }else {
+                } else {
                     finish();
                 }
-
                 break;
             case 8:
-                //全选/取消全选
-                boolean isAll=customViewFragment.selectAllPosition();
-                setAllSelectIco(isAll);
+                //全选or取消全选
+                selectAllOrNot();
+                break;
+            case 9:
+                //区间选择
+                if (startPosition != -1 && endPsoition != -1) {
+                    customViewFragment.selectSomePosition(startPosition, endPsoition);
+                }
+                break;
+            case 10:
+                compressFiles();
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    public void setAllSelectIco(boolean isAllSelected){
-        if(isAllSelected){
-            menu.getItem(6).setIcon(R.drawable.ic_check_box_black_24dp);
-        }else {
-            menu.getItem(6).setIcon(R.drawable.ic_check_box_outline_blank_black_24dp);
-        }
-
+    public void compressFiles(){
+        missionList=customViewFragment.getSelectedList();
+        fileOperationType=MODE_COMPRESS;
+        CompressDialog compressDialog=new CompressDialog(this,R.layout.dialog_compression_layout,"压缩文件参数");
+        compressDialog.showAndSetName(missionList.get(0).getFileName()+"等文件");
     }
 
-    private void pasteMenuClick() {
+
+
+    public void compressFileAction(String zipFile,String zipPass,int type){
+        ZipParameters zipParameters =new ZipParameters();
+        zipParameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE); // 压缩方式
+        zipParameters.setCompressionLevel(type); // 压缩级别
+        if(zipPass!=null&&!zipPass.equals("")){
+            zipParameters.setEncryptFiles(true);
+            zipParameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD); // 加密方式
+            zipParameters.setPassword(zipPass);//密码
+        }
+        ArrayList<FileInfo> topath = new ArrayList<>();
+        topath.add(getFileInfoFromPath(customViewFragment.getFilePath()+File.separator+zipFile));
+        if (missionList != null && missionList.size() > 0) {
+            ActionThread workThread = new ActionThread(zipParameters);
+            workThread.execute(missionList, topath);
+        } else {
+            ToastUtils.showToast(MainActivity.this, "源路径不存在", 1000);
+        }
+    }
+
+    public void setAllSelectIco(boolean isAllSelected) {
+        if (isAllSelected) {
+            menu.getItem(8).setIcon(R.drawable.ic_all_no_selecte_ico);
+        } else {
+            menu.getItem(8).setIcon(R.drawable.ic_all_selecte_ico);
+        }
+    }
+
+    public void setSelectIntervalIco(boolean visible, int start, int end) {
+        this.startPosition = start;
+        this.endPsoition = end;
+        menu.getItem(6).setVisible(visible);
+    }
+
+    private void pasteFileHere() {
         //使用AsyncTask
         setPasteVisible(false);
-        ArrayList<FileInfo> topath =new ArrayList<>();
+        ArrayList<FileInfo> topath = new ArrayList<>();
         topath.add(getFileInfoFromPath(customViewFragment.getFilePath()));
-        if(missionList!=null&&missionList.size()>0){
-            final ActionThread workThread=new ActionThread();
-            workThread.execute(missionList,topath);
+        if (missionList != null && missionList.size() > 0) {
+            ActionThread workThread = new ActionThread();
+            workThread.execute(missionList, topath);
 
-        }else {
-            ToastUtils.showToast(MainActivity.this,"源路径不存在",1000);
+        } else {
+            ToastUtils.showToast(MainActivity.this, "源路径不存在", 1000);
         }
     }
 
-    public void addFileInfoInMissionList(FileInfo fileInfo){
-        if(missionList!=null)
+    public void addFileInfoInMissionList(FileInfo fileInfo) {
+        if (missionList != null)
             missionList.clear();
-        else{
-           missionList=new ArrayList<>();
+        else {
+            missionList = new ArrayList<>();
         }
         missionList.add(fileInfo);
     }
+
     private FrameLayout right;
 
 
-    public void slideToPager(String path){
-        int position=fragmentAdapter.findPositionByFilePath(path);
-        if(position>=0){//已经有此页面
+    public void slideToPager(String path) {
+        int position = fragmentAdapter.findPositionByFilePath(path);
+        if (position >= 0) {//已经有此页面
             fragmentPager.setCurrentItem(position);
-        }else {//没有此页面
+        } else {//没有此页面
             createNewFragment(path);
         }
     }
 
     /**
      * 创建一个新页面并移动到此页面
+     *
      * @param path
      */
-    public void createNewFragment(String path){
-        FileShowFragment fileShow1=new FileShowFragment(this,path);
+    public void createNewFragment(String path) {
+        FileShowFragment fileShow1 = new FileShowFragment(this, path);
         fragments.add(fileShow1);
         fragmentAdapter.notifyDataSetChanged();
         fragmentPager.setCurrentItem(fragments.size());
@@ -433,21 +503,21 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                 slideToPager(Environment.getExternalStorageDirectory().getPath());
                 break;
             case R.id.nav_gallery:
-                slideToPager(Environment.getExternalStorageDirectory().getPath()+File.separator+"Pictures");
+                slideToPager(Environment.getExternalStorageDirectory().getPath() + File.separator + "Pictures");
                 break;
             case R.id.nav_fast_entry:
                 break;
             case R.id.nav_ftp_net:
                 break;
             case R.id.nav_recycle_station:
-                File bin =new File(Environment.getExternalStorageDirectory()+File.separator+"RecycleBin");
-                if(!bin.exists()){
+                File bin = new File(Environment.getExternalStorageDirectory() + File.separator + "RecycleBin");
+                if (!bin.exists()) {
                     bin.mkdirs();
                 }
                 customViewFragment.load(bin.getPath(), true);
                 break;
             case R.id.nav_setting:
-                Intent i =new Intent(MainActivity.this, SettingActivity.class);
+                Intent i = new Intent(MainActivity.this, SettingActivity.class);
                 startActivity(i);
                 break;
             default:
@@ -458,15 +528,16 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     /**
      * 打开上层目录
+     *
      * @return
      */
-    public boolean openParentDir(){
+    public boolean openParentDir() {
         if (!mPath.equals("/") && !mPath.equals(Environment.getExternalStorageDirectory().getPath())) {
             File file1 = new File(mPath);
             String path = file1.getParent();
             customViewFragment.load(path, true);
             return true;
-        }else {
+        } else {
             return false;
         }
     }
@@ -480,9 +551,9 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
             return;
         }
 
-        if(openParentDir())return;
+        if (openParentDir()) return;
 
-        if(fragments.size()>1){
+        if (fragments.size() > 1) {
             removeFragmentPage();
             return;
         }
@@ -492,30 +563,31 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     /**
      * 移除当前fragment
      */
-    public void removeFragmentPage(){
-        int p=fragmentPager.getCurrentItem();
+    public void removeFragmentPage() {
+        int p = fragmentPager.getCurrentItem();
         removeFragmentPage(p);
     }
 
     /**
      * 移除fragment
      */
-    public void removeFragmentPage(int position){
-        if(position==fragmentPager.getCurrentItem()) {
+    public void removeFragmentPage(int position) {
+        if (position == fragmentPager.getCurrentItem()) {
             if (position == 0) {
                 fragmentPager.setCurrentItem(position + 1);
             } else {
                 fragmentPager.setCurrentItem(position - 1);
             }
         }
-        LogUtils.i("销毁第"+(position+1)+"个",fragments.get(position)+"");
         fragmentAdapter.removePager(position);
+        if (fragments.size() < 1) finish();
     }
 
     /**
      * 点击除editText外时，editText范围失去焦点
      *
      * @param ev
+     *
      * @return
      */
     @Override
@@ -565,8 +637,10 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     /**
      * 关闭输入法
+     *
      * @param
      * @param
+     *
      * @return
      */
     public boolean isShouldHideInput(View v, MotionEvent event) {
@@ -588,27 +662,26 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
 
     public void setCustomViewFragment(CustomViewFragment customViewFragment) {
-        if(fragments==null){
-            fragments=new ArrayList<>();
+        if (fragments == null) {
+            fragments = new ArrayList<>();
         }
         fragments.add(customViewFragment);
-        fragmentAdapter =new FragmentAdapter(fragmentManager,fragments);
+        fragmentAdapter = new FragmentAdapter(fragmentManager, fragments);
         fragmentPager.setAdapter(fragmentAdapter);
         fragmentPager.setCurrentItem(0);
         fragmentPager.addOnPageChangeListener(this);
     }
 
 
-    public void smallViewLoadOrRefresh(){
-        if(smallFragmentViewAdapter ==null){
-            smallFragmentViewAdapter =new SurperAdapter<CustomViewFragment>(fragments, this, new SurperAdapter.OnItemClickListener<CustomViewFragment>() {
-
+    public void smallViewLoadOrRefresh() {
+        if (smallFragmentViewAdapter == null) {
+            smallFragmentViewAdapter = new SupperAdapter<CustomViewFragment>(fragments, this, new SupperAdapter.OnItemClickListener<CustomViewFragment>() {
                 @Override
-                public void onItemClick(SurperAdapter.VH holder, CustomViewFragment data,int position) {
+                public void onItemClick(SupperAdapter.VH holder, CustomViewFragment data, int position) {
                     holder.itemView.setBackgroundColor(ConstantUtils.SELECTED_COLOR);
-                    if(position!=fragmentPager.getCurrentItem()){
-                        if(smallFragmentView.findViewByPosition(fragmentPager.getCurrentItem())!=null)
-                        Objects.requireNonNull(smallFragmentView.findViewByPosition(fragmentPager.getCurrentItem())).setBackgroundColor(NORMAL_COLOR);
+                    if (position != fragmentPager.getCurrentItem()) {
+                        if (smallFragmentView.findViewByPosition(fragmentPager.getCurrentItem()) != null)
+                            Objects.requireNonNull(smallFragmentView.findViewByPosition(fragmentPager.getCurrentItem())).setBackgroundColor(NORMAL_COLOR);
                         fragmentPager.setCurrentItem(position);
                     }
 
@@ -617,9 +690,9 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                 @Override
                 public void onViewAttachedToWindow(@NonNull VH holder) {
                     super.onViewAttachedToWindow(holder);
-                    if(holder.getAdapterPosition()==fragmentPager.getCurrentItem()){
+                    if (holder.getAdapterPosition() == fragmentPager.getCurrentItem()) {
                         holder.itemView.setBackgroundColor(ConstantUtils.SELECTED_COLOR);
-                    }else {
+                    } else {
                         holder.itemView.setBackgroundColor(NORMAL_COLOR);
                     }
                 }
@@ -631,51 +704,38 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
                 @Override
                 public void convert(VH holder, CustomViewFragment data, final int position, Context mContext) {
-                    holder.setText(R.id.textView7,data.getFragmentTitle());
-                    holder.setPic(R.id.imageView6,data.getSmallView(),mContext);
-                    if(position==fragmentPager.getCurrentItem()){
+                    holder.setText(R.id.textView7, data.getFragmentTitle());
+                    holder.setPic(R.id.imageView6, data.getSmallView(), mContext);
+                    if (position == fragmentPager.getCurrentItem()) {
                         holder.itemView.setBackgroundColor(ConstantUtils.SELECTED_COLOR);
-                    }else {
+                    } else {
                         holder.itemView.setBackgroundColor(NORMAL_COLOR);
                     }
                     holder.getView(R.id.imageView9).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             removeFragmentPage(position);
-                           smallFragmentViewAdapter.notifyDataSetChanged();
+                            smallFragmentViewAdapter.notifyDataSetChanged();
                         }
                     });
-//                    holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-//                        @Override
-//                        public boolean onLongClick(View v) {
-//
-//                            return false;
-//                        }
-//                    });
                 }
             };
             smallFragmentView = new LinearLayoutManager(this);
             smallFragmentList.setLayoutManager(smallFragmentView);
             smallFragmentList.addItemDecoration(new MyItemDecoration(this, 1));
             smallFragmentList.setAdapter(smallFragmentViewAdapter);
-        }else {
+        } else {
             smallFragmentViewAdapter.notifyDataSetChanged();
-            //smallFragmentViewAdapter.notifyItemRangeChanged(0,fragments.size());
         }
     }
 
     public void refresh(String path) {
         if (pathEdit != null && path != null && !path.equals("")) {
             mPath = path;
-            String s=hideMax(path,55);
+            String s = hideMax(path, 55);
             pathEdit.setText(s);
             setTitle(customViewFragment.getFragmentTitle());
         }
-
-    }
-
-    public EditText getPathEdit() {
-        return pathEdit;
     }
 
     @Override
@@ -701,10 +761,10 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     @Override
     public void onPageSelected(int position) {
         fragmentPager.setCurrentItem(position);
-        customViewFragment=(FileShowFragment)fragments.get(position);
-        if(customViewFragment.getUnderBarInfos()==null||customViewFragment.getUnderBarInfos().equals("")){
+        customViewFragment = (FileShowFragment) fragments.get(position);
+        if (customViewFragment.getUnderBarInfos() == null || customViewFragment.getUnderBarInfos().equals("")) {
             clearUnderBar();
-        }else {
+        } else {
             refreshUnderBar();
         }
         refresh(customViewFragment.getFilePath());
@@ -750,8 +810,8 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                 grid.setBackgroundColor(NORMAL_COLOR);
                 break;
             case R.id.imageView3://网格布局
-                int spanCount=SettingParam.Column;
-                if(spanCount<=2) spanCount+=2;
+                int spanCount = SettingParam.Column;
+                if (spanCount <= 2) spanCount += 2;
                 SettingParam.setColumn(spanCount);
                 customViewFragment.makeGridLayout(spanCount, CustomViewFragment.makeItemLayoutRes(spanCount));
                 view.setBackgroundColor(GIRD_LINER_LAYOUT);
@@ -762,74 +822,88 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
 
     @SuppressLint("SetTextI18n")
     public void clearUnderBar() {
-        if(menu!=null){
+        if (menu != null) {
             setOperationGroupVisible(false);
             setAllSelectIco(false);
+            setSelectIntervalIco(false, -1, -1);
         }
-        underBarInfo.setText("\t"+customViewFragment.getFileInfosSize() + getString(R.string.how_many_item));
+        underBarInfo.setText("\t" + customViewFragment.getFileInfosSize() + getString(R.string.how_many_item));
     }
 
+
     @SuppressLint("SetTextI18n")
-    public void refreshUnderBar(int how, long size,boolean haveDir){
-        customViewFragment.menuVisible=how>0;
-        String howStr = how == 0 ? "" : "|\t"+getString(R.string.select) + how +"" + getString(R.string.how_many_item);
+    public void refreshUnderBar(int how, long size, boolean haveDir) {
+        customViewFragment.menuVisible = how > 0;
+        String howStr = how == 0 ? "" : "|\t" + getString(R.string.select) + how + "" + getString(R.string.how_many_item);
         String bigStr;
         if (haveDir || how == 0) {
             bigStr = "";
         } else {
-            bigStr = size > GB ? stayFrieNumber((float) size / GB) + "GB"+"\t\t|"
-                    : size > MB ? stayFrieNumber((float) size / MB) + "MB"+"\t\t|"
-                    : stayFrieNumber((float) size / KB) + "KB"+"\t\t|";
+            bigStr = size > GB ? stayFrieNumber((float) size / GB) + "GB" + "\t\t|"
+                    : size > MB ? stayFrieNumber((float) size / MB) + "MB" + "\t\t|"
+                    : stayFrieNumber((float) size / KB) + "KB" + "\t\t|";
         }
-        if(how!=0){
+        if (how != 0) {
             setOperationGroupVisible(true);
-        }else {
+        } else {
             setOperationGroupVisible(false);
         }
-        String underMsg="\t"+customViewFragment.getFileInfosSize() + getString(R.string.how_many_item) + "\t\t" + howStr + "\t\t" + bigStr;
+        String underMsg = "\t" + customViewFragment.getFileInfosSize() + getString(R.string.how_many_item) + "\t\t" + howStr + "\t\t" + bigStr;
         underBarInfo.setText(underMsg);
         customViewFragment.setUnderBarInfos(underMsg);
     }
 
-    public void refreshUnderBar(){
+    public void refreshUnderBar() {
         customViewFragment.refreshUnderBar();
     }
 
     @SuppressLint("StaticFieldLeak")
-    private class ActionThread extends AsyncTask<ArrayList<FileInfo>, ProgressMessage,Integer> {
+    private class ActionThread extends AsyncTask<ArrayList<FileInfo>, ProgressMessage, Integer> {
+        private ZipParameters zipParameters;
+
+        public ActionThread(ZipParameters zipParameters) {
+            this.zipParameters = zipParameters;
+        }
+
+        public ActionThread() {
+        }
+
         @Override
         protected Integer doInBackground(ArrayList<FileInfo>... inParams) {
-            switch (fileOperationType){
+            switch (fileOperationType) {
                 case MODE_COPY:
-                    fileOperation= FileOperation.with(MainActivity.this).copy(inParams[0]).to(inParams[1].get(0));
+                    fileOperation = FileOperation.with(MainActivity.this).copy(inParams[0]).to(inParams[1].get(0));
                     break;
                 case MODE_MOVE:
-                    fileOperation=FileOperation.with(MainActivity.this).move(inParams[0]).to(inParams[1].get(0));
+                    fileOperation = FileOperation.with(MainActivity.this).move(inParams[0]).to(inParams[1].get(0));
                     //missionList.clear();
                     break;
                 case MODE_DELETE:
-                    File bin =new File(Environment.getExternalStorageDirectory()+File.separator+"RecycleBin");
-                    if(!bin.exists()){
+                    File bin = new File(Environment.getExternalStorageDirectory() + File.separator + "RecycleBin");
+                    if (!bin.exists()) {
                         bin.mkdirs();
                     }
-                    if(customViewFragment.getFilePath().equals(bin.getPath())||SettingParam.RecycleBin<0) {
+                    if (customViewFragment.getFilePath().equals(bin.getPath()) || SettingParam.RecycleBin < 0) {
                         fileOperation = FileOperation.with(MainActivity.this).delete(inParams[0]);
-                    }else {
+                    } else {
                         fileOperation = FileOperation.with(MainActivity.this).move(inParams[0]).to(getFileInfoFromFile(bin));
                     }
                     break;
+                case MODE_COMPRESS:
+                    fileOperation=FileOperation.with(MainActivity.this).compress(inParams[0]).applyZipParameters(zipParameters).to(inParams[1].get(0));
+                    break;
             }
-            if(fileOperationType!=MODE_DELETE)
+            if (fileOperationType != MODE_DELETE)
                 publishProgress(fileOperation.getProgressMessage());
-            fileOperation.start();
+            fileOperation.run();
             return null;
         }
 
         @Override
         protected void onProgressUpdate(ProgressMessage... values) {
             super.onProgressUpdate(values);
-            Intent intent =new Intent(MainActivity.this, ProgressActivity.class);
-            if(values[0]!=null&&values[0].getProgress()!=100) {
+            if (values[0] != null && values[0].getProgress() != 100) {
+                Intent intent = new Intent(MainActivity.this, ProgressActivity.class);
                 startActivity(intent);
                 setOnActionFinish(new ProgressActivity.OnActionFinish() {
                     @Override
@@ -837,14 +911,16 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                         customViewFragment.load();
                     }
                 });
-            } else if(values[0]!=null&&values[0].getProgress()==100){
-                if(values[0].getmType()== MODE_COPY||values[0].getmType()== MODE_MOVE){
+            } else if (values[0] != null && values[0].getProgress() == 100) {
+                if (values[0].getmType() == MODE_COPY || values[0].getmType() == MODE_MOVE) {
                     customViewFragment.addFileInfos(fileOperation.getInFiles());
-                }else {
+                } else if(values[0].getmType() == MODE_COMPRESS ){
+                    customViewFragment.addFileInfo(fileOperation.getToDir());
+                } else {
                     customViewFragment.removeFileInfos(fileOperation.getInFiles());
                 }
-            }else {
-                LogUtils.e(getClass().getName(),"获取的进度values是否为空");
+            } else {
+                LogUtils.i(getClass().getName(), "获取的进度values为空");
             }
         }
 
@@ -853,8 +929,8 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        String path =intent.getStringExtra("file_path");
-        if(path!=null&&!path.equals("")){
+        String path = intent.getStringExtra("file_path");
+        if (path != null && !path.equals("")) {
             slideToPager(path);
         }
     }

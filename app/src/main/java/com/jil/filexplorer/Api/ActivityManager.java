@@ -47,7 +47,6 @@ public class ActivityManager {
     public void removeActivity(Class<?> cls) {
         String name =cls.getSimpleName();
         for (Activity activity : mActivities) {
-            LogUtils.e("未销毁activity", activity.getClass().getSimpleName());
             if (activity.getClass().getSimpleName().equals(name)) {
                 removeActivity(activity);
                 break;
@@ -58,7 +57,6 @@ public class ActivityManager {
     public void reCreatActivity(Class<?> cls) {
         String name =cls.getSimpleName();
         for (Activity activity : mActivities) {
-            LogUtils.e("未销毁activity", activity.getClass().getSimpleName());
             if (activity.getClass().getSimpleName().equals(name)) {
                 reCreatActivity(activity);
                 break;
@@ -74,7 +72,6 @@ public class ActivityManager {
         boolean islive=false;
         String name =cls.getSimpleName();
         for (Activity activity : mActivities) {
-            LogUtils.e("未销毁activity", activity.getClass().getSimpleName());
             if (activity.getClass().getSimpleName().equals(name)) {
                 islive=true;
             }
@@ -92,12 +89,8 @@ public class ActivityManager {
 
     //将activity全部关闭掉,除掉MainAcitiy
     public void clearOther() {
-
         for (Activity activity : mActivities) {
-            LogUtils.e("eerrree", activity.getClass().getSimpleName());
-
             if (activity.getClass().getSimpleName().equals("MainActivity")) {
-
                 continue;
             }
             activity.finish();

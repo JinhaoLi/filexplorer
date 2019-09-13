@@ -25,6 +25,7 @@ public abstract class SettingItem extends Item{
         this.switchOpen = switchOpen;
     }
 
+
     public String getDescription() {
         return description;
     }

@@ -4,8 +4,6 @@ import android.annotation.SuppressLint;
 ;
 import android.app.Activity;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,6 +28,8 @@ import java.util.Collections;
 import static com.jil.filexplorer.Api.SettingParam.saveSharedPreferences;
 import static com.jil.filexplorer.Api.SortComparator.SORT_BY_NAME;
 import static com.jil.filexplorer.utils.ConstantUtils.CAN_MOVE_COLOR;
+import static com.jil.filexplorer.utils.ConstantUtils.MAX_SPAN_COUNT;
+import static com.jil.filexplorer.utils.ConstantUtils.MIN_SPAN_COUNT;
 import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.CANT_SELECTED_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
@@ -203,7 +203,7 @@ public abstract class CustomViewFragment extends Fragment {
                 else
                     linearLayoutManager.findViewByPosition(outOfFromPosition).setBackgroundColor(SELECTED_COLOR);
             } catch (Exception e) {
-                LogUtils.e(getClass().getName() + ":165", "list的item过多，屏幕无法显示所有的item，当outOfFromPosition还没修正时，尝试获取View时抛出错误");
+                LogUtils.e(getClass().getName(), e.getMessage()+"list的item过多，屏幕无法显示所有的item，当outOfFromPosition还没修正时，尝试获取View时抛出错误");
             }
             //刷新此项当前的的位置
             outOfFromPosition = toPosition;
@@ -219,19 +219,19 @@ public abstract class CustomViewFragment extends Fragment {
 
     protected abstract void moveDir(FileInfo temp);
 
-    /**
-     * 手指按下-拖动状态改变
-     *
-     * @param v
-     */
-    protected void fingerDownState(View v) {
-        selectPositionChange = false;
-        int[] ints = getSelectStartAndEndPosition();
-        selectSomePosition(ints[1], longClickPosition);
-        //此项选中时将背景透明化
-        v.setAlpha(0.7f);
-        v.setBackgroundColor(NORMAL_COLOR);
-    }
+//    /**
+//     * 手指按下-拖动状态改变
+//     *
+//     * @param v
+//     */
+//    protected void fingerDownState(View v) {
+//        selectPositionChange = false;
+//        int[] ints = getSelectStartAndEndPosition();
+//        selectSomePosition(ints[1], longClickPosition);
+//        //此项选中时将背景透明化
+//        v.setAlpha(0.7f);
+//        v.setBackgroundColor(NORMAL_COLOR);
+//    }
 
     public void setLongClickPosition(int longClickPosition) {
         this.longClickPosition = longClickPosition;
@@ -244,11 +244,11 @@ public abstract class CustomViewFragment extends Fragment {
      * @param start
      * @param end
      */
-    protected void selectSomePosition(int start, int end) {
+    public void selectSomePosition(int start, int end) {
         if (start != -1 && start != end) {
             int s = start > end ? end : start;
             int e = start > end ? start : end;
-            if (fileInfos.get(end).isSelected()) {
+            if (!fileInfos.get(end).isSelected()) {
                 for (int i = s; i <= e; i++) {
                     fileInfos.get(i).setSelected(false);
                     View selectItem = linearLayoutManager.findViewByPosition(i);
@@ -281,23 +281,16 @@ public abstract class CustomViewFragment extends Fragment {
         mMainActivity.setAllSelectIco(false);
     }
 
+    public boolean isAllSelect(){
+        return FileUtils.getSelectedList(fileInfos).size()==fileInfos.size();
+    }
+
     /**
-     * 全部选项选中
+     * 全选or不全选
      * @return 是全选为true
      */
-    public boolean selectAllPosition() {
-        boolean isAll;
-        if (FileUtils.getSelectedList(fileInfos).size()==fileInfos.size()) {
-            for (int i = 0; i < fileInfos.size(); i++) {
-                fileInfos.get(i).setSelected(false);
-                View selectItem = fileList.getChildAt(i);
-                if (selectItem != null){
-                    selectItem.setBackgroundColor(NORMAL_COLOR);
-                }
-
-            }
-            isAll=false;
-        } else {
+    public void selectAllPositionOrNot(boolean selectAll) {
+        if (selectAll) {
             for (int i = 0; i < fileInfos.size(); i++) {
                 fileInfos.get(i).setSelected(true);
                 View selectItem = linearLayoutManager.findViewByPosition(i);
@@ -306,11 +299,18 @@ public abstract class CustomViewFragment extends Fragment {
                 }
 
             }
-            isAll=true;
-        }
+        } else {
+            for (int i = 0; i < fileInfos.size(); i++) {
+                fileInfos.get(i).setSelected(false);
+                View selectItem = fileList.getChildAt(i);
+                if (selectItem != null){
+                    selectItem.setBackgroundColor(NORMAL_COLOR);
+                }
 
+            }
+
+        }
         refreshUnderBar();
-        return isAll;
     }
 
 
@@ -328,9 +328,9 @@ public abstract class CustomViewFragment extends Fragment {
      *
      * @return
      */
-    private int[] getSelectStartAndEndPosition() {
+    private int[] getSelectStartAndEndPosition(ArrayList<FileInfo> selectList) {
         int[] SelectStartAndEndPosition = new int[2];//储存位置
-        ArrayList<FileInfo> selectList = FileUtils.getSelectedList(fileInfos);
+        if(selectList==null||selectList.size()==0) selectList = FileUtils.getSelectedList(fileInfos);
         if (selectList.size() != 0) {
             SelectStartAndEndPosition[0] = fileInfos.indexOf(selectList.get(0));
             SelectStartAndEndPosition[1] = fileInfos.indexOf(selectList.get(selectList.size() - 1));
@@ -390,6 +390,14 @@ public abstract class CustomViewFragment extends Fragment {
             allSelect=false;
         }
         mMainActivity.setAllSelectIco(allSelect);
+        int[] interval =getSelectStartAndEndPosition(selectList);
+        if(interval[0]!=-1&&interval[1]!=-1){
+            if(interval[1]-interval[0]>=selectList.size())
+                mMainActivity.setSelectIntervalIco(true,interval[0],interval[1]);
+            else
+                mMainActivity.setSelectIntervalIco(false, interval[0], interval[1]);
+        }
+
         mMainActivity.refreshUnderBar(selectList.size(),size,haveDir);
         return selectList.size();
     }
@@ -399,18 +407,14 @@ public abstract class CustomViewFragment extends Fragment {
     }
 
     public static int makeItemLayoutRes(int spanCount) {
-        if (spanCount == 7) {
-            return R.layout.flie_grid_item_layout_40dp;
-        } else if (spanCount == 6) {
+        if (spanCount == MAX_SPAN_COUNT) {
             return R.layout.flie_grid_item_layout_60dp;
-        } else if (spanCount == 5) {
+        } else if (spanCount == MAX_SPAN_COUNT-1) {
             return R.layout.flie_grid_item_layout_80dp;
-        } else if (spanCount == 4) {
+        } else if (spanCount == MIN_SPAN_COUNT+1) {
             return R.layout.flie_grid_item_layout_100dp;
-        } else if (spanCount == 3) {
+        } else if (spanCount == MIN_SPAN_COUNT) {
             return R.layout.flie_grid_item_layout_120dp;
-        } else if (spanCount == 2) {
-            return R.layout.flie_grid_item_layout_140dp;
         } else {
             return R.layout.flie_grid_item_layout_100dp;
         }

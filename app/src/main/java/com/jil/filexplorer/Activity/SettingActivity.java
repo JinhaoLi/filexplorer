@@ -13,19 +13,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.Switch;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.jil.filexplorer.Api.ActivityManager;
 import com.jil.filexplorer.Api.SettingItem;
 import com.jil.filexplorer.Api.SettingParam;
 import com.jil.filexplorer.R;
-import com.jil.filexplorer.adapter.SurperAdapter;
+import com.jil.filexplorer.adapter.SupperAdapter;
 import com.jil.filexplorer.ui.MyItemDecoration;
+import com.jil.filexplorer.utils.EmailSender;
 import com.jil.filexplorer.utils.FileUtils;
 
 import java.util.ArrayList;
@@ -44,7 +43,7 @@ import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
 
 public class SettingActivity extends AppCompatActivity {
 
-    private SurperAdapter<SettingItem> surperAdapter;
+    private SupperAdapter<SettingItem> supperAdapter;
     private ArrayList<SettingItem> itemArrayList;
     private RecyclerView settingList;
     float cacheSize;
@@ -56,7 +55,7 @@ public class SettingActivity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             if(msg.what==28){
-                surperAdapter.notifyDataSetChanged();
+                supperAdapter.notifyDataSetChanged();
             }
         }
     };
@@ -102,7 +101,7 @@ public class SettingActivity extends AppCompatActivity {
         createSettingItem();
         settingList = findViewById(R.id.set_list);
         LinearLayoutManager llm = new LinearLayoutManager(this);
-        surperAdapter = new SurperAdapter<SettingItem>(itemArrayList, this) {
+        supperAdapter = new SupperAdapter<SettingItem>(itemArrayList, this) {
             @Override
             public int getLayoutId(int viewType, SettingItem data) {
                 if (data.getItemLayout() == 0) {
@@ -150,7 +149,7 @@ public class SettingActivity extends AppCompatActivity {
         };
         //设置分隔线
         settingList.addItemDecoration(new MyItemDecoration(this, 1));
-        settingList.setAdapter(surperAdapter);
+        settingList.setAdapter(supperAdapter);
         settingList.setLayoutManager(llm);
     }
 
@@ -217,11 +216,18 @@ public class SettingActivity extends AppCompatActivity {
             }
         };
 
+        SettingItem email =new SettingItem("发送日志","发送日志给开发者帮助开发者发现bug" ,851) {
+            @Override
+            public void click(View v) {
+                EmailSender.sendEmail();
+            }
+        };
 
         itemArrayList.add(theme);
         itemArrayList.add(recycleBin);
         itemArrayList.add(imageCache);
         itemArrayList.add(smallViewSwitch);
+        itemArrayList.add(email);
         countCacheSize.run();
     }
 

@@ -26,7 +26,7 @@ public class ImagesPager extends ViewPager {
             try {
                 return super.onInterceptTouchEvent(ev);
             }catch (Exception e){
-                LogUtils.e("未知错误","放大手势中出现的bug");
+                LogUtils.e("未知错误",e.getMessage()+"放大手势中出现的bug");
             }
         }
         return false;
