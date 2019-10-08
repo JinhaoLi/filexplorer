@@ -25,20 +25,16 @@ import com.jil.filexplorer.Api.ReNameList;
 import com.jil.filexplorer.Api.SettingParam;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.ui.FileShowFragment;
-import com.jil.filexplorer.ui.NewNameDialog;
+import com.jil.filexplorer.ui.InputDialog;
 import com.jil.filexplorer.utils.ConstantUtils;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.ToastUtils;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static com.jil.filexplorer.Api.FileOperation.MODE_COPY;
-import static com.jil.filexplorer.Api.FileOperation.MODE_DELETE;
-import static com.jil.filexplorer.Api.FileOperation.MODE_MOVE;
 import static com.jil.filexplorer.utils.ConstantUtils.GB;
 import static com.jil.filexplorer.utils.ConstantUtils.KB;
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
@@ -90,7 +86,17 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
         return new DefaultViewHolder(v);
     }
 
+    //item进入视图
+    @Override
+    public void onViewAttachedToWindow(@NonNull DefaultViewHolder holder) {
+        if (mData.get(holder.getAdapterPosition()).isSelected()) {
+            holder.itemView.setBackgroundColor(ConstantUtils.SELECTED_COLOR);
+        } else {
+            holder.itemView.setBackgroundColor(NORMAL_COLOR);
+        }
 
+        super.onViewAttachedToWindow(holder);
+    }
 
     @Override
     public void onBindViewHolder(final DefaultViewHolder holder, final int position) {
@@ -215,13 +221,18 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                         break;
                     case 623://重命名
                         final ArrayList<FileInfo> fileInfos =getSelectedList(mData);
-                        NewNameDialog dialog;
+                        InputDialog dialog;
                         if (fileInfos.size() == 1) {
-                            dialog =new NewNameDialog(mMainActivity,R.layout.dialog_rename_layout,"重命名") {
+                            dialog =new InputDialog(mMainActivity,R.layout.dialog_rename_layout,"重命名") {
+                                @Override
+                                public void queryButtonClick(View v) {
+
+                                }
+
                                 @Override
                                 public void queryButtonClick(View v,String name) {
                                     boolean reNameOk=false;
-                                    File f =new File(mfileShowFragment.getFilePath()+File.separator+name);
+                                    File f =new File(mfileShowFragment.getPath()+File.separator+name);
                                     if(temp.exists()){
                                         reNameOk=temp.renameTo(f);
                                     }
@@ -235,7 +246,12 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                                 }
                             };
                         } else {
-                            dialog =new NewNameDialog(mMainActivity,R.layout.dialog_renames_layout,"批量重命名"){
+                            dialog =new InputDialog(mMainActivity,R.layout.dialog_renames_layout,"批量重命名"){
+                                @Override
+                                public void queryButtonClick(View v) {
+
+                                }
+
                                 @Override
                                 public void queryButtonClick(View v, String nameInputStr) {
                                     ReNameList rnl=ReNameList.getInstance(nameInputStr);
@@ -376,8 +392,5 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
             }
 
         }
-
-
-
     }
 }

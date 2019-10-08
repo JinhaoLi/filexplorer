@@ -1,11 +1,8 @@
 package com.jil.filexplorer.ui;
 
-import android.app.Dialog;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.view.View;
-import android.view.Window;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -21,7 +18,7 @@ import net.lingala.zip4j.util.Zip4jConstants;
  * @author JIL
  * 压缩窗口
  */
-public class CompressDialog extends NewNameDialog {
+public class CompressDialog extends InputDialog {
     private EditText passInput;
     private Spinner typeChoose;
     private CheckBox seePass;
@@ -31,13 +28,12 @@ public class CompressDialog extends NewNameDialog {
     public CompressDialog(final MainActivity mainActivity,int layoutRes, String title) {
         super(mainActivity,layoutRes,title);
         this.mainActivity=mainActivity;
-        cancle=findViewById(R.id.button);
-        query=findViewById(R.id.button3);
         nameInput =findViewById(R.id.name_input);
         passInput =findViewById(R.id.pass_input);
         typeChoose =findViewById(R.id.spinner2);
         seePass=findViewById(R.id.checkbox3);
         compressGrade=findViewById(R.id.raf);
+        icon.setImageResource(R.drawable.ic_pages_black_24dp);
         seePass.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -71,5 +67,10 @@ public class CompressDialog extends NewNameDialog {
                 break;
         }
         mainActivity.compressFileAction(zipName+zipType,zipPass,zipFast);
+    }
+
+    @Override
+    public void queryButtonClick(View v) {
+
     }
 }

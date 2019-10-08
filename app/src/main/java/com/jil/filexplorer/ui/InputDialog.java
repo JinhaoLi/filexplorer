@@ -6,34 +6,22 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
+import com.bumptech.glide.Glide;
 import com.jil.filexplorer.R;
 
 import java.util.ArrayList;
 
-public abstract class NewNameDialog extends Dialog implements View.OnClickListener {
-    protected TextView titleText;
-    protected EditText nameInput;
-    protected Button cancle,query;
+public abstract class InputDialog extends SimpleDialog implements View.OnClickListener {
+    protected EditText nameInput;//输入框
 
-    /**
-     *
-     * @param context
-     * @param layoutRes 布局中必须包含id==button 取消&&id==button3 确认的Button
-     */
-    public NewNameDialog(Context context,int layoutRes, String title) {
-        super(context);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(layoutRes);
+    public InputDialog(Context context, int layoutRes, String title) {
+        super(context,layoutRes,title);
         nameInput =findViewById(R.id.name_input);
-        titleText = findViewById(R.id.textView8);
-        cancle=findViewById(R.id.button);
-        query=findViewById(R.id.button3);
-        setTitle(title);
-        customView();
     }
 
     @Override
@@ -52,9 +40,7 @@ public abstract class NewNameDialog extends Dialog implements View.OnClickListen
      */
     public void showAndSetName(String name){
         nameInput.setText(name);
-        cancle.setOnClickListener(this);
-        query.setOnClickListener(this);
-        show();
+        showAndSet(-1);
     }
 
     @Override

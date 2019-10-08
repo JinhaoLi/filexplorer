@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,53 +33,20 @@ import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.CANT_SELECTED_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
 
-public abstract class CustomViewFragment extends Fragment {
-    protected final static String TAG = "CustomViewFragment";
-    protected String fragmentTitle;
-    protected MainActivity mMainActivity;
-    private View rootView;
-    private String underBarInfos;
-    protected String filePath;
-    protected ArrayList<FileInfo> fileInfos;
-    protected FileListAdapter fileListAdapter;
-    protected RecyclerView fileList;
-    public boolean menuVisible;
-    public Bitmap smallView;
-    //全选按钮可见状态
-    public boolean allSelect=false;
-
-    private boolean isRecovery;
-
-    public void addFileInfos(ArrayList<FileInfo> fileInfos){
-        this.fileInfos.addAll(fileInfos);
-        fileListAdapter.notifyDataSetChanged();
-    }
-    public void addFileInfo(FileInfo fileInfos){
-        this.fileInfos.add(fileInfos);
-        fileListAdapter.notifyDataSetChanged();
-    }
-
-    public void removeFileInfos(ArrayList<FileInfo> fileInfos){
-        this.fileInfos.removeAll(fileInfos);
-        fileListAdapter.notifyDataSetChanged();
-    }
-
+public abstract class CustomViewFragment extends CustomFragment<FileInfo>{
+    private final static String TAG = "CustomViewFragment";
     //记录上次经过项
     protected int outOfFromPosition;
     //记录位置是否已经改变
-    protected boolean selectPositionChange = true;
-    protected LinearLayoutManager linearLayoutManager;
+    private boolean selectPositionChange = true;
     protected SortComparator comparator = new SortComparator(SORT_BY_NAME);
     protected int longClickPosition;
-    //网格布局计数
-    int spanCount = 4;
-
     public CustomViewFragment() {
     }
 
     public CustomViewFragment(Activity activity, String filePath) {
         this.mMainActivity =(MainActivity)activity;
-        this.filePath = filePath;
+        this.path = filePath;
     }
 
     @SuppressLint({"ClickableViewAccessibility", "ResourceType"})
@@ -94,24 +60,12 @@ public abstract class CustomViewFragment extends Fragment {
         return v;
     }
 
-    protected View initView(LayoutInflater inflater, ViewGroup container) {
-        if(rootView==null){
-            isRecovery=false;
-            rootView = inflater.inflate(R.layout.fragment_file_view_layout, container, false);
-            fileList = rootView.findViewById(R.id.file_list_view);
-
-        }else {
-            isRecovery=true;
-        }
-        return rootView;
-    }
-
     @SuppressLint("ClickableViewAccessibility")
     protected abstract void initAction();
 
     private void refreshSmallView(){
-        if(fileList!=null)
-        smallView= UiUtils.createViewBitmap(smallView,fileList);
+        if(tList!=null)
+        smallView= UiUtils.createViewBitmap(smallView,tList);
     }
 
     public Bitmap getSmallView(){
@@ -123,8 +77,8 @@ public abstract class CustomViewFragment extends Fragment {
 
     protected abstract boolean getFileListFromDir(String filePath,boolean isBack);
 
-    public String getFilePath() {
-        return filePath;
+    public String getPath() {
+        return path;
     }
 
     public String getFragmentTitle() {
@@ -146,12 +100,12 @@ public abstract class CustomViewFragment extends Fragment {
     public void sortReFresh(int sortType) {
         try {
             comparator.setSortType(sortType);
-            Collections.sort(fileInfos, comparator);
+            Collections.sort(ts, comparator);
         } catch (Exception e) {
             comparator.setSortType(SORT_BY_NAME);
-            Collections.sort(fileInfos, comparator);
+            Collections.sort(ts, comparator);
         }
-        fileListAdapter.notifyItemRangeChanged(0, fileInfos.size());
+        tListAdapter.notifyItemRangeChanged(0, ts.size());
     }
     /**
      * 手指抬起-拖动状态改变
@@ -159,7 +113,7 @@ public abstract class CustomViewFragment extends Fragment {
      * @param view
      */
     private void fingerUpState(View view) {
-        FileInfo temp = fileInfos.get(outOfFromPosition);
+        FileInfo temp = ts.get(outOfFromPosition);
         //ToastUtils.showToast(mMainActivity,temp.getFileName(),1000);
         //选中项次层级
         View v = linearLayoutManager.findViewByPosition(outOfFromPosition);
@@ -179,7 +133,7 @@ public abstract class CustomViewFragment extends Fragment {
         View selectItem = linearLayoutManager.findViewByPosition(longClickPosition);
         if (selectItem != null) {
             selectItem.setAlpha(1.0f);
-            if (fileInfos.get(longClickPosition).isSelected())
+            if (ts.get(longClickPosition).isSelected())
                 selectItem.setBackgroundColor(SELECTED_COLOR);
         }
     }
@@ -191,8 +145,8 @@ public abstract class CustomViewFragment extends Fragment {
      * @return
      */
     protected boolean itemPositionDrag(int toPosition) {
-        FileInfo temp = fileInfos.get(outOfFromPosition);//从此项离开
-        FileInfo inputDir = fileInfos.get(toPosition);//进入此项
+        FileInfo temp = ts.get(outOfFromPosition);//从此项离开
+        FileInfo inputDir = ts.get(toPosition);//进入此项
         selectPositionChange = true;//代表位置已经改变
         //记录此项原来的的位置
         if (outOfFromPosition != toPosition) {
@@ -248,16 +202,16 @@ public abstract class CustomViewFragment extends Fragment {
         if (start != -1 && start != end) {
             int s = start > end ? end : start;
             int e = start > end ? start : end;
-            if (!fileInfos.get(end).isSelected()) {
+            if (!ts.get(end).isSelected()) {
                 for (int i = s; i <= e; i++) {
-                    fileInfos.get(i).setSelected(false);
+                    ts.get(i).setSelected(false);
                     View selectItem = linearLayoutManager.findViewByPosition(i);
                     if (selectItem != null)
                         selectItem.setBackgroundColor(NORMAL_COLOR);
                 }
             } else {
                 for (int i = s; i <= e; i++) {
-                    fileInfos.get(i).setSelected(true);
+                    ts.get(i).setSelected(true);
                     View selectItem = linearLayoutManager.findViewByPosition(i);
                     if (selectItem != null)
                         selectItem.setBackgroundColor(SELECTED_COLOR);
@@ -268,10 +222,10 @@ public abstract class CustomViewFragment extends Fragment {
     }
 
     public void unSelectAll(){
-        for(FileInfo fileInfo:fileInfos){
+        for(FileInfo fileInfo:ts){
             if(fileInfo.isSelected()){
                 fileInfo.setSelected(false);
-                int i =fileInfos.indexOf(fileInfo);
+                int i =ts.indexOf(fileInfo);
                 View selectItem = linearLayoutManager.findViewByPosition(i);
                 if (selectItem != null)
                     selectItem.setBackgroundColor(NORMAL_COLOR);
@@ -282,7 +236,7 @@ public abstract class CustomViewFragment extends Fragment {
     }
 
     public boolean isAllSelect(){
-        return FileUtils.getSelectedList(fileInfos).size()==fileInfos.size();
+        return FileUtils.getSelectedList(ts).size()==ts.size();
     }
 
     /**
@@ -291,8 +245,8 @@ public abstract class CustomViewFragment extends Fragment {
      */
     public void selectAllPositionOrNot(boolean selectAll) {
         if (selectAll) {
-            for (int i = 0; i < fileInfos.size(); i++) {
-                fileInfos.get(i).setSelected(true);
+            for (int i = 0; i < ts.size(); i++) {
+                ts.get(i).setSelected(true);
                 View selectItem = linearLayoutManager.findViewByPosition(i);
                 if (selectItem != null){
                     selectItem.setBackgroundColor(SELECTED_COLOR);
@@ -300,9 +254,9 @@ public abstract class CustomViewFragment extends Fragment {
 
             }
         } else {
-            for (int i = 0; i < fileInfos.size(); i++) {
-                fileInfos.get(i).setSelected(false);
-                View selectItem = fileList.getChildAt(i);
+            for (int i = 0; i < ts.size(); i++) {
+                ts.get(i).setSelected(false);
+                View selectItem = tList.getChildAt(i);
                 if (selectItem != null){
                     selectItem.setBackgroundColor(NORMAL_COLOR);
                 }
@@ -315,12 +269,12 @@ public abstract class CustomViewFragment extends Fragment {
 
 
     public void load(){
-        load(filePath,true);
+        load(path,true);
     }
 
 
     public ArrayList<FileInfo> getSelectedList() {
-        return FileUtils.getSelectedList(fileInfos);
+        return FileUtils.getSelectedList(ts);
     }
 
     /**
@@ -330,10 +284,10 @@ public abstract class CustomViewFragment extends Fragment {
      */
     private int[] getSelectStartAndEndPosition(ArrayList<FileInfo> selectList) {
         int[] SelectStartAndEndPosition = new int[2];//储存位置
-        if(selectList==null||selectList.size()==0) selectList = FileUtils.getSelectedList(fileInfos);
+        if(selectList==null||selectList.size()==0) selectList = FileUtils.getSelectedList(ts);
         if (selectList.size() != 0) {
-            SelectStartAndEndPosition[0] = fileInfos.indexOf(selectList.get(0));
-            SelectStartAndEndPosition[1] = fileInfos.indexOf(selectList.get(selectList.size() - 1));
+            SelectStartAndEndPosition[0] = ts.indexOf(selectList.get(0));
+            SelectStartAndEndPosition[1] = ts.indexOf(selectList.get(selectList.size() - 1));
         } else {
             SelectStartAndEndPosition[0] = -1;
             SelectStartAndEndPosition[1] = -1;
@@ -351,20 +305,19 @@ public abstract class CustomViewFragment extends Fragment {
         ArrayList<Integer> selectPosition = new ArrayList<>();//储存位置
         for (int i = 0; i < deleteList.size(); i++) {
             FileInfo fileInfo = deleteList.get(i);
-            selectPosition.add(fileInfos.indexOf(fileInfo));
+            selectPosition.add(ts.indexOf(fileInfo));
         }
         return selectPosition;
     }
 
     @SuppressLint("SetTextI18n")
     protected void clearUnderBar() {
-        //underBarInfo.setText("\t"+fileInfos.size() + getString(R.string.how_many_item));
         mMainActivity.clearUnderBar();
     }
 
     public int getFileInfosSize(){
-        if(fileInfos!=null)
-        return fileInfos.size();
+        if(ts!=null)
+        return ts.size();
         else
         return 0;
     }
@@ -372,7 +325,7 @@ public abstract class CustomViewFragment extends Fragment {
 
     @SuppressLint("SetTextI18n")
     public int refreshUnderBar() {
-        ArrayList<FileInfo> selectList = FileUtils.getSelectedList(fileInfos);
+        ArrayList<FileInfo> selectList = FileUtils.getSelectedList(ts);
 
         long size = 0L;
         boolean haveDir = false;
@@ -384,7 +337,7 @@ public abstract class CustomViewFragment extends Fragment {
                 haveDir = true;
             }
         }
-        if(selectList.size()==fileInfos.size()&&fileInfos.size()!=0){
+        if(selectList.size()==ts.size()&&ts.size()!=0){
             allSelect=true;
         }else {
             allSelect=false;
@@ -402,8 +355,8 @@ public abstract class CustomViewFragment extends Fragment {
         return selectList.size();
     }
 
-    public void setUnderBarInfos(String underBarInfos) {
-        this.underBarInfos = underBarInfos;
+    public void setUnderBarMsg(String underBarInfos) {
+        this.underBarMsg = underBarInfos;
     }
 
     public static int makeItemLayoutRes(int spanCount) {
@@ -420,19 +373,7 @@ public abstract class CustomViewFragment extends Fragment {
         }
     }
 
-
-
-
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (null != rootView) {
-            ((ViewGroup) rootView.getParent()).removeView(rootView);
-        }
-    }
-
-    public String getUnderBarInfos() {
-        return underBarInfos;
+    public String getUnderBarMsg() {
+        return underBarMsg;
     }
 }

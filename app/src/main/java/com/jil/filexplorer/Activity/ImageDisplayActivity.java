@@ -1,10 +1,13 @@
 package com.jil.filexplorer.Activity;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -64,6 +67,16 @@ public class ImageDisplayActivity extends AppCompatActivity {
     public static void setFileChangeListenter(FileChangeListenter fileChange) {
         fileChangeListenter = fileChange;
     }
+   @SuppressLint("HandlerLeak")
+   Handler updateUi =new Handler(){
+       @Override
+       public void handleMessage(Message msg) {
+           super.handleMessage(msg);
+           if(msg.what==1521){
+               initAction();
+           }
+       }
+   };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +89,6 @@ public class ImageDisplayActivity extends AppCompatActivity {
         tryFindPath(intent);
 
         initView();
-        initAction();
 
     }
 
@@ -87,7 +99,6 @@ public class ImageDisplayActivity extends AppCompatActivity {
         isThisAppRes=checkUriEqualsDisk(intent);
         if (isThisAppRes) {
             loadImagesInDisk();
-            imageAdapter=new ImageAdapter(images,this);
         } else {
             getRes(intent);
             uriAdapter=new UriAdapter(uris,this);
@@ -131,6 +142,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
     }
 
     private void initAction() {
+        imageAdapter=new ImageAdapter(images,ImageDisplayActivity.this);
         menuButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -271,9 +283,12 @@ public class ImageDisplayActivity extends AppCompatActivity {
                 if(!FileUtils.getMimeType(imageDirPath).startsWith("image")){
                     images.add(file);
                 }
+                Message msg =new Message();
+                msg.what=1521;
+                updateUi.sendMessage(msg);
             }
         };
-        loadImage.run();
+        new Thread(loadImage).start();
     }
 
     /**

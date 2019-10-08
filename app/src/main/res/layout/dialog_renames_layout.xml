@@ -6,32 +6,9 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:orientation="horizontal">
+    <include
+        layout="@layout/dialog_title_icon_text_group" />
 
-        <ImageView
-            android:id="@+id/imageView7"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:background="@color/colorAccent"
-            app:srcCompat="@drawable/ic_edit_black_24dp"
-            tools:ignore="VectorDrawableCompat" />
-
-        <TextView
-            android:id="@+id/textView8"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal"
-            android:layout_weight="1"
-            android:background="@color/colorAccent"
-            android:gravity="center_vertical"
-            android:text="重命名"
-            android:textColor="@android:color/white"
-            android:textSize="18sp" />
-
-    </LinearLayout>
 
     <TextView
         android:id="@+id/textView16"
@@ -69,41 +46,7 @@
         android:drawableStart="@drawable/ic_info_black_24dp"
         android:text="表达式规则：冒号为分隔符，等号后为值，等号前为类型。\n【:d=】 当前日期 yyyy-mm-dd \n【:s=jil】固定文字 jil \n【:i-=5】 数字降序从5开始 \n【:i+=1 】 数字升序从1开始\n例如:s=pic:i+=1:s=.jpg就是将一系列文件命名为pic+数字+.jpg" />
 
-    <View
-        android:id="@+id/view17"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="20dp"
-        android:background="@color/colorAccent" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/button_click_type_alp_bule"
-            android:text="取消" />
-
-        <View
-            android:id="@+id/view16"
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="@color/colorAccent" />
-
-        <Button
-            android:id="@+id/button3"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/button_click_type_alp_bule"
-            android:text="确定" />
-    </LinearLayout>
+    <include layout="@layout/dialog_button_two_group" />
 
 
 </LinearLayout>

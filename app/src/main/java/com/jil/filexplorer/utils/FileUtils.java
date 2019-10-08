@@ -87,13 +87,13 @@ public class FileUtils {
     public static void moveFileToSystem(String filePath, String sysFilePath) {
 //        exusecmd("mount -o rw,remount /system");
 //        exusecmd("chmod 777 /system");
-//        exusecmd("cp  " + filePath + " " + sysFilePath);
+//        exusecmd("cp  " + path + " " + sysFilePath);
     }
 
     public static void deleteFileToSystem(String filePath) {
 //        exusecmd("mount -o rw,remount /system");
 //        exusecmd("chmod 777 /system");
-//        exusecmd("rm "+filePath);
+//        exusecmd("rm "+path);
     }
 
     public static void readFileToSystem() {
@@ -375,7 +375,6 @@ public class FileUtils {
             installApk(filePath, context);
             return;
         }
-
         Intent intent = new Intent();
         intent.addCategory("android.intent.category.DEFAULT");
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -675,7 +674,7 @@ public class FileUtils {
         return ext;
     }
 
-    private static void installApk(String filePath, Context context) {
+    public static void installApk(String filePath, Context context) {
         File apkFile = new File(filePath);
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

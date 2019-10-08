@@ -35,8 +35,8 @@ public final class LogUtils {
         if (LOGI) {
             Log.i(tag, mess);
         }
-        //String date = "[" + FileUtils.getFormatData(System.currentTimeMillis()) + "] ";
-        //writeInFile(date + tag + mess);
+        String date = "[" + FileUtils.getFormatData(System.currentTimeMillis()) + "] ";
+        writeInFile(date + tag + mess);
     }
 
     public static void e(String tag, String mess) {

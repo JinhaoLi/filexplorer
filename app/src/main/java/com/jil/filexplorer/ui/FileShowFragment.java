@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -20,7 +19,6 @@ import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.Api.SettingParam;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.FileListAdapter;
-import com.jil.filexplorer.utils.ConstantUtils;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.ToastUtils;
@@ -32,7 +30,6 @@ import java.util.Collections;
 
 import static com.jil.filexplorer.Api.SettingParam.saveSharedPreferences;
 import static com.jil.filexplorer.utils.DialogUtils.showAndMake;
-import static com.jil.filexplorer.utils.FileUtils.getDistance;
 
 public class FileShowFragment extends CustomViewFragment implements FileChangeListenter {
     @SuppressLint("HandlerLeak")
@@ -65,7 +62,7 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
 
     @Override
     protected View initView(LayoutInflater inflater, ViewGroup container) {
-        //filePath = Environment.getExternalStorageDirectory().getPath();
+        //path = Environment.getExternalStorageDirectory().getPath();
         View v =super.initView(inflater, container);
         return v;
     }
@@ -73,8 +70,8 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
 
     @Override
     protected void initAction() {
-        sacleIcon();
-        load(filePath, false);
+        enlargeIcon();
+        load(path, false);
 
     }
 
@@ -90,9 +87,14 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
 
     @Override
     public void deleteItem(int adapterPosition) {
-        fileInfos.remove(adapterPosition);
-        fileListAdapter.notifyDataSetChanged();
+        ts.remove(adapterPosition);
+        tListAdapter.notifyDataSetChanged();
         refreshUnderBar();
+    }
+
+    @Override
+    protected boolean initDates(String filePath, boolean isBack) {
+        return false;
     }
 
     public void makeGridLayout(int spanCount, int layoutRes) {
@@ -100,9 +102,9 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
             saveSharedPreferences(mMainActivity,"Column",spanCount);
         }
         linearLayoutManager = new GridLayoutManager(mMainActivity, spanCount);
-        fileListAdapter = new FileListAdapter(fileInfos, this, mMainActivity, layoutRes);
-        fileList.setAdapter(fileListAdapter);
-        fileList.setLayoutManager(linearLayoutManager);
+        tListAdapter = new FileListAdapter(ts, this, mMainActivity, layoutRes);
+        tList.setAdapter(tListAdapter);
+        tList.setLayoutManager(linearLayoutManager);
 
     }
 
@@ -111,10 +113,10 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
             saveSharedPreferences(mMainActivity,"Column",1);
         }
         linearLayoutManager = new LinearLayoutManager(mMainActivity);
-        fileListAdapter = new FileListAdapter(fileInfos, this, mMainActivity, R.layout.file_list_item_layout);
+        tListAdapter = new FileListAdapter(ts, this, mMainActivity, R.layout.file_list_item_layout);
         try{
-            fileList.setAdapter(fileListAdapter);
-            fileList.setLayoutManager(linearLayoutManager);
+            tList.setAdapter(tListAdapter);
+            tList.setLayoutManager(linearLayoutManager);
         }catch (Exception e){
             LogUtils.e(e.getMessage(),e.getMessage()+getString(R.string.eat_err));
         }
@@ -131,12 +133,12 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
 
                 File[] files = file.listFiles();
                 SoftReference<File[]> softReference =new SoftReference<>(files);
-                fileInfos = new ArrayList<>();
+                ts = new ArrayList<>();
                 for (File temp : softReference.get()) {
-                    fileInfos.add(FileUtils.getFileInfoFromFile(temp));
+                    ts.add(FileUtils.getFileInfoFromFile(temp));
                 }
                 try {
-                    Collections.sort(fileInfos, comparator);
+                    Collections.sort(ts, comparator);
                 }catch (Exception e){
                     LogUtils.e(getClass().getName(),e.getMessage()+getString(R.string.sort_err));
                 }
@@ -159,12 +161,12 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
             ToastUtils.showToast(mMainActivity, mMainActivity.getString(R.string.unable_to_access), 1000);
             return false;
         }
-        loadFile.run();
+        new Thread(loadFile).start();
         return true;
     }
 
     private void screenToView(String filePath,boolean isBack){
-        if (fileListAdapter == null) {
+        if (tListAdapter == null) {
             //第一次加载
             int column =SettingParam.Column;
             if(column<2){
@@ -175,13 +177,14 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
             mMainActivity.getHistoryPath().add(filePath);
         } else {
             //刷新
-            fileListAdapter.setmData(fileInfos);
-            fileListAdapter.notifyDataSetChanged();
+            FileListAdapter fla= (FileListAdapter) tListAdapter;
+            fla.setmData(ts);
+            fla.notifyDataSetChanged();
             if (!isBack) {
                 mMainActivity.getHistoryPath().add(filePath);
             }
         }
-        this.filePath = filePath;
+        this.path = filePath;
 
     }
 
@@ -205,11 +208,11 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
                 .setNegativeButton(getString(R.string.move), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        fileInfos.remove(longClickPosition);  //移除选中项
-                        fileListAdapter.notifyItemRemoved(longClickPosition);//通知刷新界面移除效果
+                        ts.remove(longClickPosition);  //移除选中项
+                        tListAdapter.notifyItemRemoved(longClickPosition);//通知刷新界面移除效果
                         //修正position
-                        if (longClickPosition != fileInfos.size()) {
-                            fileListAdapter.notifyItemRangeChanged(longClickPosition, fileInfos.size() - longClickPosition);
+                        if (longClickPosition != ts.size()) {
+                            tListAdapter.notifyItemRangeChanged(longClickPosition, ts.size() - longClickPosition);
                         }
                         refreshUnderBar();
                     }
@@ -222,46 +225,9 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
                 }).create();
         showAndMake(alertDialog);
     }
-    private float distance = 50000;
-    @SuppressLint("ClickableViewAccessibility")
-    private void sacleIcon() {
-        fileList.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_DOWN:
-                        break;
-                    case MotionEvent.ACTION_POINTER_DOWN:
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        if (event.getPointerCount() == 2 && linearLayoutManager instanceof GridLayoutManager) {
-                            float newDistance = getDistance(event);
-                            if (newDistance > 100f && newDistance >= distance * 1.3) {
-                                if (spanCount > ConstantUtils.MIN_SPAN_COUNT) {
-                                    spanCount--;
-                                    makeGridLayout(spanCount, makeItemLayoutRes(spanCount));
-                                    SettingParam.setColumn(spanCount);
-                                }
-                                distance = newDistance;
-                            } else if (newDistance > 100f && newDistance <= distance / 1.3) {
-                                if (spanCount < ConstantUtils.MAX_SPAN_COUNT) {
-                                    spanCount++;
-                                    makeGridLayout(spanCount, makeItemLayoutRes(spanCount));
-                                    SettingParam.setColumn(spanCount);
-                                }
-                                distance = newDistance;
-                            }
-                            return true;
-                        }
-                        break;
-                }
-                return false;
-            }
-        });
-    }
 
     @Override
     public void change() {
-        load(filePath,true);
+        load(path,true);
     }
 }

@@ -33,7 +33,16 @@ public class ProgressActivity extends AppCompatActivity implements ProgressChang
             if(progressMessage!=null){
                 if(progressMessage.getProgress()==100){
                     if(onActionFinish!=null)onActionFinish.OnRefresh();
-                    finish();
+                    new Thread(){
+                        public void run(){
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            finish();
+                        }
+                    }.start();
                 }else {
                     progressBar.setProgress(progressMessage.getProgress());
                     mTitle.setText(progressMessage.getTitle());

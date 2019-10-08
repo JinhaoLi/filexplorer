@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -33,13 +34,16 @@ import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;
 /**
  * 文件操作类
  * 必须在非UI线程调用
+ * 结合ProgressMessage，ProgressChangeListener
  */
 public class FileOperation implements Runnable{
-    public final static int MODE_COMPRESS =-8;
+
     public final static int MODE_COPY = -4;
     public final static int MODE_MOVE = -5;
     public final static int MODE_DELETE = -6;
     public final static int MODE_RENAME = -7;
+    public final static int MODE_COMPRESS =-8;
+    public final static int MODE_DOWNLOAD =-9;
     private Context context;
     private static FileOperation fileOperation;
     /**
@@ -48,8 +52,13 @@ public class FileOperation implements Runnable{
     private int mode;
     /**
      * 任务队列
+     * 下载模式MODE_DOWNLOAD下，此为下载文件名数组
      */
     private ArrayList<FileInfo> inFiles;
+    /**
+     * 模式MODE_DOWNLOAD输入
+     */
+    private ArrayList<InputStream> inputStreams;
     /**
      * 任务总大小
      */
@@ -116,7 +125,7 @@ public class FileOperation implements Runnable{
         fileOperation = new FileOperation(context);
         builder = new NotificationCompat.Builder(context, CHANNEL_ID);
         notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
-        notifitionMsg = "复制任务准备中...";
+        notifitionMsg = "任务准备中...";
         return fileOperation;
     }
 
@@ -158,7 +167,16 @@ public class FileOperation implements Runnable{
         return this;
     }
 
+    public FileOperation download(ArrayList<InputStream> inputStreams,ArrayList<FileInfo> downloadFileNameList,long actionSize){
+        this.inputStreams =inputStreams;
+        this.inFiles =downloadFileNameList;
+        this.mode =MODE_DOWNLOAD;
+        downloadInit(actionSize);
+        return this;
+    }
+
     public FileOperation to(FileInfo to$Path) {
+        notifitionMsg = "源文件不存在";
         if(mode==MODE_MOVE||mode==MODE_COPY){
             if (!to$Path.isDir()) {
                 LogUtils.i("FileOperation", "目标不是文件夹");
@@ -174,6 +192,8 @@ public class FileOperation implements Runnable{
                 isReady = false;
                 return null;
             }
+        }else {
+            notifitionMsg = "源文件不存在";
         }
         this.toDir = to$Path;
         progressMessage = new ProgressMessage(System.currentTimeMillis(), actionSize, projectCount, mode, to$Path.getFilePath());
@@ -216,8 +236,14 @@ public class FileOperation implements Runnable{
             actionSize = size;
         }
         isReady = projectCount > 0;
-        notifitionMsg = "源文件不存在";
+    }
 
+    private void downloadInit(long actionSize){
+        overCount = 0;
+        overSize = 0;
+        this.actionSize =actionSize;
+        projectCount = inputStreams.size();
+        isReady = inputStreams.size()>0;
     }
 
     public void pushProgressMsg() {
@@ -225,6 +251,7 @@ public class FileOperation implements Runnable{
             progressChangeListener.progressChang(progressMessage);
         }
     }
+
 
     /**
      * 历遍目录获取总大小
@@ -494,6 +521,8 @@ public class FileOperation implements Runnable{
                     copyDirWithFile(temp, targt);
                 }
             }
+        }else{
+            missionFinish();
         }
     }
 
@@ -612,7 +641,41 @@ public class FileOperation implements Runnable{
                     progressChangeListener.progressChang(progressMessage);
                 compressFiles();
                 break;
+            case MODE_DOWNLOAD:
+                if (progressChangeListener != null)
+                    progressChangeListener.progressChang(progressMessage);
+                downloadFiles();
+                break;
         }
         missionFinish();
+    }
+
+    private void downloadFiles() {
+        for(InputStream in:inputStreams){
+            downloadFile(in,inFiles.get(inputStreams.indexOf(in)).getFileName());
+        }
+        missionFinish();
+    }
+
+    private void downloadFile(InputStream inputStream, String name) {
+        File storeFile = new File(toDir.getFilePath(),name);
+        FileOutputStream fis = null;
+        int sum=0;
+        try {
+            fis = new FileOutputStream(storeFile);
+            byte[] b =new byte[1024];
+            int len;
+            while ((len = inputStream.read(b)) != -1) {
+                fis.write(b,0,len);
+                fis.flush();
+                sum+=len;
+                refreshProgresss(len);
+            }
+            System.out.println("数据大小：---------------------------------------------"+sum);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        } finally {
+            closeAnyThing(fis, inputStream);
+        }
     }
 }
