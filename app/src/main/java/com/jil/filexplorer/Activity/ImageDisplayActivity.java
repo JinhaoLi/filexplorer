@@ -68,7 +68,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
         fileChangeListenter = fileChange;
     }
    @SuppressLint("HandlerLeak")
-   Handler updateUi =new Handler(){
+   private Handler updateUi =new Handler(){
        @Override
        public void handleMessage(Message msg) {
            super.handleMessage(msg);

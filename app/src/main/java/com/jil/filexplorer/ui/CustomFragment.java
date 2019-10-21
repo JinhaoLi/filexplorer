@@ -157,16 +157,7 @@ public abstract class CustomFragment<T extends Item> extends Fragment {
         this.comparator = comparator;
     }
 
-    public void sortReFresh(int sortType) {
-        try {
-            //comparator.setSortType(sortType);
-            Collections.sort(ts, comparator);
-        } catch (Exception e) {
-            //comparator.setSortType(SORT_BY_NAME);
-            Collections.sort(ts, comparator);
-        }
-        tListAdapter.notifyItemRangeChanged(0, ts.size());
-    }
+    public abstract void sortReFresh(int sortType);
 
     public void load() {
         load(path, true);
@@ -250,5 +241,7 @@ public abstract class CustomFragment<T extends Item> extends Fragment {
             }
         });
     }
+
+    public abstract int getSortType();
 
 }

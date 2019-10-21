@@ -560,10 +560,10 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                 break;
             case R.id.nav_setting:
                 //setting in activity
-//                Intent i = new Intent(MainActivity.this, SettingActivity.class);
-//                startActivity(i);
+                Intent i = new Intent(MainActivity.this, SettingActivity.class);
+                startActivity(i);
                 //setting in fragment
-                slideToPager("system:"+File.separator+"setting");
+                //slideToPager("system:"+File.separator+"setting");
                 break;
             default:
         }
@@ -839,7 +839,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
             }
             return;
         }
-        FileShowFragment customViewFragment = (FileShowFragment) this.customViewFragment;
+        //FileShowFragment customViewFragment = (FileShowFragment) this.customViewFragment;
         switch (view.getId()) {
             case R.id.textView2://名字排序
                 if (customViewFragment.getSortType() == SORT_BY_NAME)

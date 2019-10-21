@@ -41,6 +41,7 @@ import static com.jil.filexplorer.utils.FileUtils.installApk;
 import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
 import static com.jil.filexplorer.utils.PackageInfoManager.getVersionName;
 
+@SuppressLint("ValidFragment")
 public class SettingFragment extends CustomFragment<SettingItem> {
     float cacheSize;
     SettingItem clearCache;
@@ -61,6 +62,7 @@ public class SettingFragment extends CustomFragment<SettingItem> {
         }
     };
 
+    @SuppressLint("ValidFragment")
     public SettingFragment(MainActivity mainActivity, String path) {
         super(mainActivity,path);
     }
@@ -86,8 +88,18 @@ public class SettingFragment extends CustomFragment<SettingItem> {
     public void load(String filePath, boolean isBack) {
         ts =new ArrayList<>();
         createSettingItem();
-        makeGridLayout(SettingParam.Column,makeItemLayoutRes(SettingParam.Column));
+        makeLinerLayout();
 
+    }
+
+    @Override
+    public void sortReFresh(int sortType) {
+
+    }
+
+    @Override
+    public int getSortType() {
+        return 0;
     }
 
     @Override
@@ -112,13 +124,13 @@ public class SettingFragment extends CustomFragment<SettingItem> {
 
     @Override
     public void makeGridLayout(int spanCount, int layoutRes) {
-        if(linearLayoutManager!=null){
-            saveSharedPreferences(mMainActivity,"Column",spanCount);
-        }
-        linearLayoutManager = new GridLayoutManager(mMainActivity, spanCount);
-        tListAdapter = new SettingItemAdapter(ts, this, mMainActivity, layoutRes);
-        tList.setAdapter(tListAdapter);
-        tList.setLayoutManager(linearLayoutManager);
+//        if(linearLayoutManager!=null){
+//            saveSharedPreferences(mMainActivity,"Column",spanCount);
+//        }
+//        linearLayoutManager = new GridLayoutManager(mMainActivity, spanCount);
+//        tListAdapter = new SettingItemAdapter(ts, this, mMainActivity, layoutRes);
+//        tList.setAdapter(tListAdapter);
+//        tList.setLayoutManager(linearLayoutManager);
     }
 
     @Override

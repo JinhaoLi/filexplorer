@@ -59,7 +59,7 @@ public class FileShowFragment extends CustomFragment<FileInfo> implements FileCh
     @SuppressLint("ValidFragment")
     public FileShowFragment(Activity activity, String filePath) {
         super(activity, filePath);
-        comparator = new SortComparator(SORT_BY_NAME);
+        initSort(new SortComparator(SORT_BY_NAME));
     }
 
     @Override
@@ -367,13 +367,34 @@ public class FileShowFragment extends CustomFragment<FileInfo> implements FileCh
         refreshUnderBar();
     }
 
+    /**
+     * 返回当前按什么方式排序
+     * @return
+     */
     public int getSortType(){
         SortComparator sortComparator = (SortComparator) comparator;
         return sortComparator.getSortType();
     }
 
+//    @Override
+//    public void initSort(Comparator<FileInfo> comparator) {
+//        super.initSort(comparator);
+//    }
+
+    /**
+     * 排序
+     * @param sortType 排序方式
+     */
     @Override
-    public void initSort(Comparator<FileInfo> comparator) {
-        super.initSort(comparator);
+    public void sortReFresh(int sortType) {
+        SortComparator sortComparator = (SortComparator) comparator;
+        try {
+            sortComparator.setSortType(sortType);
+            Collections.sort(ts, sortComparator);
+        } catch (Exception e) {
+            sortComparator.setSortType(SORT_BY_NAME);
+            Collections.sort(ts, sortComparator);
+        }
+        tListAdapter.notifyItemRangeChanged(0, ts.size());
     }
 }
