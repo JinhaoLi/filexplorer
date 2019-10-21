@@ -25,14 +25,14 @@
         android:layout_marginRight="30dp"
         android:orientation="horizontal">
 
-        <EditText
-            android:id="@+id/name_input"
-            android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            android:layout_weight="1"
-            android:singleLine="true"
-            android:textAlignment="viewStart"
-            android:textColor="@android:color/black" />
+        <EditText android:id="@+id/name_input"
+                 android:layout_width="match_parent"
+                 android:layout_height="30dp"
+                 android:layout_weight="1"
+                  android:singleLine="true"
+                 android:textAlignment="viewStart"
+                 android:background="@drawable/edittext_background"
+                 android:textColor="@android:color/black"/>
 
         <Spinner
             android:id="@+id/spinner2"
@@ -64,6 +64,8 @@
             android:layout_weight="1"
             android:inputType="textPassword"
             android:textAlignment="viewStart"
+            android:singleLine="true"
+            android:background="@drawable/edittext_background"
             android:textColor="@android:color/black"
             android:textSize="18sp" />
 

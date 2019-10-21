@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.jil.filexplorer.Api.FileChangeListenter;
 import com.jil.filexplorer.Api.FileInfo;
 import com.jil.filexplorer.Api.SettingParam;
+import com.jil.filexplorer.Api.SortComparator;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.FileListAdapter;
 import com.jil.filexplorer.utils.FileUtils;
@@ -27,11 +28,15 @@ import java.io.File;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
 import static com.jil.filexplorer.Api.SettingParam.saveSharedPreferences;
+import static com.jil.filexplorer.Api.SortComparator.SORT_BY_NAME;
+import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
+import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
 import static com.jil.filexplorer.utils.DialogUtils.showAndMake;
 
-public class FileShowFragment extends CustomViewFragment implements FileChangeListenter {
+public class FileShowFragment extends CustomFragment<FileInfo> implements FileChangeListenter {
     @SuppressLint("HandlerLeak")
     private Handler handler=new Handler(){
         @Override
@@ -51,8 +56,10 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
 
     }
 
+    @SuppressLint("ValidFragment")
     public FileShowFragment(Activity activity, String filePath) {
-        super(activity,filePath);
+        super(activity, filePath);
+        comparator = new SortComparator(SORT_BY_NAME);
     }
 
     @Override
@@ -97,6 +104,17 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
         return false;
     }
 
+
+    @Override
+    public int getFileInfosSize() {
+        return 0;
+    }
+
+    @Override
+    public void setUnderBarMsg(String underMsg) {
+
+    }
+
     public void makeGridLayout(int spanCount, int layoutRes) {
         if(linearLayoutManager!=null){
             saveSharedPreferences(mMainActivity,"Column",spanCount);
@@ -124,6 +142,10 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
     }
 
     @Override
+    public boolean isAllSelect() {
+        return false;
+    }
+
     protected boolean getFileListFromDir(final String filePath, final boolean isBack) {
         final File file = new File(filePath);
         Runnable loadFile =new Runnable() {
@@ -189,45 +211,169 @@ public class FileShowFragment extends CustomViewFragment implements FileChangeLi
     }
 
 
+
     @Override
     public void load(String filePath, boolean isBack) {
         boolean result=getFileListFromDir(filePath,isBack);
         if(!result)return;
-        outOfFromPosition = 0;
+
         mMainActivity.refresh(filePath);
         clearUnderBar();
     }
-    /**
-     * 拖动状态改变--手指抬起,移动文件夹
-     * @param dir
-     */
-    protected void moveDir(FileInfo dir){
-        String name = dir.getFileName();
-        AlertDialog.Builder builder = new AlertDialog.Builder(mMainActivity);
-        AlertDialog alertDialog = builder.setTitle(getString(R.string.File_operations)).setMessage(getString(R.string.Determine_to_move_to) + name + "？")
-                .setNegativeButton(getString(R.string.move), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        ts.remove(longClickPosition);  //移除选中项
-                        tListAdapter.notifyItemRemoved(longClickPosition);//通知刷新界面移除效果
-                        //修正position
-                        if (longClickPosition != ts.size()) {
-                            tListAdapter.notifyItemRangeChanged(longClickPosition, ts.size() - longClickPosition);
-                        }
-                        refreshUnderBar();
-                    }
-                })
-                .setPositiveButton(getString(R.string.cancle), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
 
-                    }
-                }).create();
-        showAndMake(alertDialog);
-    }
 
     @Override
     public void change() {
         load(path,true);
+    }
+
+    @SuppressLint("SetTextI18n")
+    public int refreshUnderBar() {
+        ArrayList<FileInfo> selectList = FileUtils.getSelectedList(ts);
+
+        long size = 0L;
+        boolean haveDir = false;
+
+        for (FileInfo temp : selectList) {
+            if (!temp.isDir()) {
+                size += temp.getFileSize();
+            } else {
+                haveDir = true;
+            }
+        }
+        if(selectList.size()==ts.size()&&ts.size()!=0){
+            allSelect=true;
+        }else {
+            allSelect=false;
+        }
+        mMainActivity.setAllSelectIco(allSelect);
+        int[] interval =getSelectStartAndEndPosition(selectList);
+        if(interval[0]!=-1&&interval[1]!=-1){
+            if(interval[1]-interval[0]>=selectList.size())
+                mMainActivity.setSelectIntervalIco(true,interval[0],interval[1]);
+            else
+                mMainActivity.setSelectIntervalIco(false, interval[0], interval[1]);
+        }
+
+        mMainActivity.refreshUnderBar(selectList.size(),size,haveDir);
+        return selectList.size();
+    }
+
+    /**
+     * 获取所有选中的item position的开始位置和结束位置
+     *
+     * @return
+     */
+    private int[] getSelectStartAndEndPosition(ArrayList<FileInfo> selectList) {
+        int[] SelectStartAndEndPosition = new int[2];//储存位置
+        if(selectList==null||selectList.size()==0) selectList = FileUtils.getSelectedList(ts);
+        if (selectList.size() != 0) {
+            SelectStartAndEndPosition[0] = ts.indexOf(selectList.get(0));
+            SelectStartAndEndPosition[1] = ts.indexOf(selectList.get(selectList.size() - 1));
+        } else {
+            SelectStartAndEndPosition[0] = -1;
+            SelectStartAndEndPosition[1] = -1;
+        }
+        return SelectStartAndEndPosition;
+    }
+
+    public ArrayList<FileInfo> getSelectedList() {
+        return FileUtils.getSelectedList(ts);
+    }
+
+    public void unSelectAll(){
+        for(FileInfo fileInfo:ts){
+            if(fileInfo.isSelected()){
+                fileInfo.setSelected(false);
+                int i =ts.indexOf(fileInfo);
+                View selectItem = linearLayoutManager.findViewByPosition(i);
+                if (selectItem != null)
+                    selectItem.setBackgroundColor(NORMAL_COLOR);
+            }
+        }
+        mMainActivity.setOperationGroupVisible(false);
+        mMainActivity.setAllSelectIco(false);
+    }
+
+    /**
+     * 获取所有选中的item position
+     *
+     * @param deleteList 选中的列表
+     * @return
+     */
+    public ArrayList<Integer> getSelectPosition(ArrayList<FileInfo> deleteList) {
+        ArrayList<Integer> selectPosition = new ArrayList<>();//储存位置
+        for (int i = 0; i < deleteList.size(); i++) {
+            FileInfo fileInfo = deleteList.get(i);
+            selectPosition.add(ts.indexOf(fileInfo));
+        }
+        return selectPosition;
+    }
+
+    /**
+     * 全选or不全选
+     * @return 是全选为true
+     */
+    public void selectAllPositionOrNot(boolean selectAll) {
+        if (selectAll) {
+            for (int i = 0; i < ts.size(); i++) {
+                ts.get(i).setSelected(true);
+                View selectItem = linearLayoutManager.findViewByPosition(i);
+                if (selectItem != null){
+                    selectItem.setBackgroundColor(SELECTED_COLOR);
+                }
+
+            }
+        } else {
+            for (int i = 0; i < ts.size(); i++) {
+                ts.get(i).setSelected(false);
+                View selectItem = tList.getChildAt(i);
+                if (selectItem != null){
+                    selectItem.setBackgroundColor(NORMAL_COLOR);
+                }
+
+            }
+
+        }
+        refreshUnderBar();
+    }
+
+    /**
+     * 将一些区间选项选中
+     *
+     * @param start
+     * @param end
+     */
+    public void selectSomePosition(int start, int end) {
+        if (start != -1 && start != end) {
+            int s = start > end ? end : start;
+            int e = start > end ? start : end;
+            if (!ts.get(end).isSelected()) {
+                for (int i = s; i <= e; i++) {
+                    ts.get(i).setSelected(false);
+                    View selectItem = linearLayoutManager.findViewByPosition(i);
+                    if (selectItem != null)
+                        selectItem.setBackgroundColor(NORMAL_COLOR);
+                }
+            } else {
+                for (int i = s; i <= e; i++) {
+                    ts.get(i).setSelected(true);
+                    View selectItem = linearLayoutManager.findViewByPosition(i);
+                    if (selectItem != null)
+                        selectItem.setBackgroundColor(SELECTED_COLOR);
+                }
+            }
+        }
+        refreshUnderBar();
+    }
+
+    public int getSortType(){
+        SortComparator sortComparator = (SortComparator) comparator;
+        return sortComparator.getSortType();
+    }
+
+    @Override
+    public void initSort(Comparator<FileInfo> comparator) {
+        super.initSort(comparator);
     }
 }

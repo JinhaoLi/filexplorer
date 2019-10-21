@@ -150,7 +150,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
             }
         });
         linearLayoutManager =new LinearLayoutManager(this);
-        linearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+        linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
         //imageAdapter=new ImageAdapter(imageDirPath,this);
         viewPager.setAdapter(isThisAppRes?imageAdapter:uriAdapter);
         selectPosition=findNowPosition();
@@ -351,12 +351,6 @@ public class ImageDisplayActivity extends AppCompatActivity {
             }
         });
         menu.show();
-//        menu.setOnDismissListener(new PopupWindow.OnDismissListener() {
-//            @Override
-//            public void onDismiss() {
-//                NavigationBarStatusBar(ImageDisplayActivity.this,true);
-//            }
-//        });
     }
 
 

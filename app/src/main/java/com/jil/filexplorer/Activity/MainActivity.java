@@ -48,7 +48,6 @@ import com.jil.filexplorer.adapter.FragmentAdapter;
 import com.jil.filexplorer.adapter.SupperAdapter;
 import com.jil.filexplorer.ui.CompressDialog;
 import com.jil.filexplorer.ui.CustomFragment;
-import com.jil.filexplorer.ui.CustomViewFragment;
 import com.jil.filexplorer.ui.FileShowFragment;
 import com.jil.filexplorer.ui.MyItemDecoration;
 import com.jil.filexplorer.ui.InputDialog;
@@ -834,7 +833,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                 int spanCount = SettingParam.Column;
                 if (spanCount <= 2) spanCount += 2;
                 SettingParam.setColumn(spanCount);
-                customViewFragment.makeGridLayout(spanCount, CustomViewFragment.makeItemLayoutRes(spanCount));
+                customViewFragment.makeGridLayout(spanCount, CustomFragment.makeItemLayoutRes(spanCount));
                 view.setBackgroundColor(GIRD_LINER_LAYOUT);
                 liner.setBackgroundColor(NORMAL_COLOR);
             }
@@ -876,7 +875,7 @@ public class MainActivity extends ClearActivity implements NavigationView.OnNavi
                 int spanCount = SettingParam.Column;
                 if (spanCount <= 2) spanCount += 2;
                 SettingParam.setColumn(spanCount);
-                customViewFragment.makeGridLayout(spanCount, CustomViewFragment.makeItemLayoutRes(spanCount));
+                customViewFragment.makeGridLayout(spanCount, CustomFragment.makeItemLayoutRes(spanCount));
                 view.setBackgroundColor(GIRD_LINER_LAYOUT);
                 liner.setBackgroundColor(NORMAL_COLOR);
                 break;

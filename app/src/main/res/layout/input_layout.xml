@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EditText xmlns:android="http://schemas.android.com/apk/res/android"
+          android:id="@+id/name_input"
+          android:layout_width="match_parent"
+          android:layout_height="30dp"
+          android:layout_marginLeft="30dp"
+          android:layout_marginRight="30dp"
+          android:layout_weight="1"
+          android:textAlignment="viewStart"
+          android:singleLine="true"
+          android:background="@drawable/edittext_background"
+          android:textColor="@android:color/black" >
+
+</EditText>

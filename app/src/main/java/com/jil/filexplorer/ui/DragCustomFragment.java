@@ -3,6 +3,8 @@ package com.jil.filexplorer.ui;
 import android.annotation.SuppressLint;
 ;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -32,8 +34,9 @@ import static com.jil.filexplorer.utils.ConstantUtils.MIN_SPAN_COUNT;
 import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.CANT_SELECTED_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
+import static com.jil.filexplorer.utils.DialogUtils.showAndMake;
 
-public abstract class CustomViewFragment extends CustomFragment<FileInfo>{
+public abstract class DragCustomFragment extends CustomFragment<FileInfo>{
     private final static String TAG = "CustomViewFragment";
     //记录上次经过项
     protected int outOfFromPosition;
@@ -41,10 +44,10 @@ public abstract class CustomViewFragment extends CustomFragment<FileInfo>{
     private boolean selectPositionChange = true;
     protected SortComparator comparator = new SortComparator(SORT_BY_NAME);
     protected int longClickPosition;
-    public CustomViewFragment() {
+    public DragCustomFragment() {
     }
 
-    public CustomViewFragment(Activity activity, String filePath) {
+    public DragCustomFragment(Activity activity, String filePath) {
         this.mMainActivity =(MainActivity)activity;
         this.path = filePath;
     }
@@ -58,6 +61,35 @@ public abstract class CustomViewFragment extends CustomFragment<FileInfo>{
         }
 
         return v;
+    }
+
+    /**
+     * 拖动状态改变--手指抬起,移动文件夹
+     * @param dir
+     */
+    protected void moveDir(FileInfo dir){
+        String name = dir.getFileName();
+        AlertDialog.Builder builder = new AlertDialog.Builder(mMainActivity);
+        AlertDialog alertDialog = builder.setTitle(getString(R.string.File_operations)).setMessage(getString(R.string.Determine_to_move_to) + name + "？")
+                .setNegativeButton(getString(R.string.move), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        ts.remove(longClickPosition);  //移除选中项
+                        tListAdapter.notifyItemRemoved(longClickPosition);//通知刷新界面移除效果
+                        //修正position
+                        if (longClickPosition != ts.size()) {
+                            tListAdapter.notifyItemRangeChanged(longClickPosition, ts.size() - longClickPosition);
+                        }
+                        refreshUnderBar();
+                    }
+                })
+                .setPositiveButton(getString(R.string.cancle), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                    }
+                }).create();
+        showAndMake(alertDialog);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -171,21 +203,21 @@ public abstract class CustomViewFragment extends CustomFragment<FileInfo>{
         return true;
     }
 
-    protected abstract void moveDir(FileInfo temp);
+    //protected abstract void moveDir(FileInfo temp);
 
-//    /**
-//     * 手指按下-拖动状态改变
-//     *
-//     * @param v
-//     */
-//    protected void fingerDownState(View v) {
-//        selectPositionChange = false;
-//        int[] ints = getSelectStartAndEndPosition();
-//        selectSomePosition(ints[1], longClickPosition);
-//        //此项选中时将背景透明化
-//        v.setAlpha(0.7f);
-//        v.setBackgroundColor(NORMAL_COLOR);
-//    }
+    /**
+     * 手指按下-拖动状态改变
+     *
+     * @param v
+     */
+    protected void fingerDownState(View v) {
+        selectPositionChange = false;
+        //int[] ints = getSelectStartAndEndPosition();
+        //selectSomePosition(ints[1], longClickPosition);
+        //此项选中时将背景透明化
+        v.setAlpha(0.7f);
+        v.setBackgroundColor(NORMAL_COLOR);
+    }
 
     public void setLongClickPosition(int longClickPosition) {
         this.longClickPosition = longClickPosition;
@@ -269,6 +301,7 @@ public abstract class CustomViewFragment extends CustomFragment<FileInfo>{
 
 
     public void load(){
+        outOfFromPosition = 0;
         load(path,true);
     }
 
