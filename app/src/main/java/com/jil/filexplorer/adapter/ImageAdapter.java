@@ -14,13 +14,16 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
-import com.jil.filexplorer.Api.OnScaleListener;
-import com.jil.filexplorer.Activity.ImageDisplayActivity;
+import com.jil.filexplorer.api.OnScaleListener;
+import com.jil.filexplorer.activity.ImageDisplayActivity;
 import com.jil.filexplorer.R;
 
 import java.io.File;
 import java.util.ArrayList;
 
+/***
+ * 展示图片的适配器
+ */
 public class ImageAdapter extends PagerAdapter {
     private ArrayList<File> images;
     private String path;

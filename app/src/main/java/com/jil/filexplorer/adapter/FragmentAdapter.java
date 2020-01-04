@@ -10,6 +10,9 @@ import com.jil.filexplorer.ui.FileShowFragment;
 
 import java.util.List;
 
+/**
+ * fragment 设配器
+ */
 public class FragmentAdapter extends FragmentStatePagerAdapter {
     private List<CustomFragment> fragments;
 
@@ -41,8 +44,7 @@ public class FragmentAdapter extends FragmentStatePagerAdapter {
 
     public int findPositionByFilePath(String path){
         for(int i =0;i<getCount();i++){
-            CustomFragment fragment=fragments.get(i);
-            if(fragment.getPath().equals(path)){
+            if(fragments.get(i).getPath().equals(path)){
                 return i;
             }
         }

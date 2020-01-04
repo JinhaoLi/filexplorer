@@ -11,20 +11,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.bumptech.glide.signature.MediaStoreSignature;
-import com.jil.filexplorer.Activity.ImageDisplayActivity;
-import com.jil.filexplorer.Activity.MainActivity;
-import com.jil.filexplorer.Api.OnDoubleClickListener;
-import com.jil.filexplorer.Api.SettingFragment;
-import com.jil.filexplorer.Api.SettingItem;
-import com.jil.filexplorer.Api.SettingParam;
+import com.jil.filexplorer.activity.MainActivity;
+import com.jil.filexplorer.api.OnDoubleClickListener;
+import com.jil.filexplorer.ui.SettingFragment;
+import com.jil.filexplorer.api.SettingItem;
+import com.jil.filexplorer.api.SettingParam;
 import com.jil.filexplorer.R;
-import com.jil.filexplorer.utils.FileUtils;
 
 import java.util.ArrayList;
-import java.util.Date;
 
-import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.FileUtils.getOptions;
 import static com.jil.filexplorer.utils.FileUtils.viewFile;
 

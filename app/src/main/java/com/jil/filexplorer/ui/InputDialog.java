@@ -39,8 +39,9 @@ public abstract class InputDialog extends SimpleDialog implements View.OnClickLi
      * @param name
      */
     public void showAndSetName(String name){
-        nameInput.setText(name);
         showAndSet(-1);
+        nameInput.setText(name);
+
     }
 
     @Override

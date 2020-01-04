@@ -2,30 +2,21 @@ package com.jil.filexplorer.utils;
 
 import android.content.Context;
 import android.os.Environment;
-import android.util.JsonReader;
 
-import com.jil.filexplorer.Api.FileInfo;
-import com.jil.filexplorer.Api.FileOperation;
+import com.jil.filexplorer.api.FileInfo;
+import com.jil.filexplorer.api.FileOperation;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Properties;
 
 import javax.activation.DataHandler;
@@ -36,7 +27,6 @@ import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
-import javax.mail.NoSuchProviderException;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
@@ -48,7 +38,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 
-import static com.jil.filexplorer.utils.ConstantUtils.KB;
 import static com.jil.filexplorer.utils.FileUtils.closeAnyThing;
 
 /***

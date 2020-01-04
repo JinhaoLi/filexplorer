@@ -13,14 +13,16 @@ import androidx.viewpager.widget.PagerAdapter;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.jil.filexplorer.Api.OnScaleListener;
-import com.jil.filexplorer.Activity.ImageDisplayActivity;
+import com.jil.filexplorer.api.OnScaleListener;
+import com.jil.filexplorer.activity.ImageDisplayActivity;
 import com.jil.filexplorer.R;
 import java.util.ArrayList;
 
+/**
+ * 当获取到的是图片的uri的时候使用这个适配器
+ */
 public class UriAdapter  extends PagerAdapter {
     private ArrayList<Uri> images;
-    private String path;
     private ImageDisplayActivity activity;
 
     public UriAdapter(ArrayList<Uri> images, ImageDisplayActivity activity) {

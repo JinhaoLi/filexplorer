@@ -10,6 +10,9 @@ import android.view.View;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+/**
+ * 分隔线
+ */
 public class MyItemDecoration extends RecyclerView.ItemDecoration {
 
     private final Drawable mLine;

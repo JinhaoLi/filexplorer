@@ -62,6 +62,7 @@ public abstract class SimpleDialog extends Dialog implements View.OnClickListene
         if(icoRes!=-1)
         Glide.with(getContext()).load(icoRes).into(icon);
         show();
+
     }
 
     @Override

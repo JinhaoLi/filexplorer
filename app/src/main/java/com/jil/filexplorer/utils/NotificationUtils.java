@@ -8,16 +8,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Build;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
-import com.jil.filexplorer.Activity.ProgressActivity;
-import com.jil.filexplorer.Activity.MainActivity;
+import com.jil.filexplorer.activity.ProgressActivity;
 import com.jil.filexplorer.R;
-import com.jil.filexplorer.ui.CopyProgressDialog;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.jil.filexplorer.utils.ConstantUtils.CHANNEL_ID;

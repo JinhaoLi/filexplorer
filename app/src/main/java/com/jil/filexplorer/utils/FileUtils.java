@@ -11,10 +11,8 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.graphics.drawable.Drawable;
@@ -40,8 +38,8 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.signature.MediaStoreSignature;
-import com.jil.filexplorer.Activity.MainActivity;
-import com.jil.filexplorer.Api.FileInfo;
+import com.jil.filexplorer.activity.MainActivity;
+import com.jil.filexplorer.api.FileInfo;
 import com.jil.filexplorer.BuildConfig;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.BoxAdapter;
@@ -53,7 +51,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ref.SoftReference;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -61,7 +58,6 @@ import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -401,6 +397,9 @@ public class FileUtils {
      * @return
      */
     public static ArrayList<FileInfo> getSelectedList(ArrayList<FileInfo> fileInfos) {
+        if(fileInfos==null){
+            return new ArrayList<>();
+        }
         ArrayList<FileInfo> selectList = new ArrayList<>();
         for (int i = 0; i < fileInfos.size(); i++) {
             FileInfo fileInfo = fileInfos.get(i);

@@ -17,6 +17,10 @@ import com.jil.filexplorer.utils.ConstantUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * 菜单子项
+ * @param <T>
+ */
 public abstract class BoxAdapter<T> extends ArrayAdapter<T> {
     ArrayList<T> datas;
     int itemLayoutRes;

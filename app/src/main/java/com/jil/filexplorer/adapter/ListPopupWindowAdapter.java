@@ -1,34 +1,28 @@
 package com.jil.filexplorer.adapter;
 
 import android.content.Context;
-import android.database.DataSetObserver;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ImageView;
-import android.widget.ListAdapter;
-import android.widget.TextView;
+import android.widget.*;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.jil.filexplorer.Api.Item;
+import com.jil.filexplorer.api.Item;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.utils.ConstantUtils;
-import com.jil.filexplorer.utils.LogUtils;
 
-import java.util.ArrayList;
-
-public class ListPopupWindowAdapter extends ArrayAdapter<Item> {
-    Item[] itemArrayList;
+/***
+ * 用于ListPopupWindow的适配器
+ */
+public class ListPopupWindowAdapter extends BaseAdapter {
+    private Item[] itemArrayList;
+    private Context mContext;
+    private int layoutRes;
 
     public ListPopupWindowAdapter(Context context,int layoutRes,Item[] itemArrayList) {
-        super(context,layoutRes);
+        this.layoutRes=layoutRes;
+        this.mContext=context;
         this.itemArrayList = itemArrayList;
     }
-
-
 
     @Override
     public long getItemId(int position) {
@@ -42,11 +36,16 @@ public class ListPopupWindowAdapter extends ArrayAdapter<Item> {
     }
 
     @Override
+    public Object getItem(int position) {
+        return null;
+    }
+
+    @Override
     public View getView(int position, View convertView,  ViewGroup parent) {
         ViewHolder holder=null;
         if(convertView == null){
 
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.menu_simple_list_item,parent,false);
+            convertView = LayoutInflater.from(mContext).inflate(R.layout.menu_simple_list_item,parent,false);
             holder = new ViewHolder();
             //holder.img_icon =convertView.findViewById(R.id.img_icon);
             holder.txt_content = convertView.findViewById(android.R.id.text1);

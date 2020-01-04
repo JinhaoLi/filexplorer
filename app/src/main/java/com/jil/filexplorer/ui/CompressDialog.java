@@ -1,5 +1,6 @@
 package com.jil.filexplorer.ui;
 
+import android.content.Context;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.view.View;
@@ -9,10 +10,18 @@ import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 
-import com.jil.filexplorer.Activity.MainActivity;
+import com.jil.filexplorer.activity.MainActivity;
 import com.jil.filexplorer.R;
 
+import com.jil.filexplorer.api.FileInfo;
+import com.jil.filexplorer.utils.ToastUtils;
+import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
+
+import java.io.File;
+import java.util.ArrayList;
+
+import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;
 
 /**
  * @author JIL
@@ -23,11 +32,11 @@ public class CompressDialog extends InputDialog {
     private Spinner typeChoose;
     private CheckBox seePass;
     private RadioGroup compressGrade;
-    private MainActivity mainActivity;
+    private Context context;
 
-    public CompressDialog(final MainActivity mainActivity,int layoutRes, String title) {
-        super(mainActivity,layoutRes,title);
-        this.mainActivity=mainActivity;
+    public CompressDialog(Context context,int layoutRes, String title) {
+        super(context,layoutRes,title);
+        this.context=context;
         nameInput =findViewById(R.id.name_input);
         passInput =findViewById(R.id.pass_input);
         typeChoose =findViewById(R.id.spinner2);
@@ -66,11 +75,30 @@ public class CompressDialog extends InputDialog {
                 zipFast= Zip4jConstants.DEFLATE_LEVEL_FASTEST;
                 break;
         }
-        mainActivity.compressFileAction(zipName+zipType,zipPass,zipFast);
+        compressFileAction(zipName+zipType,zipPass,zipFast);
     }
 
     @Override
     public void queryButtonClick(View v) {
 
+    }
+
+    public void compressFileAction(String zipFile,String zipPass,int type){
+        ZipParameters zipParameters =new ZipParameters();
+        zipParameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE); // 压缩方式
+        zipParameters.setCompressionLevel(type); // 压缩级别
+        if(zipPass!=null&&!zipPass.equals("")){
+            zipParameters.setEncryptFiles(true);
+            zipParameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD); // 加密方式
+            zipParameters.setPassword(zipPass);//密码
+        }
+        ArrayList<FileInfo> topath = new ArrayList<>();
+//        topath.add(getFileInfoFromPath(customViewFragment.getPath()+ File.separator+zipFile));
+//        if (missionList != null && missionList.size() > 0) {
+//            MainActivity.ActionThread workThread = new MainActivity.ActionThread(zipParameters);
+//            workThread.execute(missionList, topath);
+//        } else {
+//            ToastUtils.showToast(MainActivity.this, "源路径不存在", 1000);
+//        }
     }
 }

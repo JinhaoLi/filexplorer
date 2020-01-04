@@ -1,19 +1,15 @@
 package com.jil.filexplorer.utils;
 
 import android.app.AlertDialog;
-import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
-import android.util.DisplayMetrics;
-import android.view.Gravity;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.ListPopupWindow;
 import android.widget.TextView;
 
-import com.jil.filexplorer.Api.FileInfo;
-import com.jil.filexplorer.Api.Item;
+import com.jil.filexplorer.api.FileInfo;
+import com.jil.filexplorer.api.Item;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.ListPopupWindowAdapter;
 

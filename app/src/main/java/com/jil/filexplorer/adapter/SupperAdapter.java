@@ -17,9 +17,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.jil.filexplorer.Api.SettingParam;
+import com.bumptech.glide.util.Util;
+import com.jil.filexplorer.api.SettingParam;
 import com.jil.filexplorer.utils.FileUtils;
-import com.jil.filexplorer.utils.LogUtils;
 
 import java.io.File;
 import java.util.List;
@@ -76,7 +76,7 @@ public abstract class SupperAdapter<T> extends RecyclerView.Adapter<SupperAdapte
 
     @Override
     public void onViewRecycled(VH holder) {
-        Log.e("SupperAdapter--", "onViewRecycled" + holder.getAdapterPosition());
+        //Log.e("SupperAdapter--", "onViewRecycled" + holder.getAdapterPosition());
         super.onViewRecycled(holder);
 
     }
@@ -154,6 +154,7 @@ public abstract class SupperAdapter<T> extends RecyclerView.Adapter<SupperAdapte
             ImageView view = getView(id);
             //RequestOptions options= FileUtils.getOptions(SettingParam.ImageCacheSwitch,250,400);
             Glide.with(mContext).load(pic).override(250, 400).into(view);
+
         }
     }
 
@@ -179,6 +180,5 @@ public abstract class SupperAdapter<T> extends RecyclerView.Adapter<SupperAdapte
                 notifyItemRangeChanged(position, mDatas.size() - position);
             }
         }
-        //notifyDataSetChanged();
     }
 }

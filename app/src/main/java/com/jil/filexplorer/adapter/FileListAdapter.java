@@ -16,15 +16,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.signature.MediaStoreSignature;
-import com.jil.filexplorer.Activity.ImageDisplayActivity;
-import com.jil.filexplorer.Activity.MainActivity;
-import com.jil.filexplorer.Api.FileInfo;
-import com.jil.filexplorer.Api.Item;
-import com.jil.filexplorer.Api.OnDoubleClickListener;
-import com.jil.filexplorer.Api.ReNameList;
-import com.jil.filexplorer.Api.SettingParam;
+import com.jil.filexplorer.activity.ImageDisplayActivity;
+import com.jil.filexplorer.api.*;
 import com.jil.filexplorer.R;
-import com.jil.filexplorer.ui.FileShowFragment;
 import com.jil.filexplorer.ui.InputDialog;
 import com.jil.filexplorer.utils.ConstantUtils;
 import com.jil.filexplorer.utils.FileUtils;
@@ -53,24 +47,29 @@ import static com.jil.filexplorer.utils.FileUtils.shareFile;
 import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
 import static com.jil.filexplorer.utils.FileUtils.viewFile;
 
+/**
+ * 文件列表设配器
+ */
 public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.DefaultViewHolder> {
     private ArrayList<FileInfo> mData;
-    private FileShowFragment mfileShowFragment;
-    private MainActivity mMainActivity;
+    private FilePresenter filePresenter;
     private int itemLayoutRes;
-    Item[] dirMenu = {new Item("新页面打开",142),new Item("分享",128),new Item("剪切",321)
+    static Item[] dirMenu = {new Item("新页面打开",142),new Item("分享",128),new Item("剪切",321)
             ,new Item("复制",44),new Item("发送到桌面",52)
             ,new Item("重命名",623),new Item("删除",732)
             ,new Item("属性",813)};//要填充的数据
-    Item[] fileMenu = {new Item("打开方式",143),new Item("分享",128),new Item("剪切",321)
+    static Item[] fileMenu = {new Item("打开方式",143),new Item("分享",128),new Item("剪切",321)
             ,new Item("复制",44),new Item("发送到桌面",52)
             ,new Item("重命名",623),new Item("删除",732)
             ,new Item("属性",813)};//要填充的数据
 
-    public FileListAdapter(ArrayList<FileInfo> mData, FileShowFragment mFileListFragment, MainActivity m,int itemLayoutRes) {
+    public FileListAdapter(ArrayList<FileInfo> mData, FilePresenter filePresenter,int itemLayoutRes) {
         this.mData = mData;
-        this.mfileShowFragment = mFileListFragment;
-        this.mMainActivity = m;
+        this.filePresenter = filePresenter;
+        this.itemLayoutRes = itemLayoutRes;
+    }
+
+    public void setItemLayoutRes(int itemLayoutRes) {
         this.itemLayoutRes = itemLayoutRes;
     }
 
@@ -123,13 +122,10 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
             @Override
             public void onClick(View v) {
                 if (!fileInfo.isSelected()) {
-                    fileInfo.setSelected(true);
-                    v.setBackgroundColor(SELECTED_COLOR);
+                    filePresenter.selectItem(position);
                 } else {
-                    fileInfo.setSelected(false);
-                    v.setBackgroundColor(NORMAL_COLOR);
+                    filePresenter.unSelectItem(position);
                 }
-                mMainActivity.refreshUnderBar();
             }
         });
 
@@ -137,8 +133,9 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
             @Override
             public boolean onLongClick(View v) {
                 if(!fileInfo.isSelected())
-                mfileShowFragment.selectAllPositionOrNot(false);
-                fileInfo.setSelected(true);
+                    filePresenter.selectAllPositionOrNot(false);
+                filePresenter.selectItem(position);
+
                 Item[] menu ;
                 if(fileInfo.isDir()){
                     menu=dirMenu;
@@ -156,18 +153,19 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
             public void onDoubleClick(View view) {
                 if (fileInfo.isDir()) {
                     String path = fileInfo.getFilePath();
-                    mfileShowFragment.load(path, false);
+                    filePresenter.input2Model(path, null,true);
+                    //filePresenter.refreshUnderBar();
                 } else {
-                    viewFile(mMainActivity, fileInfo,view);
+                    viewFile(filePresenter.mContext, fileInfo,view);
                     if(fileInfo.isSelected()){
-                        fileInfo.setSelected(false);
-                        view.setBackgroundColor(NORMAL_COLOR);
+                        filePresenter.unSelectItem(position);
+//                        fileInfo.setSelected(false);
+//                        view.setBackgroundColor(NORMAL_COLOR);
                     }
                     if(fileInfo.getFiletype().startsWith("image")){
-                        ImageDisplayActivity.setFileChangeListenter(mfileShowFragment);
+                        ImageDisplayActivity.setFileChangeListenter(filePresenter);
                     }
                 }
-                mfileShowFragment.refreshUnderBar();
             }
 
             @Override
@@ -179,12 +177,12 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
     }
 
     private void chooseOperation(final View v, final Item[] menu, final FileInfo fileInfo, final int position) {
-        final ListPopupWindow listPopupWindow=showListPopupWindow(mMainActivity,v,R.layout.menu_simple_list_item,menu);
+        final ListPopupWindow listPopupWindow=showListPopupWindow(filePresenter.mContext,v,R.layout.menu_simple_list_item,menu);
         v.setBackgroundColor(ConstantUtils.CAN_MOVE_COLOR);
         listPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
-                mMainActivity.refreshUnderBar();
+                filePresenter.refreshUnderBar();
                 if(fileInfo.isSelected()){
                     v.setBackgroundColor(SELECTED_COLOR);
                 }else {
@@ -201,29 +199,29 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                 int clickId = 0;
                 switch (id){
                     case 142://新页面打开
-                        mMainActivity.slideToPager(fileInfo.getFilePath());
+                        filePresenter.slideToPager(fileInfo.getFilePath());
                         break;
                     case 143://打开方式
                         clickId=143;
-                        chooseViewFile(mMainActivity,view,fileInfo.getFilePath(),listPopupWindow);
+                        chooseViewFile(filePresenter.mContext,view,fileInfo.getFilePath(),listPopupWindow);
                         break;
                     case 128:
-                        shareFile(mMainActivity,fileInfo.getFilePath(),fileInfo.getFiletype());
+                        shareFile(filePresenter.mContext,fileInfo.getFilePath(),fileInfo.getFiletype());
                         break;
                     case 732://删除
-                        mMainActivity.delecteSelectFile();
+                        filePresenter.delecteSelectFile();
                         break;
                     case 44://复制
-                        mMainActivity.copySelectFile();
+                        filePresenter.copySelectFile();
                         break;
                     case 321://剪切
-                          mMainActivity.moveSelectFile();
+                          filePresenter.moveSelectFile();
                         break;
                     case 623://重命名
                         final ArrayList<FileInfo> fileInfos =getSelectedList(mData);
                         InputDialog dialog;
                         if (fileInfos.size() == 1) {
-                            dialog =new InputDialog(mMainActivity,R.layout.dialog_rename_layout,"重命名") {
+                            dialog =new InputDialog(filePresenter.mContext,R.layout.dialog_rename_layout,"重命名") {
                                 @Override
                                 public void queryButtonClick(View v) {
 
@@ -232,7 +230,7 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                                 @Override
                                 public void queryButtonClick(View v,String name) {
                                     boolean reNameOk=false;
-                                    File f =new File(mfileShowFragment.getPath()+File.separator+name);
+                                    File f =new File(filePresenter.getPath()+File.separator+name);
                                     if(temp.exists()){
                                         reNameOk=temp.renameTo(f);
                                     }
@@ -241,12 +239,12 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                                         mData.add(position,getFileInfoFromFile(f));
                                         notifyDataSetChanged();
                                     }else {
-                                        ToastUtils.showToast(mMainActivity,"重命名失败",1000);
+                                        ToastUtils.showToast(filePresenter.mContext,"重命名失败",1000);
                                     }
                                 }
                             };
                         } else {
-                            dialog =new InputDialog(mMainActivity,R.layout.dialog_renames_layout,"批量重命名"){
+                            dialog =new InputDialog(filePresenter.mContext,R.layout.dialog_renames_layout,"批量重命名"){
                                 @Override
                                 public void queryButtonClick(View v) {
 
@@ -280,10 +278,10 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                     dialog.showAndSetName(temp.getName());
                         break;
                     case 813:
-                        showFileInfoMsg(mMainActivity,fileInfo);
+                        showFileInfoMsg(filePresenter.mContext,fileInfo);
                         break;
                     case 52:
-                        addFastToDesk(mMainActivity,fileInfo.getFileName(),fileInfo.getFilePath(), android.os.Build.VERSION.SDK_INT );
+                        addFastToDesk(filePresenter.mContext,fileInfo.getFileName(),fileInfo.getFilePath(), android.os.Build.VERSION.SDK_INT );
                         break;
                     case 418:
                         break;
@@ -305,35 +303,35 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
         RequestOptions options=getOptions(SettingParam.ImageCacheSwitch,260,283);
         if(fileInfo.isDir()){
             if (ico.exists()) {//自定义文件夹照片
-                Glide.with(mMainActivity).load(ico).apply(options)
+                Glide.with(filePresenter.mContext).load(ico).apply(options)
                         .error(R.mipmap.list_ico_dir)
                         .signature(new MediaStoreSignature("image/*", ico.length(), 0))
                         .placeholder(R.mipmap.list_ico_dir)
                         .into(holder.icon);
 
             }else {
-                Glide.with(mMainActivity).load(R.mipmap.list_ico_dir).placeholder(R.mipmap.list_ico_dir).into(holder.icon);
+                Glide.with(filePresenter.mContext).load(R.mipmap.list_ico_dir).placeholder(R.mipmap.list_ico_dir).into(holder.icon);
             }
         }else {
             File f=new File(fileInfo.getFilePath());
             if (imageIf(fileInfo.getFiletype())&&SettingParam.SmallViewSwitch>0) {//加载图片缩略图
-                Glide.with(mMainActivity).load(f).apply(options)
+                Glide.with(filePresenter.mContext).load(f).apply(options)
                         .error(fileInfo.getIcon())
                         .signature(new MediaStoreSignature("image/*", f.length(), 2))
                         .placeholder(fileInfo.getIcon())
                         .into(holder.icon);
             } else if(fileInfo.getFileName().endsWith(".apk")){//加载apk缩略图
-                Glide.with(mMainActivity).load(FileUtils.getApkIcon(mMainActivity,f.getPath()))
+                Glide.with(filePresenter.mContext).load(FileUtils.getApkIcon(filePresenter.mContext,f.getPath()))
                         .error(R.drawable.ic_android_black_24dp)
                         .placeholder(R.mipmap.list_ico_unknow)
                         .into(holder.icon);
             }else if(videoIf(fileInfo.getFiletype())&&SettingParam.SmallViewSwitch>0){//加载视频缩略图
-                Glide.with(mMainActivity).load(fileInfo.getFilePath())
+                Glide.with(filePresenter.mContext).load(fileInfo.getFilePath())
                         .error(fileInfo.getIcon())
                         .placeholder(fileInfo.getIcon())
                         .into(holder.icon);
             }else {//不加载缩略图
-                Glide.with(mMainActivity).load(fileInfo.getIcon())
+                Glide.with(filePresenter.mContext).load(fileInfo.getIcon())
                         .error(R.mipmap.list_ico_unknow)
                         .placeholder(fileInfo.getIcon())
                         .into(holder.icon);
@@ -355,7 +353,6 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
             String mineType =fileInfo.getName();
             holder.size.setText(size > GB ? stayFrieNumber((float) size / GB) + "GB" : size > MB ? stayFrieNumber((float) size / MB) + "MB" : stayFrieNumber((float) size / KB) + "KB");
             holder.type.setText(mineType.substring(mineType.lastIndexOf(".")+1));//文件种类
-
         }
     }
 
@@ -363,11 +360,17 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
         this.mData = mData;
     }
 
-
-
     @Override
     public int getItemCount(){
         return mData.size();
+    }
+
+    public void addData(FileInfo fileInfo) {
+        mData.add(fileInfo);
+    }
+
+    public void addMoreData(ArrayList<FileInfo> inFiles) {
+        mData.addAll(inFiles);
     }
 
     public class DefaultViewHolder extends RecyclerView.ViewHolder {
