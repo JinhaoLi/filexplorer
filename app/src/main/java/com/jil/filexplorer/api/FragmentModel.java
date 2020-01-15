@@ -34,6 +34,13 @@ public class FragmentModel implements FragmentPresenterCompl.IFragmentModel{
         fragments.add(customFragment);
     }
 
+    @Override
+    public FilePresenter getFilePresent(int index) {
+        FileShowFragment fragment= (FileShowFragment) fragments.get(index);
+        return fragment.getFilePresent();
+    }
+
+
     public CustomFragment getCurrentCustomFragment(int current){
         return fragments.get(current);
     }

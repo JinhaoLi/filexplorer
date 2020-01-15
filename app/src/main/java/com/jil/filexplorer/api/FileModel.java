@@ -1,32 +1,29 @@
 package com.jil.filexplorer.api;
 
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Environment;
-import com.jil.filexplorer.activity.ProgressActivity;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
-import net.lingala.zip4j.model.ZipParameters;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import static com.jil.filexplorer.api.ExplorerApplication.ApplicationContext;
+import static com.jil.filexplorer.api.ExplorerApp.ApplicationContext;
+import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromFile;
+import static com.jil.filexplorer.utils.FileUtils.getSelectedList;
 
 public class FileModel implements FilePresenterCompl.IFileModel {
     public String path = "null";
     private ArrayList<FileInfo> aBunchOfData = new ArrayList<>();
+    private static ArrayList<FileModel> fileModels;
 
     private int selectedSize;
     private long allSelectedLength;
     private boolean haveSelectedDir;
 
     private FileComparator comparator = new FileComparator(FileComparator.SORT_BY_NAME);
+
 
     public void load(String path, FileFilter fileFilter, ResultListener<FileInfo> listener) {
         this.path = path;
@@ -50,10 +47,6 @@ public class FileModel implements FilePresenterCompl.IFileModel {
         Collections.sort(aBunchOfData, comparator);
     }
 
-    public void sort() {
-        Collections.sort(aBunchOfData,comparator);
-    }
-
     public int getSortType() {
         return comparator.getSortType();
     }
@@ -62,7 +55,16 @@ public class FileModel implements FilePresenterCompl.IFileModel {
         aBunchOfData.remove(adapterPosition);
     }
 
+    public void remove(ArrayList<FileInfo> deleteList) {
+        aBunchOfData.removeAll(deleteList);
+    }
 
+    private void remove(int[] selectPosition) {
+        for (int position :
+                selectPosition) {
+            remove(position);
+        }
+    }
 
     public int size() {
         return aBunchOfData.size();
@@ -84,6 +86,7 @@ public class FileModel implements FilePresenterCompl.IFileModel {
                     allSelectedLength+=f.getFileSize();
             }
         }
+        LogUtils.d(getClass().getName(),"notifyChanged():{selectedSize:"+selectedSize+"}");
     }
 
     public int indexOfFirstSelect() {
@@ -116,7 +119,6 @@ public class FileModel implements FilePresenterCompl.IFileModel {
                 index++;
             }
         }
-        notifyChanged();
         return ints;
     }
 
@@ -143,7 +145,6 @@ public class FileModel implements FilePresenterCompl.IFileModel {
         for (FileInfo f : aBunchOfData) {
             f.setSelected(true);
         }
-        notifyChanged();
     }
 
     /**
@@ -152,13 +153,11 @@ public class FileModel implements FilePresenterCompl.IFileModel {
      */
     public void selectPosition(int position,boolean select){
         aBunchOfData.get(position).setSelected(select);
-        notifyChanged();
     }
 
     public boolean isSelected(int position) {
         return aBunchOfData.get(position).isSelected();
     }
-
 
     public boolean haveSelectedDir() {
         return haveSelectedDir;
@@ -172,9 +171,54 @@ public class FileModel implements FilePresenterCompl.IFileModel {
         return allSelectedLength;
     }
 
-    public void remove(ArrayList<FileInfo> deleteList) {
-        aBunchOfData.remove(deleteList);
+    public boolean reName(String newName) {
+        boolean reNameOk=false;
+        int[] selectPosition =getSelectedPosition();
+        if (getSelectedSize() == 1) {
+            File oldFile =new File(aBunchOfData.get(selectPosition[0]).getFilePath());
+            File newFile =new File(oldFile.getParentFile(),newName);
+            if(oldFile.exists()){
+                reNameOk=oldFile.renameTo(newFile);
+            }
+            if(reNameOk) {
+                remove(selectPosition[0]);
+                aBunchOfData.add(selectPosition[0], getFileInfoFromFile(newFile));
+            }
+
+        } else {
+            ReNameList rnl=ReNameList.getInstance(newName);
+            ArrayList<String> strings=rnl.getNameList(getSelectedSize());
+            for (int h =0;h<getSelectedSize();h++) {
+                FileInfo fi =aBunchOfData.get(selectPosition[h]);
+                File f = new File(fi.getFilePath());
+                File t = new File(f.getParent(), strings.get(h));
+                fi.setName(strings.get(h));
+                fi.setFilePath(t.getPath());
+                if (t.exists()) {
+                    t = new File(f.getParent(), strings.get(h) + h);
+                }
+                reNameOk=f.renameTo(t);
+
+                if(reNameOk) {
+                    remove(selectPosition[h]);
+                    aBunchOfData.add(selectPosition[h], getFileInfoFromFile(t));
+                }
+            }
+        }
+
+        return reNameOk;
     }
+
+    public void refreshMissionList() {
+        FileOperation.inFiles=getSelectedList(aBunchOfData);
+    }
+
+    public FileInfo getFileInfoByPosition(int position) {
+        return aBunchOfData.get(position);
+    }
+
+
+
 
     private class LoadFileThread implements Runnable {
         private String path;
@@ -190,33 +234,49 @@ public class FileModel implements FilePresenterCompl.IFileModel {
         @Override
         public void run() {
             File file = new File(path);
-            if (!file.exists()) {
-                listener.onError(ApplicationContext.getString(R.string.Invalid_path));
+
+            if(!check(file)){
                 return;
             }
-            if (!file.canRead()) {
-                listener.onError(ApplicationContext.getString(R.string.unable_to_access));
-                return;
+
+            if (file.isFile()) {
+                FileUtils.viewFileWithPath(ApplicationContext,file.getPath());
+                file=file.getParentFile();
+                if(file==null||!check(file)){
+                    return;
+                }
             }
+
             aBunchOfData.clear();
 
-            if (!file.isDirectory()) {
-                return;
-            }
             File[] files = file.listFiles(fileFilter);
 
             if (files == null) {
-                listener.onError("无法读取！");
+                listener.onError(ApplicationContext.getString(R.string.unable_to_access));
                 return;
             }
 
             for (File f : files) {
                 aBunchOfData.add(FileUtils.getFileInfoFromFile(f));
             }
-            sort();
-            listener.onComplete(aBunchOfData, path, file.getName());
+            Collections.sort(aBunchOfData,comparator);
+            listener.onComplete(aBunchOfData, file.getPath(), file.getName());
             notifyChanged();
         }
+
+        private boolean check(File file){
+            if (!file.exists()) {
+                listener.onError(ApplicationContext.getString(R.string.Invalid_path));
+                return false;
+            }
+            if (!file.canRead()) {
+                listener.onError(ApplicationContext.getString(R.string.unable_to_access));
+                return false;
+            }
+            return true;
+        }
     }
+
+
 
 }

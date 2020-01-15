@@ -4,60 +4,52 @@ import android.content.Context;
 import android.os.Environment;
 import android.view.View;
 import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.jil.filexplorer.R;
+import com.jil.filexplorer.activity.ProgressActivity;
 import com.jil.filexplorer.adapter.FragmentAdapter;
 import com.jil.filexplorer.adapter.SupperAdapter;
 import com.jil.filexplorer.ui.*;
 import com.jil.filexplorer.utils.ConstantUtils;
 import com.jil.filexplorer.utils.FileUtils;
+import com.jil.filexplorer.utils.LogUtils;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Objects;
 
+import static com.jil.filexplorer.api.ExplorerApp.fragmentPresenter;
 import static com.jil.filexplorer.api.FileOperation.*;
 import static com.jil.filexplorer.utils.ConstantUtils.*;
 import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;
-import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
 
-public class FragmentPresenter implements FragmentPresenterCompl.IFragmentPresenter {
+public class FragmentPresenter implements FragmentPresenterCompl.IFragmentPresenter, FileChangeListener {
 
-    FragmentPresenterCompl.IFragmentView fragmentView;
+    private FragmentPresenterCompl.IFragmentView fragmentView;
     private FragmentModel fragmentModel;
-
     public int current;
-    public String mPath;                                       //当前fragment的路径
-    public ArrayList<String> historyPath = new ArrayList<>();//历史路径
-    public LinearLayoutManager linearLayoutManager;              //预览图列表
+    public ArrayList<String> historyPath;
+    public LinearLayoutManager linearLayoutManager;
     public SupperAdapter<CustomFragment> smallFragmentViewAdapter;
-
-    public FileOperation fileOperation;
     public int fileOperationType;
-
     public FragmentAdapter fragmentAdapter;
-    public FragmentManager fragmentManager;
-
-
-    public ArrayList<FileInfo> missionList;
-    public int startPosition, endPsoition;
+    public int startPosition, endPosition;
 
     public static FragmentPresenter getInstance(FragmentPresenterCompl.IFragmentView iFragmentView,String startPath){
         if(startPath==null||startPath.trim().equals("")){
-            ExplorerApplication.fragmentPresenter=new FragmentPresenter(iFragmentView,Environment.getExternalStorageDirectory().getPath());
+            fragmentPresenter=new FragmentPresenter(iFragmentView,Environment.getExternalStorageDirectory().getPath());
         }else
-            ExplorerApplication.fragmentPresenter=new FragmentPresenter(iFragmentView,startPath);
-        return ExplorerApplication.fragmentPresenter;
+            fragmentPresenter=new FragmentPresenter(iFragmentView,startPath);
+        return fragmentPresenter;
     }
 
 
     private FragmentPresenter(FragmentPresenterCompl.IFragmentView fragmentView, String startPath) {
         this.fragmentView = fragmentView;
         this.fragmentModel =FragmentModel.getInstance();
+        this.historyPath=new ArrayList<>();
         fragmentAdapter = new FragmentAdapter(fragmentView.linkFragmentManager(), fragmentModel.fragments);
         fragmentModel.add(FileShowFragment.newInstance(startPath,this));
-
     }
 
     public void initSmallView(){
@@ -101,7 +93,6 @@ public class FragmentPresenter implements FragmentPresenterCompl.IFragmentPresen
                     @Override
                     public void onClick(View v) {
                         removeFragmentPage(position);
-                        smallFragmentViewAdapter.notifyDataSetChanged();
                     }
                 });
             }
@@ -122,54 +113,15 @@ public class FragmentPresenter implements FragmentPresenterCompl.IFragmentPresen
         return fragmentModel.getCurrentCustomFragment(current);
     }
 
-    public void load(int current,String path,boolean isBack){
+    public void refresh(int current, String path, boolean isBack){
         getCurrentCustomFragment(current).load(path,isBack);
     }
 
     public boolean isAllSelect(){
-        return getCurrentCustomFragment(current).allSelect;
+        return getCurrentCustomFragment(current).isAllSelect();
     }
 
-    public void copySelectFile(){
-//        FileShowFragment s =(FileShowFragment)getCurrentCustomFragment();
-//        missionList = s.getSelectedList();
-//        fileOperationType = MODE_COPY;
-//        fragmentView.setPasteVisible(true);
-//        s.unSelectAll();
-//        fragmentView.setOperationGroupVisible(false);
-//        fragmentView.allSelectIco(false);
-    }
-
-    public void delecteSelectFile(){
-//        fileOperationType = MODE_DELETE;
-//        FileShowFragment customViewFragment=(FileShowFragment)getCurrentCustomFragment();
-//        missionList = customViewFragment.getSelectedList();//储存删除对象
-//        ArrayList<Integer> deletePosition = customViewFragment.getSelectPosition(missionList);//储存位置
-//        if (missionList.size() != 0 && deletePosition.size() != 0) {
-//            customViewFragment.removeData(missionList);
-//        }
-//
-//        deleteFile();
-    }
-
-    private void deleteFile() {
-//        if(fileOperationType != MODE_DELETE)
-//            return;
-//        if (missionList.size() > 0) {
-//            new Thread(FileOperation.with(getCurrentCustomFragment().getContext()).delete(missionList)).start();
-//        }
-//        fragmentView.clearUnderBar();
-    }
-
-    public void moveSelectFile(){
-//        FileShowFragment customViewFragment=(FileShowFragment) getCurrentCustomFragment();
-//        fileOperationType = MODE_MOVE;
-//        missionList = customViewFragment.getSelectedList();
-//        fragmentView.setPasteVisible(true);
-//        customViewFragment.unSelectAll();
-    }
-
-    public void load(){
+    public void refresh(){
         String s = fragmentView.getPathFromEdit();
         if (s.startsWith("...")) {
             getCurrentCustomFragment().refresh();
@@ -180,7 +132,7 @@ public class FragmentPresenter implements FragmentPresenterCompl.IFragmentPresen
 
     public boolean load(String path) {
         if (path != null && !path.trim().equals("")){
-            getCurrentCustomFragment().load(path, true);
+            getCurrentCustomFragment().load(path, false);
             return true;
         } else {
             fragmentView.showToast("errPath:" + path);
@@ -189,38 +141,35 @@ public class FragmentPresenter implements FragmentPresenterCompl.IFragmentPresen
     }
 
     public void selectAllOrNot(){
-        boolean isAll = getCurrentCustomFragment().isAllSelect();
+        boolean isAll = isAllSelect();
         getCurrentCustomFragment().selectAllPositionOrNot(!isAll);
-        fragmentView.allSelectIco(!isAll);
+        changeAllSelectIco(!isAll);
+    }
+
+    public void changeAllSelectIco(boolean isAll){
+        fragmentView.changeAllSelectIco(isAll);
     }
 
     public boolean createNewFile(String fileName,boolean isFile){
         String path = getCurrentCustomFragment().getPath() + File.separator + fileName;
-        String successful=null;
+        String successful;
         if(isFile)
             successful=FileUtils.newFile(path);
         else
             successful=FileUtils.newFolder(path);
         if(successful!=null) {
             getCurrentCustomFragment().addData(getFileInfoFromPath(getCurrentCustomFragment().getPath() + File.separator + successful));
+            getCurrentCustomFragment().refreshUnderBar();
             return true;
         }else {
             return false;
         }
     }
 
-    public void compressFiles(Context context){
-//        FileShowFragment customViewFragment=(FileShowFragment) getCurrentCustomFragment();
-//        missionList=customViewFragment.getSelectedList();
-//        fileOperationType=MODE_COMPRESS;
-//        CompressDialog compressDialog=new CompressDialog(context,R.layout.dialog_compression_layout,"压缩文件参数");
-//        compressDialog.showAndSetName(missionList.get(0).getFileName()+"等文件");
-    }
-
     public void intervalSelection() {
-        if (startPosition != -1 && endPsoition != -1) {
+        if (startPosition != -1 && endPosition != -1) {
             FileShowFragment customViewFragment=(FileShowFragment)getCurrentCustomFragment();
-            customViewFragment.selectSomePosition(startPosition, endPsoition);
+            customViewFragment.selectSomePosition(startPosition, endPosition);
             fragmentView.refreshUnderBar(customViewFragment.getUnderBarMsg());
         }
     }
@@ -230,24 +179,19 @@ public class FragmentPresenter implements FragmentPresenterCompl.IFragmentPresen
     }
 
     public void pasteFileHere(Context context){
-        if(missionList == null ||missionList.size() == 0)
+        FileOperation fileOperation;
+        if(inFiles == null ||inFiles.size() == 0)
             return;
-        ArrayList<FileInfo> topath = new ArrayList<>();
-        topath.add(getFileInfoFromPath(getPath()));
-        if(fileOperationType== MODE_COPY){
-            new Thread(FileOperation.with(context).copy(missionList).to(getPath())).start();
-        }else {
-            new Thread(FileOperation.with(context).move(missionList).to(getPath())).start();
-        }
-    }
 
-    public void addFileInfoInMissionList(FileInfo fileInfo) {
-        if (missionList != null)
-            missionList.clear();
-        else {
-            missionList = new ArrayList<>();
-        }
-        missionList.add(fileInfo);
+        if(fileOperationType== MODE_COPY)
+            fileOperation=FileOperation.with(context).copy().to(getPath());
+        else if(fileOperationType==MODE_MOVE)
+            fileOperation=FileOperation.with(context).move().to(getPath());
+        else
+            return;
+        fileOperation.setFileChangeListener(this);
+        ProgressActivity.start(context,fileOperation.getId());
+        new Thread(fileOperation).start();
     }
 
     public void slideToPager(String path) {
@@ -283,6 +227,10 @@ public class FragmentPresenter implements FragmentPresenterCompl.IFragmentPresen
      * 移除fragment
      */
     public void removeFragmentPage(int position) {
+        if(size()==1){
+            fragmentView.exit();
+            return;
+        }
         if (position == current) {
             if (position == 0) {
                 fragmentView.setCurrentItem(position + 1);
@@ -291,20 +239,30 @@ public class FragmentPresenter implements FragmentPresenterCompl.IFragmentPresen
             }
         }
         fragmentAdapter.removePager(position);
+        smallViewLoadOrRefresh();
+        LogUtils.d(getClass().getName(),"removeFragmentPage():size()=="+size()+")");
+//        if(size()==0){
+//            fragmentView.exit();
+//        }
+    }
+
+    /**
+     * 区间选择 ico
+     *
+     * @param visible
+     * @param start
+     * @param end
+     */
+    public void setSelectIntervalIco(boolean visible, int start, int end) {
+        this.startPosition = start;
+        this.endPosition = end;
+        fragmentView.setSelectIntervalIco(visible);
+
     }
 
     public void smallViewLoadOrRefresh() {
         smallFragmentViewAdapter.notifyDataSetChanged();
-//        if (smallFragmentViewAdapter == null) {
-//
-//
-//        } else {
-//
-//        }
     }
-
-
-
 
     @Override
     public int getSortType() {
@@ -323,7 +281,15 @@ public class FragmentPresenter implements FragmentPresenterCompl.IFragmentPresen
 
     @Override
     public void addHistory(String okPath) {
+        while (historyPath.size() > 10) {
+            historyPath.remove(0);
+        }
+        historyPath.add(0,okPath);
+    }
 
+    @Override
+    public void showToast(String msg) {
+        fragmentView.showToast(msg);
     }
 
     public void makeLinerLayout() {
@@ -336,15 +302,16 @@ public class FragmentPresenter implements FragmentPresenterCompl.IFragmentPresen
         getCurrentCustomFragment().changeView(spanCount);
     }
 
-    public int getFileInfosSize() {
-        return getCurrentCustomFragment().getFileInfosSize();
-    }
-
     public void setUnderBarMsg(String underMsg) {
         fragmentView.refreshUnderBar(underMsg);
     }
 
-    public void setOperationGroupVisible(boolean b) {
-        fragmentView.setOperationGroupVisible(b);
+    public void setPasteVisible(boolean visible) {
+        fragmentView.setPasteVisible(visible);
+    }
+
+    @Override
+    public void change() {
+        refresh();
     }
 }

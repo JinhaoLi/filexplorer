@@ -1,5 +1,7 @@
 package com.jil.filexplorer.api;
 
+import com.jil.filexplorer.utils.LogUtils;
+
 import static com.jil.filexplorer.api.FileOperation.MODE_COMPRESS;
 import static com.jil.filexplorer.api.FileOperation.MODE_COPY;
 import static com.jil.filexplorer.api.FileOperation.MODE_DELETE;
@@ -14,9 +16,9 @@ public class ProgressMessage {
     //开始时间
     private long startTime;
     //结束位置
-    private long endLoacation=1;
+    private long endLocation;
     //项目总数量
-    public int projectCount;
+    private int projectCount;
     //进度类型
     private int mType;
     //原路径
@@ -39,16 +41,16 @@ public class ProgressMessage {
     }
 
 
-    public ProgressMessage(long startTime, long endLoacation, int projectCount, int mType) {
+    public ProgressMessage(long startTime, long endLocation, int projectCount, int mType) {
         this.startTime = startTime;
-        this.endLoacation = endLoacation;
+        this.endLocation = endLocation;
         this.projectCount = projectCount;
         this.mType = mType;
     }
 
-    public ProgressMessage(long startTime, long endLoacation, int projectCount, int mType, String to) {
+    public ProgressMessage(long startTime, long endLocation, int projectCount, int mType, String to) {
         this.startTime = startTime;
-        this.endLoacation = endLoacation;
+        this.endLocation = endLocation;
         this.projectCount = projectCount;
         this.mType = mType;
         this.to = to;
@@ -59,7 +61,7 @@ public class ProgressMessage {
     }
 
     public void setNowLoacation(long nowLoacation) {
-        this.nowLoacation = nowLoacation>endLoacation ? endLoacation:nowLoacation;
+        this.nowLoacation = Math.min(nowLoacation, endLocation);
     }
 
     public long getNowLoacation() {
@@ -78,13 +80,9 @@ public class ProgressMessage {
         return "项目名称："+nowProjectName;
     }
 
-    public void setEndLoacation(long endLoacation) {
-        this.endLoacation = endLoacation;
-    }
-
-    public String getTitle(){
+    public String getTitle(int progress){
         if(title==null||title.equals("")){
-            return "已完成"+ getProgress() +"%";
+            return "已完成"+ progress +"%";
         }else {
             return title;
         }
@@ -100,13 +98,15 @@ public class ProgressMessage {
      * @return 百分比
      */
     public int getProgress(){
-        if(endLoacation==0){
+        LogUtils.i(getClass().getName(),"{nowLoacation:"+nowLoacation+"}"+
+                "{projectCount:"+projectCount+"}");
+        if(endLocation ==0){
             return 0;
         }
         if(mType== MODE_COPY&&projectCount!=0){
-            return (int) (nowLoacation*100/endLoacation);
+            return (int) (nowLoacation*100/ endLocation);
         }else if(projectCount!=0&&mType==MODE_COMPRESS){
-            return (int) (nowLoacation*100/endLoacation);
+            return (int) (nowLoacation*100/ endLocation);
         }else if(projectCount!=0){
             return (projectOverCount*100)/projectCount;
         }else {
@@ -170,7 +170,7 @@ public class ProgressMessage {
 
     public String getReMainCount(){
         if(mType== MODE_COPY||mType==MODE_COMPRESS){
-            return "剩余项目："+(projectCount- projectOverCount)+"("+(endLoacation-nowLoacation)/MB+"MB)";
+            return "剩余项目："+(projectCount- projectOverCount)+"("+(endLocation -nowLoacation)/MB+"MB)";
         }else {
             return "剩余项目："+(projectCount- projectOverCount);
         }
@@ -180,7 +180,7 @@ public class ProgressMessage {
     public String getReMainTime(){
         long nowTime =System.currentTimeMillis()-startTime;
         nowTime= nowTime==0 ? 1:nowTime;
-        float s= (endLoacation-nowLoacation) / (nowLoacation/(nowTime/1000f));
+        int s= (int) ((endLocation -nowLoacation) / (nowLoacation/(nowTime/1000f)));
         if(mType== MODE_COPY||mType==MODE_COMPRESS){
             return "剩余时间：大约"+s+"秒";
         }else {

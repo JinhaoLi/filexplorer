@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <include layout="@layout/dialog_title_icon_text_group"/>
+    <include layout="@layout/dialogpart_title_icon_text_group"/>
 
 
     <ImageView
@@ -17,5 +17,5 @@
         android:scaleType="centerInside"
         app:srcCompat="@mipmap/gird_layout_show" />
 
-    <include layout="@layout/dialog_button_two_group" />
+    <include layout="@layout/dialogpart_button_two_group" />
 </LinearLayout>

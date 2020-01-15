@@ -27,7 +27,7 @@ import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;
  * @author JIL
  * 压缩窗口
  */
-public class CompressDialog extends InputDialog {
+public abstract class CompressDialog extends InputDialog {
     private EditText passInput;
     private Spinner typeChoose;
     private CheckBox seePass;
@@ -92,13 +92,8 @@ public class CompressDialog extends InputDialog {
             zipParameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD); // 加密方式
             zipParameters.setPassword(zipPass);//密码
         }
-        ArrayList<FileInfo> topath = new ArrayList<>();
-//        topath.add(getFileInfoFromPath(customViewFragment.getPath()+ File.separator+zipFile));
-//        if (missionList != null && missionList.size() > 0) {
-//            MainActivity.ActionThread workThread = new MainActivity.ActionThread(zipParameters);
-//            workThread.execute(missionList, topath);
-//        } else {
-//            ToastUtils.showToast(MainActivity.this, "源路径不存在", 1000);
-//        }
+        doIt(zipParameters,zipFile);
     }
+
+    public abstract void doIt(ZipParameters zipParameters, String zipName);
 }

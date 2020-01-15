@@ -14,9 +14,11 @@ import androidx.core.app.NotificationCompat;
 
 import com.jil.filexplorer.activity.ProgressActivity;
 import com.jil.filexplorer.R;
+import com.jil.filexplorer.api.FileOperation;
+import com.jil.filexplorer.api.ProgressMessage;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
-import static com.jil.filexplorer.utils.ConstantUtils.CHANNEL_ID;
+import static com.jil.filexplorer.utils.ConstantUtils.PROGRESS_ID;
 
 public class NotificationUtils {
     private static final int NOTIFICATION_ID = 1410;
@@ -26,7 +28,7 @@ public class NotificationUtils {
     public static void registerNotifty(Context context) {
         if(Build.VERSION.SDK_INT>=26){
             String channelName = "复制进度通知";
-            NotificationChannel channel =new NotificationChannel(CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_HIGH);
+            NotificationChannel channel =new NotificationChannel(PROGRESS_ID, channelName, NotificationManager.IMPORTANCE_HIGH);
             channel.setDescription("用于显示复制·移动·重命名·删除等操作进度的通知！");
             createNotificationChannel(context,channel);
         }
@@ -45,6 +47,13 @@ public class NotificationUtils {
     }
 
 
+    /**
+     *
+     * @param context
+     * @param builder
+     * @param notificationManager
+     * @param content
+     */
     public static void setNotification(Context context, NotificationCompat.Builder builder,NotificationManager notificationManager,String content) {
         Intent intent = new Intent(context, ProgressActivity.class);// ========= 重点2============
         PendingIntent pendingIntent = null;
@@ -71,6 +80,8 @@ public class NotificationUtils {
         //PendingIntent pendingIntentOne = PendingIntent.getActivity(context, 0, intentOne, PendingIntent.FLAG_UPDATE_CURRENT);
         notificationManager.notify(NOTIFICATION_ID, notification);
     }
+
+
 
 
 }

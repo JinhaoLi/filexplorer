@@ -12,6 +12,8 @@ public class FragmentPresenterCompl {
 
 
         void add(CustomFragment customFragment);
+
+        FilePresenter getFilePresent(int index);
     }
 
     public interface IFragmentView extends MVPFramework.IView{
@@ -19,9 +21,7 @@ public class FragmentPresenterCompl {
 
         String getPathFromEdit();
 
-        void clearUnderBar();
-
-        void allSelectIco(boolean b);
+        void changeAllSelectIco(boolean b);
 
         void setCurrentItem(int position);
 
@@ -34,6 +34,10 @@ public class FragmentPresenterCompl {
         FragmentManager linkFragmentManager();
 
         Context getContext();
+
+        void setSelectIntervalIco(boolean visible);
+
+        void exit();
     }
 
     public interface IFragmentPresenter extends MVPFramework.IPresenter{
@@ -45,5 +49,7 @@ public class FragmentPresenterCompl {
         void update();
 
         void addHistory(String okPath);
+
+        void showToast(String msg);
     }
 }

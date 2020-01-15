@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <include layout="@layout/dialog_title_icon_text_group"/>
+    <include layout="@layout/dialogpart_title_icon_text_group"/>
 
 
     <TextView
@@ -13,8 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="TextView"
-        android:textAlignment="center" />
+        android:text="TextView"/>
 
-    <include layout="@layout/dialog_button_two_group" />
+    <include layout="@layout/dialogpart_button_two_group" />
 </LinearLayout>

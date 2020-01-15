@@ -30,6 +30,10 @@ public class FilePresenterCompl {
         void selectItem(int i);
 
         Context getContext();
+
+        void reNameDialog(String title, int layoutId, String param, int type);
+
+        void showCompressDialog(String parentName);
     }
 
     public interface IFilePresenter extends MVPFramework.IPresenter {

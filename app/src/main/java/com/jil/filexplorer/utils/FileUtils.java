@@ -173,49 +173,41 @@ public class FileUtils {
         return true;
     }
 
-    /**
-     * 安卓8.0及以上，发送图标到桌面
-     *
-     * @param context
-     */
-    @TargetApi(Build.VERSION_CODES.O)
-    public static void addFastToDesk(Context context, String name, String id) {
-        ShortcutManager shortcutManager = (ShortcutManager) context.getSystemService(Context.SHORTCUT_SERVICE);//获取shortcutManager
-        //如果默认桌面支持requestPinShortcut（ShortcutInfo，IntentSender）方法，则返回TRUE。
-        if (shortcutManager != null && shortcutManager.isRequestPinShortcutSupported()) {
-            Intent shortCutIntent = new Intent(context, MainActivity.class);//快捷方式启动页面
-            shortCutIntent.setAction(Intent.ACTION_VIEW);
-            shortCutIntent.putExtra("file_path", id);
-            //快捷方式创建相关信息。图标名字 id
-            ShortcutInfo shortcutInfo = null;
-            shortcutInfo = new ShortcutInfo.Builder(context, id)
-                    .setIcon(Icon.createWithResource(context, R.mipmap.ic_launcher))
-                    .setShortLabel(name)
-                    .setIntent(shortCutIntent)
-                    .build();
-            //创建快捷方式时候回调
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, new
-                    Intent(context, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
-            shortcutManager.requestPinShortcut(shortcutInfo, pendingIntent.getIntentSender());
-        }
-    }
 
-    public static void addFastToDesk(Context context, String name, String id, int version) {
-        if (version < 26) {
+
+    public static void addFastToDesk(Context context, String name, String path,int icoRes) {
+        if (android.os.Build.VERSION.SDK_INT < 26) {
             Intent addShortIntent = new Intent("com.android.launcher.action.INSTALL_SHORTCUT");
             addShortIntent.putExtra("duplicate", false); //禁止重复添加。 小米系统无效果
             addShortIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, name);//快捷方式的名字
-            Intent.ShortcutIconResource shortcutIconResource = Intent.ShortcutIconResource.fromContext(context, R.mipmap.ic_launcher);
+            Intent.ShortcutIconResource shortcutIconResource = Intent.ShortcutIconResource.fromContext(context, icoRes);
             addShortIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, shortcutIconResource); //快捷方式的图标
             //点击快捷方式打开的页面
             Intent actionIntent = new Intent(Intent.ACTION_MAIN);
             actionIntent.setClass(context, MainActivity.class);
-            actionIntent.putExtra("file_path", id);
+            actionIntent.putExtra(MainActivity.INTENT_INPUT_PATH, path);
             actionIntent.addCategory(Intent.CATEGORY_LAUNCHER);//添加categoryCATEGORY_LAUNCHER 应用被卸载时快捷方式也随之删除
             addShortIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, actionIntent);
             context.sendBroadcast(addShortIntent); //设置完毕后发送广播给系统。
         } else {
-            addFastToDesk(context, name, id);
+            ShortcutManager shortcutManager = (ShortcutManager) context.getSystemService(Context.SHORTCUT_SERVICE);//获取shortcutManager
+            //如果默认桌面支持requestPinShortcut（ShortcutInfo，IntentSender）方法，则返回TRUE。
+            if (shortcutManager != null && shortcutManager.isRequestPinShortcutSupported()) {
+                Intent shortCutIntent = new Intent(context, MainActivity.class);//快捷方式启动页面
+                shortCutIntent.setAction(Intent.ACTION_VIEW);
+                shortCutIntent.putExtra(MainActivity.INTENT_INPUT_PATH, path);
+                //快捷方式创建相关信息。图标名字 id
+                ShortcutInfo shortcutInfo = null;
+                shortcutInfo = new ShortcutInfo.Builder(context, path)
+                        .setIcon(Icon.createWithResource(context, icoRes))
+                        .setShortLabel(name)
+                        .setIntent(shortCutIntent)
+                        .build();
+                //创建快捷方式时候回调
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, new
+                        Intent(context, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+                shortcutManager.requestPinShortcut(shortcutInfo, pendingIntent.getIntentSender());
+            }
         }
 
     }
@@ -356,8 +348,14 @@ public class FileUtils {
         return df.format(date);
     }
 
+
+    public static String getFormatData(long date,String format) {
+        SimpleDateFormat df = new SimpleDateFormat(format);//设置日期格式
+        return df.format(date);
+    }
+
     public static String getFormatData(long date) {
-        SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");//设置日期格式
+        SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd  HH:mm:ss");//设置日期格式
         return df.format(date);
     }
 
@@ -366,7 +364,7 @@ public class FileUtils {
         return df.format(date);
     }
 
-    public static void viewFile(final Context context, final String filePath, String type) {
+    public static void viewFile(final Context context,String filePath, String type) {
         if (filePath.endsWith(".apk")) {
             installApk(filePath, context);
             return;
@@ -461,7 +459,13 @@ public class FileUtils {
         }
         intent.setType(type);
         intent.putExtra(Intent.EXTRA_STREAM, uri);
-        context.startActivity(intent);
+        try{
+            context.startActivity(intent);
+        }catch (Exception e){
+            ToastUtils.showToast(context,"找不到处理意图的活动!",1000);
+            LogUtils.e("FileUtils.shareFile()",e.getMessage());
+        }
+
     }
 
     public static void viewFileWithPath(final Context context, final String filePath) {
@@ -469,7 +473,7 @@ public class FileUtils {
         if (!TextUtils.isEmpty(type) && !TextUtils.equals(type, "*/*")) {
             viewFile(context, filePath, type);
         } else {
-            chooseViewFile(context, filePath);
+            viewFile(context, filePath,"*/*");
         }
     }
 
@@ -709,13 +713,13 @@ public class FileUtils {
     }
 
     /**
-     * 保留小数点后2位
+     * 保留4位
      *
      * @param priceCar
      *
      * @return
      */
-    public static float stayFrieNumber(float priceCar) {
+    public static float stayFireNumber(float priceCar) {
         // 设置位数
         int scale = getScale(priceCar);
         // 表示四舍五入，可以选择其他舍值方式，例如去尾，等等.

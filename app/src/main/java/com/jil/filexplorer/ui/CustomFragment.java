@@ -29,19 +29,15 @@ import static com.jil.filexplorer.utils.ConstantUtils.MAX_SPAN_COUNT;
 import static com.jil.filexplorer.utils.ConstantUtils.MIN_SPAN_COUNT;
 import static com.jil.filexplorer.utils.FileUtils.getDistance;
 
-public abstract class CustomFragment<T extends Item> extends Fragment {
+public abstract class CustomFragment extends Fragment {
     private final static String TAG = "CustomFragment";
 
     private View rootView;
 
     protected RecyclerView tList;
-    protected String underBarMsg;
 
-    /**
-     * 菜单可见
-     */
-    public boolean menuVisible;
     public Bitmap smallView;
+
     //全选按钮可见状态
     public boolean allSelect = false;
 
@@ -53,13 +49,7 @@ public abstract class CustomFragment<T extends Item> extends Fragment {
 
     protected abstract void initAction();
 
-    protected abstract void deleteItem(int adapterPosition);
-
-    protected abstract boolean initDates(String filePath, boolean isBack);
-
     public abstract void refreshUnderBar();
-
-    public abstract int getFileInfosSize();
 
     public abstract void makeGridLayout(int spanCount);
 
@@ -77,26 +67,17 @@ public abstract class CustomFragment<T extends Item> extends Fragment {
 
     public abstract int getSortType();
 
-    public abstract void removeData(ArrayList<FileInfo> deleteList);
-
     public abstract void addData(FileInfo fileInfoFromPath);
-
-    public abstract void addMoreData(ArrayList<FileInfo> inFiles);
 
     public abstract String getPath();
 
     public abstract void refresh();
 
-    /**
-     * 载入刷新
-     *
-     * @param filePath
-     * @param isBack
-     */
+    public abstract void selectSomePosition(int startPosition, int endPosition);
+
     public abstract void load(String filePath, boolean isBack);
 
-    public CustomFragment() {
-    }
+    public CustomFragment() { }
 
     @SuppressLint({"ClickableViewAccessibility", "ResourceType"})
     @Override
@@ -192,9 +173,4 @@ public abstract class CustomFragment<T extends Item> extends Fragment {
             }
         });
     }
-
-
-    public abstract void unSelectAll();
-
-    public abstract void selectSomePosition(int startPosition, int endPosition);
 }

@@ -12,9 +12,9 @@ import java.io.IOException;
 import java.io.Writer;
 
 public final class LogUtils {
-    private static final boolean LOGV = true;
+    private static final boolean LOGV = false;
     private static final boolean LOGD = true;
-    private static final boolean LOGI = true;
+    private static final boolean LOGI = false;
     private static final boolean LOGW = true;
     private static final boolean LOGE = true;
     private static final String LOG_FILE_PATH = Environment.getExternalStorageDirectory() + File.separator + "fileExplorer.log";
@@ -34,9 +34,10 @@ public final class LogUtils {
     public static void i(String tag, String mess) {
         if (LOGI) {
             Log.i(tag, mess);
+            String date = "[" + FileUtils.getFormatData(System.currentTimeMillis()) + "] ";
+            writeInFile(date + tag + mess);
         }
-        String date = "[" + FileUtils.getFormatData(System.currentTimeMillis()) + "] ";
-        writeInFile(date + tag + mess);
+
     }
 
     public static void e(String tag, String mess) {

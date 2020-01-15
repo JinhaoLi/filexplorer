@@ -7,7 +7,7 @@
     android:orientation="vertical">
 
     <include
-        layout="@layout/dialog_title_icon_text_group">
+        layout="@layout/dialogpart_title_icon_text_group">
     </include>
 
     <TextView
@@ -28,7 +28,7 @@
 
     </LinearLayout>
 
-    <include layout="@layout/dialog_button_two_group" />
+    <include layout="@layout/dialogpart_button_two_group" />
 
 
 </LinearLayout>

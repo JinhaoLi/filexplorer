@@ -19,13 +19,13 @@ public class MenuUtils {
         addMenu(1,menu, 1, 1, R.string.copy, R.drawable.ic_content_copy_black_24dp);
         addMenu(1,menu, 3, 2, R.string.delete, R.drawable.ic_delete_black_24dp);
         addMenu(1,menu, 5, 3, R.string.cut, R.drawable.ic_content_cut_black_24dp);
-        addMenu(1,menu, 10, 10, R.string.compress,R.drawable.ic_pages_black_24dp);
         addMenu(4,menu, 2, 4, R.string.paste, R.drawable.ic_content_paste_black_24dp);
         addMenu(2,menu, 4, 5, R.string.add_new, R.drawable.ic_add);
         addMenu(2,menu, 6, 6, R.string.refresh, R.drawable.ic_refresh);
         addMenu(3,menu, 9, 7, R.string.interval, R.drawable.ic_all_selecte_in_qu);
         addMenu(2,menu, 7, 8, R.string.close, R.drawable.ic_close_black_24dp);
         addMenu(3,menu, 8, 9, R.string.all_choose, R.drawable.ic_all_selecte_ico);
+        addMenu(1,menu, 10, 10, R.string.compress,R.drawable.ic_pages_black_24dp);
 
         return true;
     }
@@ -38,7 +38,7 @@ public class MenuUtils {
         if (itemId == 8 || itemId == 9) {
             menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         } else {
-            menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+            menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         }
         /**
          * 反射

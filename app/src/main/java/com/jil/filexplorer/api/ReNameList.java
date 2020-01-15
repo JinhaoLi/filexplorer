@@ -52,12 +52,12 @@ public class ReNameList {
         StringBuilder name =new StringBuilder();
         for(int i =1;i<=map.size();i++){
             String t =map.get(i);
-            int it = Integer.parseInt(t.substring(t.indexOf("=")+1));
+            int it;
             if(t.startsWith("/i+")){
-
+                it= Integer.parseInt(t.substring(t.indexOf("=")+1));
                 name.append(it+twice);
             }else if(t.startsWith("/i-")){
-                //int it =Integer.parseInt(t.substring(t.indexOf("=")+1));
+                it =Integer.parseInt(t.substring(t.indexOf("=")+1));
                 name.append(it-twice);
             }else {
                 name.append(t);

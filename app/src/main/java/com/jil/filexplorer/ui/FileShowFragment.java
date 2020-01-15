@@ -3,30 +3,34 @@ package com.jil.filexplorer.ui;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.jil.filexplorer.api.*;
 import com.jil.filexplorer.R;
-import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.ToastUtils;
+import net.lingala.zip4j.model.ZipParameters;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.ArrayList;
 
 import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
 
 @SuppressLint("ValidFragment")
-public class FileShowFragment extends CustomFragment<FileInfo> implements FileChangeListenter, FilePresenterCompl.IFileView {
+public class FileShowFragment extends CustomFragment implements FileChangeListener, FilePresenterCompl.IFileView {
     private static final String ARG_PARAM = "DirPath";
+    private static final int ERR_MESSAGE=-1;
+    private static final int UPDATE_MESSAGE=1;
 
     private FilePresenter filePresenter;
 
@@ -52,7 +56,8 @@ public class FileShowFragment extends CustomFragment<FileInfo> implements FileCh
             filePresenter =new FilePresenter(this,getContext());
 
         if (getArguments() != null) {
-            filePresenter.path = getArguments().getString(ARG_PARAM);
+            if(filePresenter.path==null)
+                filePresenter.path = getArguments().getString(ARG_PARAM);
         }
 
 
@@ -74,11 +79,6 @@ public class FileShowFragment extends CustomFragment<FileInfo> implements FileCh
     }
 
     @Override
-    public void unSelectAll() {
-        filePresenter.unSelectAll();
-    }
-
-    @Override
     public void selectSomePosition(int startPosition, int endPosition) {
         filePresenter.selectSomePosition(startPosition,endPosition);
     }
@@ -88,7 +88,6 @@ public class FileShowFragment extends CustomFragment<FileInfo> implements FileCh
         return filePresenter.fragmentTitle;
     }
 
-
     @Override
     protected void initAction() {
         enlargeIcon();
@@ -97,33 +96,17 @@ public class FileShowFragment extends CustomFragment<FileInfo> implements FileCh
     }
 
     @Override
-    public void deleteItem(int adapterPosition) {
-        filePresenter.deleteFileInfoItem(adapterPosition);
-        filePresenter.tListAdapter.notifyDataSetChanged();
-        refreshUnderBar();
-    }
-
-    @Override
-    protected boolean initDates(String filePath, boolean isBack) {
-        return false;
-    }
-
-
-    @Override
-    public int getFileInfosSize() {
-        return filePresenter.getFileInfosSize();
-    }
-
-    @Override
     public void makeGridLayout(int spanCount) {
         if(linearLayoutManager!=null){
             filePresenter.saveSharedPreferences(spanCount);
         }
         linearLayoutManager = new GridLayoutManager(getContext(), spanCount);
+        filePresenter.changeItemLayout();
         tList.setAdapter(filePresenter.tListAdapter);
         tList.setLayoutManager(linearLayoutManager);
     }
 
+    @Override
     public void makeLinerLayout() {
         if(linearLayoutManager!=null){
             filePresenter.saveSharedPreferences(1);
@@ -150,6 +133,8 @@ public class FileShowFragment extends CustomFragment<FileInfo> implements FileCh
     @Override
     public void selectAllPositionOrNot(boolean selectAll) {
         filePresenter.selectAllPositionOrNot(selectAll);
+        filePresenter.notifyChanged();
+        filePresenter.refreshUnderBar();
     }
 
     @Override
@@ -165,7 +150,7 @@ public class FileShowFragment extends CustomFragment<FileInfo> implements FileCh
 
     @Override
     public void change() {
-        load(filePresenter.path,true);
+        load(filePresenter.path,false);
     }
 
     @Override
@@ -182,10 +167,6 @@ public class FileShowFragment extends CustomFragment<FileInfo> implements FileCh
         return filePresenter.getSortType();
     }
 
-    @Override
-    public void removeData(ArrayList<FileInfo> deleteList) {
-        filePresenter.removeDates(deleteList);
-    }
 
     @Override
     public void addData(FileInfo fileInfo) {
@@ -193,64 +174,15 @@ public class FileShowFragment extends CustomFragment<FileInfo> implements FileCh
     }
 
     @Override
-    public void addMoreData(ArrayList<FileInfo> inFiles) {
-        filePresenter.addMoreData(inFiles);
-    }
-
-    @Override
     public String getPath() {
+        if(filePresenter==null)
+            return "null";
         return filePresenter.path;
     }
 
     @Override
     public void refresh() {
         load(filePresenter.path,false);
-    }
-
-
-    /**
-     * 排序
-     * @param sortType 排序方式
-     */
-    @Override
-    public void sortReFresh(int sortType) {
-        filePresenter.sort(sortType);
-//        FileComparator fileComparator = (FileComparator) comparator;
-//        try {
-//            fileComparator.setSortType(sortType);
-//            Collections.sort(filePresenter.getData(), fileComparator);
-//        } catch (Exception e) {
-//            fileComparator.setSortType(SORT_BY_NAME);
-//            Collections.sort(filePresenter.getData(), fileComparator);
-//        }
-//        filePresenter.tListAdapter.notifyItemRangeChanged(0, filePresenter.getData().size());
-    }
-
-
-    @Override
-    public void init() {
-        changeView(SettingParam.Column);
-    }
-
-    @Override
-    public void update() {
-
-    }
-
-    @Override
-    public void upDatePath(final String okPath) {
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                filePresenter.tListAdapter.notifyDataSetChanged();
-
-                iFragmentPresenter.update();
-                if(filePresenter.isAddHistory()){
-                    iFragmentPresenter.addHistory(okPath);
-                }
-                refreshUnderBar();
-            }
-        });
     }
 
     @Override
@@ -276,15 +208,73 @@ public class FileShowFragment extends CustomFragment<FileInfo> implements FileCh
     }
 
 
-    public void missionSuccess(final String okPath) {
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
+    /**
+     * 排序
+     * @param sortType 排序方式
+     */
+    @Override
+    public void sortReFresh(int sortType) {
+        filePresenter.sort(sortType);
+    }
+
+
+    @Override
+    public void init() {
+        if(SettingParam.Column>2){
+            makeGridLayout(SettingParam.Column);
+        }else {
+            makeLinerLayout();
+        }
+    }
+
+    @Override
+    public void update() {
+
+    }
+
+    @SuppressLint("HandlerLeak")
+    private Handler handler=new Handler(){
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+            if(msg.what==ERR_MESSAGE){
+                ToastUtils.showToast(getContext(), (String) msg.obj, 1000);
+            }
+            if(msg.what==UPDATE_MESSAGE){
                 filePresenter.tListAdapter.notifyDataSetChanged();
 
+                iFragmentPresenter.update();
+                if(filePresenter.isAddHistory()){
+                    iFragmentPresenter.addHistory((String) msg.obj);
+                }
+                refreshUnderBar();
             }
-        });
+        }
+    };
+
+    @Override
+    public void upDatePath(String okPath) {
+        Message message =Message.obtain();;
+        message.what=UPDATE_MESSAGE;
+        message.obj =okPath;
+
+        handler.sendMessage(message);
+
     }
+
+    public void missionSuccess(String okPath) {
+
+    }
+
+    @Override
+    public void setErr(String msg) {
+        Message message =Message.obtain();
+        message.what=ERR_MESSAGE;
+        message.obj =msg;
+
+        handler.sendMessage(message);
+    }
+
 
     @Override
     public void changeView(int spanCount) {
@@ -296,16 +286,41 @@ public class FileShowFragment extends CustomFragment<FileInfo> implements FileCh
 
     }
 
-
-    @Override
-    public void setErr(String msg) {
-        ToastUtils.showToast(getContext(), msg, 1000);
-    }
-
-
     @Nullable
     @Override
     public Context getContext() {
         return super.getContext();
+    }
+
+    @Override
+    public void reNameDialog(String title, int layoutId, String oldName, final int type) {
+        InputDialog dialog =new InputDialog(filePresenter.mContext,layoutId,title) {
+            @Override
+            public void queryButtonClick(View v) {
+
+            }
+
+            @Override
+            public void queryButtonClick(View v,String name) {
+                filePresenter.reNameSelectFile(name);
+            }
+
+        };
+        dialog.showAndSetName(oldName);
+    }
+
+    @Override
+    public void showCompressDialog(String parentName) {
+        CompressDialog compressDialog= new CompressDialog(getContext(), R.layout.dialog_compression_layout, "配置压缩文件参数") {
+            @Override
+            public void doIt(ZipParameters zipParameters, String zipName) {
+                filePresenter.compressFile(zipParameters,zipName);
+            }
+        };
+        compressDialog.showAndSetName(parentName);
+    }
+
+    public FilePresenter getFilePresent() {
+        return filePresenter;
     }
 }

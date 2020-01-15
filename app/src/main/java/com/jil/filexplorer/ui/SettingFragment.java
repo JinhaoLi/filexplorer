@@ -34,11 +34,11 @@ import static com.jil.filexplorer.utils.ConstantUtils.MB;
 import static com.jil.filexplorer.utils.DialogUtils.showAlertDialog;
 import static com.jil.filexplorer.utils.FileUtils.deleteDirectory;
 import static com.jil.filexplorer.utils.FileUtils.installApk;
-import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
+import static com.jil.filexplorer.utils.FileUtils.stayFireNumber;
 import static com.jil.filexplorer.utils.PackageInfoManager.getVersionName;
 
 @SuppressLint("ValidFragment")
-public class SettingFragment extends CustomFragment<SettingItem> {
+public class SettingFragment extends CustomFragment {
     float cacheSize;
     SettingItem clearCache;
     private ActivityManager activityManager;
@@ -79,15 +79,6 @@ public class SettingFragment extends CustomFragment<SettingItem> {
         tList.setBackgroundColor(DARK_COLOR);
     }
 
-    @Override
-    protected void deleteItem(int adapterPosition) {
-
-    }
-
-    @Override
-    protected boolean initDates(String filePath, boolean isBack) {
-        return false;
-    }
 
     @Override
     public void load(String filePath, boolean isBack) {
@@ -102,10 +93,6 @@ public class SettingFragment extends CustomFragment<SettingItem> {
         return null;
     }
 
-    @Override
-    public void unSelectAll() {
-
-    }
 
     @Override
     public void selectSomePosition(int startPosition, int endPosition) {
@@ -128,19 +115,10 @@ public class SettingFragment extends CustomFragment<SettingItem> {
     }
 
     @Override
-    public void removeData(ArrayList<FileInfo> deleteList) {
-
-    }
-
-    @Override
     public void addData(FileInfo fileInfoFromPath) {
 
     }
 
-    @Override
-    public void addMoreData(ArrayList<FileInfo> inFiles) {
-
-    }
 
     @Override
     public String getPath() {
@@ -170,11 +148,6 @@ public class SettingFragment extends CustomFragment<SettingItem> {
     @Override
     public void refreshUnderBar() {
 
-    }
-
-    @Override
-    public int getFileInfosSize() {
-        return ts.size();
     }
 
     @Override
@@ -433,14 +406,14 @@ public class SettingFragment extends CustomFragment<SettingItem> {
         public void run() {
             cacheSize = (float) FileUtils.getLength(getContext().getCacheDir()) / MB;
             if (clearCache == null) {
-                clearCache = new SettingItem("清除缓存", "当前缓存大小为" + stayFrieNumber(cacheSize) + "MB", 5151) {
+                clearCache = new SettingItem("清除缓存", "当前缓存大小为" + stayFireNumber(cacheSize) + "MB", 5151) {
                     @Override
                     public void click(View v) {
                         new Thread(deleteCacheThread).start();
                     }
                 };
             } else {
-                clearCache.setDescription("当前缓存大小为" + stayFrieNumber(cacheSize) + "MB");
+                clearCache.setDescription("当前缓存大小为" + stayFireNumber(cacheSize) + "MB");
             }
             if (!ts.contains(clearCache))
                 ts.add(clearCache);

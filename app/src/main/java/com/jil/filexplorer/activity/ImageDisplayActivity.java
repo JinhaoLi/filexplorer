@@ -22,7 +22,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
-import com.jil.filexplorer.api.FileChangeListenter;
+import com.jil.filexplorer.api.ExplorerApp;
+import com.jil.filexplorer.api.FileChangeListener;
 import com.jil.filexplorer.api.ImageFilter;
 import com.jil.filexplorer.api.Item;
 import com.jil.filexplorer.R;
@@ -65,10 +66,10 @@ public class ImageDisplayActivity extends AppCompatActivity {
     private String imageDirPath;
     private boolean isThisAppRes;
     private boolean isSamePath;
-    private static FileChangeListenter fileChangeListenter;
+    private static FileChangeListener fileChangeListener;
 
-    public static void setFileChangeListenter(FileChangeListenter fileChange) {
-        fileChangeListenter = fileChange;
+    public static void setFileChangeListener(FileChangeListener fileChange) {
+        fileChangeListener = fileChange;
     }
    @SuppressLint("HandlerLeak")
    private Handler updateUi =new Handler(){
@@ -327,8 +328,9 @@ public class ImageDisplayActivity extends AppCompatActivity {
                             if(selectPosition!=images.size()){
                                 setTopBarTitle(selectPosition);
                             }
-                            if(fileChangeListenter!=null)
-                            fileChangeListenter.change();
+                            if(fileChangeListener !=null)
+                                ExplorerApp.fragmentPresenter.update();
+                            fileChangeListener.change();
                         }else {
                             ToastUtils.showToast(ImageDisplayActivity.this,"删除失败",1000);
                         }
@@ -427,6 +429,6 @@ public class ImageDisplayActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        fileChangeListenter =null;
+        fileChangeListener =null;
     }
 }

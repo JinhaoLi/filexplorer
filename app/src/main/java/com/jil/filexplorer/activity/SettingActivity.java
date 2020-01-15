@@ -36,18 +36,14 @@ import com.jil.filexplorer.utils.ToastUtils;
 import java.io.File;
 import java.util.ArrayList;
 
-import static com.jil.filexplorer.api.SettingParam.readSharedPreferences;
-import static com.jil.filexplorer.api.SettingParam.saveSharedPreferences;
-import static com.jil.filexplorer.api.SettingParam.setImageCacheSwitch;
-import static com.jil.filexplorer.api.SettingParam.setRecycleBin;
-import static com.jil.filexplorer.api.SettingParam.setSmallViewSwitch;
+import static com.jil.filexplorer.api.SettingParam.*;
 import static com.jil.filexplorer.utils.ConstantUtils.BULE_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.DARK_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
 import static com.jil.filexplorer.utils.DialogUtils.showAlertDialog;
 import static com.jil.filexplorer.utils.FileUtils.deleteDirectory;
 import static com.jil.filexplorer.utils.FileUtils.installApk;
-import static com.jil.filexplorer.utils.FileUtils.stayFrieNumber;
+import static com.jil.filexplorer.utils.FileUtils.stayFireNumber;
 import static com.jil.filexplorer.utils.PackageInfoManager.getVersionName;
 
 /**
@@ -56,7 +52,7 @@ import static com.jil.filexplorer.utils.PackageInfoManager.getVersionName;
 public class SettingActivity extends AppCompatActivity {
 
     private SupperAdapter<SettingItem> supperAdapter;
-    private ArrayList<SettingItem> itemArrayList;
+    private static ArrayList<SettingItem> itemArrayList;
     private RecyclerView settingList;
     float cacheSize;
     SettingItem clearCache;
@@ -131,14 +127,14 @@ public class SettingActivity extends AppCompatActivity {
         public void run() {
             cacheSize = (float) FileUtils.getLength(SettingActivity.this.getCacheDir()) / MB;
             if (clearCache == null) {
-                clearCache = new SettingItem("清除缓存", "当前缓存大小为" + stayFrieNumber(cacheSize) + "MB", 5151) {
+                clearCache = new SettingItem("清除缓存", "当前缓存大小为" + stayFireNumber(cacheSize) + "MB", 5151) {
                     @Override
                     public void click(View v) {
                         new Thread(deleteCacheThread).start();
                     }
                 };
             } else {
-                clearCache.setDescription("当前缓存大小为" + stayFrieNumber(cacheSize) + "MB");
+                clearCache.setDescription("当前缓存大小为" + stayFireNumber(cacheSize) + "MB");
             }
             if (!itemArrayList.contains(clearCache))
                 itemArrayList.add(clearCache);
@@ -156,8 +152,12 @@ public class SettingActivity extends AppCompatActivity {
         }
         versionName = getVersionName(this);
         activityManager = ActivityManager.getInstance();
-        itemArrayList = new ArrayList<>();
-        createSettingItem();
+
+        if(itemArrayList==null||itemArrayList.size()==0){
+            itemArrayList = new ArrayList<>();
+            createSettingItem();
+        }
+
         settingList = findViewById(R.id.set_list);
         LinearLayoutManager llm = new LinearLayoutManager(this);
         supperAdapter = new SupperAdapter<SettingItem>(itemArrayList, this) {
@@ -337,6 +337,18 @@ public class SettingActivity extends AppCompatActivity {
             }
         };
 
+        SettingItem testMode =new SettingItem("测试模式","测试模式下不会进行真正的文件操作",(SettingParam.TestModeSwitch>0),9595) {
+            @Override
+            public void click(View v) {
+                CompoundButton s = (CompoundButton) v;
+                boolean check = s.isChecked();
+                setSwitchOpen(s.isChecked());
+                int i = check ? 1 : -1;
+                saveSharedPreferences(SettingActivity.this, "TestModeSwitch", i);
+                setTestModeSwitch(check ? 1 : -1);
+            }
+        };
+
         itemArrayList.add(theme);
         itemArrayList.add(recycleBin);
         itemArrayList.add(imageCache);
@@ -344,6 +356,7 @@ public class SettingActivity extends AppCompatActivity {
         itemArrayList.add(email);
         itemArrayList.add(updateItem);
         itemArrayList.add(donations);
+        itemArrayList.add(testMode);
         new Thread(checkUpdate).start();
         new Thread(countCacheSize).start();
     }

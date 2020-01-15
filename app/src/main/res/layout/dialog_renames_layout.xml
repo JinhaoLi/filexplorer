@@ -7,7 +7,7 @@
     android:orientation="vertical">
 
     <include
-        layout="@layout/dialog_title_icon_text_group" />
+        layout="@layout/dialogpart_title_icon_text_group" />
 
 
     <TextView
@@ -38,7 +38,7 @@
         android:drawableStart="@drawable/ic_info_black_24dp"
         android:text="表达式规则：冒号为分隔符，等号后为值，等号前为类型。\n【:d=】 当前日期 yyyy-mm-dd \n【:s=jil】固定文字 jil \n【:i-=5】 数字降序从5开始 \n【:i+=1 】 数字升序从1开始\n例如:s=pic:i+=1:s=.jpg就是将一系列文件命名为pic+数字+.jpg" />
 
-    <include layout="@layout/dialog_button_two_group" />
+    <include layout="@layout/dialogpart_button_two_group" />
 
 
 </LinearLayout>

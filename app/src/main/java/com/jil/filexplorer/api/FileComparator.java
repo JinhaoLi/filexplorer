@@ -34,17 +34,19 @@ public class FileComparator implements Comparator<FileInfo> {
     private static int sortTypeMenth(int sortType, FileInfo f1, FileInfo f2){
         String s1 =f1.getFileName().toLowerCase();
         String s2 =f2.getFileName().toLowerCase();
+        long d1=f1.getModifiedDate()/1000;
+        long d2=f2.getModifiedDate()/1000;
         switch (sortType){
             case SORT_BY_NAME:
                 return s1.compareTo(s2);
             case SORT_BY_SIZE:
                 return (int) (f1.getFileSize()-f2.getFileSize());
             case SORT_BY_DATE:
-                if(f1.getModifiedDate()==f2.getModifiedDate()) return 0;
-                return (int) (f1.getModifiedDate()-f2.getModifiedDate());
+                if(d1==d2) return 0;
+                return (int) (d1-d2);
             case SORT_BY_TYPE:
                 if (f1.getFiletype()==null||f2.getFiletype()==null){
-                    return 1;
+                    return 0;
                 }
                 return f1.getFiletype().compareTo(f2.getFiletype());
             case SORT_BY_NAME_REV:
@@ -52,11 +54,11 @@ public class FileComparator implements Comparator<FileInfo> {
             case SORT_BY_SIZE_REV:
                 return (int) (f2.getFileSize()-f1.getFileSize());
             case SORT_BY_DATE_REV:
-                if(f1.getModifiedDate()==f2.getModifiedDate()) return 0;
-                return (int) (f2.getModifiedDate()-f1.getModifiedDate());
+                if(d1==d2) return 0;
+                return (int) (d2-d1);
             case SORT_BY_TYPE_REV:
                 if (f1.getFiletype()==null||f2.getFiletype()==null){
-                    return 1;
+                    return 0;
                 }
                 return f2.getFiletype().compareTo(f1.getFiletype());
             default:
@@ -66,8 +68,8 @@ public class FileComparator implements Comparator<FileInfo> {
     }
 
     private static int sortWithDoule(int sortType,FileInfo f1,FileInfo f2){
-        int f1_isDir = f1.isDir() ? 10:1;
-        int f2_isDir = f2.isDir() ? 10:1;
+        int f1_isDir = f1.isDir() ? 1:0;
+        int f2_isDir = f2.isDir() ? 1:0;
         if(f1_isDir!=f2_isDir){
             return f2_isDir-f1_isDir;
         }else{
@@ -77,7 +79,6 @@ public class FileComparator implements Comparator<FileInfo> {
 
 
     public void setSortType(int sortType) {
-        LogUtils.d("setSortTypeIN",this.sortType+"___"+sortType);
         if(this.sortType==sortType/10){
             this.sortType = sortType;
         }else if (this.sortType==sortType*10){
@@ -91,7 +92,6 @@ public class FileComparator implements Comparator<FileInfo> {
         }else {
             this.sortType=sortType;
         }
-        LogUtils.d("setSortTypeOUT",this.sortType+"___"+sortType);
     }
 
     public int getSortType() {

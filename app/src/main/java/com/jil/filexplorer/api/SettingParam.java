@@ -49,6 +49,7 @@ public class SettingParam {
         setRecycleBin(sp.getInt("RecycleBin",-1));
         setImageCacheSwitch(sp.getInt("ImageCacheSwitch",1));
         setSmallViewSwitch(sp.getInt("SmallViewSwitch",1));
+        setTestModeSwitch(sp.getInt("TestModeSwitch",-1));
     }
     /**
      * 主题资源
@@ -104,5 +105,14 @@ public class SettingParam {
 
     public static void setSmallViewSwitch(int parm){
         SmallViewSwitch=parm;
+    }
+
+    /**
+     * 测试模式
+     */
+    public static int TestModeSwitch;
+
+    public static void setTestModeSwitch(int testModeSwitch) {
+        TestModeSwitch = testModeSwitch;
     }
 }
