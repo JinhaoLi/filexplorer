@@ -13,6 +13,8 @@ import androidx.viewpager.widget.PagerAdapter;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 import com.jil.filexplorer.api.OnScaleListener;
 import com.jil.filexplorer.activity.ImageDisplayActivity;
 import com.jil.filexplorer.R;
@@ -24,6 +26,8 @@ import java.util.ArrayList;
 public class UriAdapter  extends PagerAdapter {
     private ArrayList<Uri> images;
     private ImageDisplayActivity activity;
+    public int width=720;
+    public int height=1280;
 
     public UriAdapter(ArrayList<Uri> images, ImageDisplayActivity activity) {
         this.images = images;
@@ -50,28 +54,26 @@ public class UriAdapter  extends PagerAdapter {
     @Override
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
         View v = LayoutInflater.from(activity).inflate(R.layout.image_layout,container,false);
-        final ImageView imageView =v.findViewById(R.id.imageView);
-        Glide.with(activity).load(images.get(position))
+        ImageView imageView =v.findViewById(R.id.imageView);
+        Uri uri =images.get(position);
+        RoundedCorners roundedCorners= new RoundedCorners(10);
+        RequestOptions requestOptions =RequestOptions.bitmapTransform(roundedCorners)
                 .skipMemoryCache(true)//跳过缓存
                 .diskCacheStrategy(DiskCacheStrategy.NONE)//不缓存
+                .override(width,height);
+        Glide.with(activity).load(uri).apply(requestOptions)
                 .into(imageView);
         imageView.setOnTouchListener(new OnScaleListener(new OnScaleListener.OnScalceCallBack() {
-            @Override
-            public void scaleTouch(Matrix matrix) {
-                imageView.setImageMatrix(matrix);
-            }
-
-            @Override
-            public void scaleType(ImageView.ScaleType scaleType) {
-                imageView.setScaleType( ImageView.ScaleType.MATRIX );
-            }
-
             @Override
             public void onClick(View view) {
                 activity.hideView();
             }
         }));
         container.addView(v);
+        if(width!=720){
+            width=720;
+            height=1280;
+        }
         return v;
     }
 

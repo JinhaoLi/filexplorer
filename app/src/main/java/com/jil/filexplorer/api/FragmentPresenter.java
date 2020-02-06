@@ -241,9 +241,7 @@ public class FragmentPresenter implements FragmentPresenterCompl.IFragmentPresen
         fragmentAdapter.removePager(position);
         smallViewLoadOrRefresh();
         LogUtils.d(getClass().getName(),"removeFragmentPage():size()=="+size()+")");
-//        if(size()==0){
-//            fragmentView.exit();
-//        }
+
     }
 
     /**

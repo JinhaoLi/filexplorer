@@ -2,6 +2,7 @@ package com.jil.filexplorer.adapter;
 
 import android.annotation.SuppressLint;
 import android.graphics.Matrix;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,36 +57,29 @@ public class ImageAdapter extends PagerAdapter {
     public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
         container.removeView((View)object);
     }
-    boolean sacle;
+
     @SuppressLint("ClickableViewAccessibility")
     @NonNull
     @Override
     public Object instantiateItem(ViewGroup container, final int position) {
-        //sacle=false;
         View v = LayoutInflater.from(activity).inflate(R.layout.image_layout,container,false);
-        final ImageView imageView =v.findViewById(R.id.imageView);
+        ImageView imageView =v.findViewById(R.id.imageView);
+        File file=images.get(position);
         RoundedCorners roundedCorners= new RoundedCorners(10);
         RequestOptions requestOptions =RequestOptions.bitmapTransform(roundedCorners)
                 .skipMemoryCache(true)//跳过缓存
                 .diskCacheStrategy(DiskCacheStrategy.NONE)//不缓存
                 .override(width,height);
-        Glide.with(activity).load(images.get(position)).apply(requestOptions).into(imageView);
+        Glide.with(activity).load(file).apply(requestOptions)
+                .into(imageView);
         imageView.setOnTouchListener(new OnScaleListener(new OnScaleListener.OnScalceCallBack() {
-            @Override
-            public void scaleType(ImageView.ScaleType scaleType) {
-                imageView.setScaleType( ImageView.ScaleType.MATRIX );
-            }
-            @SuppressLint("CheckResult")
-            @Override
-            public void scaleTouch(Matrix matrix) {
-                imageView.setImageMatrix(matrix);
-            }
             @Override
             public void onClick(View view) {
                 activity.hideView();
             }
 
         }));
+
         container.addView(v);
         if(width!=720){
             width=720;

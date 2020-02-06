@@ -214,31 +214,31 @@ public class SettingActivity extends AppCompatActivity {
 
     private void createSettingItem() {
 
-        SettingItem theme = new SettingItem("主题", 5151) {
-            @Override
-            public void click(View v) {
-                int i = 0;
-                if (SettingParam.Theme != R.style.AppTheme) {
-                    i = 1;
-                }
-                String[] item = new String[]{"亮色", "暗色"};
-                AlertDialog.Builder builder = showAlertDialog(SettingActivity.this, "主题选择");
-                builder.setSingleChoiceItems(item, i, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0) {
-                            saveSharedPreferences(SettingActivity.this, "theme", R.style.AppTheme);
-                            saveSharedPreferences(SettingActivity.this, "main_color", BULE_COLOR);
-                        } else if (which == 1) {
-                            saveSharedPreferences(SettingActivity.this, "theme", R.style.MyThemeGray);
-                            saveSharedPreferences(SettingActivity.this, "main_color", DARK_COLOR);
-                        }
-                        readSharedPreferences(SettingActivity.this);
-                        activityManager.removeActivity(MainActivity.class);
-                    }
-                }).create().show();
-            }
-        };
+//        SettingItem theme = new SettingItem("主题", 5151) {
+//            @Override
+//            public void click(View v) {
+//                int i = 0;
+//                if (SettingParam.Theme != R.style.AppTheme) {
+//                    i = 1;
+//                }
+//                String[] item = new String[]{"亮色", "暗色"};
+//                AlertDialog.Builder builder = showAlertDialog(SettingActivity.this, "主题选择");
+//                builder.setSingleChoiceItems(item, i, new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        if (which == 0) {
+//                            saveSharedPreferences(SettingActivity.this, "theme", R.style.AppTheme);
+//                            saveSharedPreferences(SettingActivity.this, "main_color", BULE_COLOR);
+//                        } else if (which == 1) {
+//                            saveSharedPreferences(SettingActivity.this, "theme", R.style.MyThemeGray);
+//                            saveSharedPreferences(SettingActivity.this, "main_color", DARK_COLOR);
+//                        }
+//                        readSharedPreferences(SettingActivity.this);
+//                        activityManager.removeActivity(MainActivity.class);
+//                    }
+//                }).create().show();
+//            }
+//        };
         SettingItem recycleBin = new SettingItem("回收站", "开启回收站之后文件不会被真正地删除", (SettingParam.RecycleBin > 0), 5051) {
             @Override
             public void click(View v) {
@@ -349,7 +349,7 @@ public class SettingActivity extends AppCompatActivity {
             }
         };
 
-        itemArrayList.add(theme);
+        //itemArrayList.add(theme);
         itemArrayList.add(recycleBin);
         itemArrayList.add(imageCache);
         itemArrayList.add(smallViewSwitch);
@@ -364,10 +364,10 @@ public class SettingActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (!activityManager.isLive(MainActivity.class)) {
-            Intent i = new Intent(SettingActivity.this, MainActivity.class);
-            startActivity(i);
-        }
+//        if (!activityManager.isLive(MainActivity.class)) {
+//            Intent i = new Intent(SettingActivity.this, MainActivity.class);
+//            startActivity(i);
+//        }
     }
 
     private void updateUi(){

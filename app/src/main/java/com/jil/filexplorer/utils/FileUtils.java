@@ -13,6 +13,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.graphics.drawable.Drawable;
@@ -44,13 +45,7 @@ import com.jil.filexplorer.BuildConfig;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.BoxAdapter;
 
-import java.io.Closeable;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.ref.SoftReference;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -68,7 +63,7 @@ import static com.jil.filexplorer.utils.UiUtils.getScreenHeight;
 public class FileUtils {
 
     /**
-     * 请求授权
+     * 读取文件——请求授权
      */
     public static void requestPermission(Activity activity) {
         if (ContextCompat.checkSelfPermission(activity,
@@ -77,25 +72,6 @@ public class FileUtils {
             ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         }
     }
-
-
-    //移动文件
-    public static void moveFileToSystem(String filePath, String sysFilePath) {
-//        exusecmd("mount -o rw,remount /system");
-//        exusecmd("chmod 777 /system");
-//        exusecmd("cp  " + path + " " + sysFilePath);
-    }
-
-    public static void deleteFileToSystem(String filePath) {
-//        exusecmd("mount -o rw,remount /system");
-//        exusecmd("chmod 777 /system");
-//        exusecmd("rm "+path);
-    }
-
-    public static void readFileToSystem() {
-//        exusecmd("chmod 777 data");
-    }
-
 
     /**
      * 应用程序运行命令获取 Root权限，设备必须已破解(获得ROOT权限)
@@ -173,8 +149,13 @@ public class FileUtils {
         return true;
     }
 
-
-
+    /**
+     * 添加快捷方式到桌面
+     * @param context
+     * @param name
+     * @param path
+     * @param icoRes
+     */
     public static void addFastToDesk(Context context, String name, String path,int icoRes) {
         if (android.os.Build.VERSION.SDK_INT < 26) {
             Intent addShortIntent = new Intent("com.android.launcher.action.INSTALL_SHORTCUT");
@@ -447,6 +428,16 @@ public class FileUtils {
         return i;
     }
 
+    public static int[] getPicWidthAndHeight(InputStream image){
+        int[] i = new int[2];
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;//这个参数设置为true才有效，
+        BitmapFactory.decodeStream(image,null,options);
+        i[0] = options.outWidth;
+        i[1] = options.outHeight;
+        return i;
+    }
+
     public static void shareFile(Context context, String filePath, String type) {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.addCategory("android.intent.category.DEFAULT");
@@ -635,7 +626,6 @@ public class FileUtils {
                 l.setOverScrollMode(ListView.OVER_SCROLL_NEVER);
             }
         } catch (Exception e) {
-            listPopupWindow = null;
             upPopupWindow.dismiss();
             chooseViewFile(context, filePath);
             LogUtils.e(e.getMessage(), "无法显示窗口");
@@ -713,7 +703,7 @@ public class FileUtils {
     }
 
     /**
-     * 保留4位
+     * 保留5位有效数字
      *
      * @param priceCar
      *
@@ -724,11 +714,32 @@ public class FileUtils {
         int scale = getScale(priceCar);
         // 表示四舍五入，可以选择其他舍值方式，例如去尾，等等.
         int roundingMode = 4;
-        BigDecimal bd = new BigDecimal((float) priceCar);
+        BigDecimal bd = BigDecimal.valueOf(priceCar);
         bd = bd.setScale(scale, roundingMode);
         priceCar = bd.floatValue();
         return priceCar;
     }
+
+    /**
+     * 保留1位小数
+     *
+     * @param priceCar
+     *
+     * @return
+     */
+    public static float keepADecimalPlaces(float priceCar) {
+        // 设置位数
+        int scale = 2;
+        // 表示四舍五入，可以选择其他舍值方式，例如去尾，等等.
+        int roundingMode = 4;
+        BigDecimal bd = BigDecimal.valueOf(priceCar);
+        bd = bd.setScale(scale, roundingMode);
+        priceCar = bd.floatValue();
+        return priceCar;
+    }
+
+
+
 
     /**
      * 删除单个文件

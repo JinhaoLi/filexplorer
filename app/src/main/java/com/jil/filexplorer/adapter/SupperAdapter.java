@@ -16,8 +16,11 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.util.Util;
+import com.jil.filexplorer.R;
 import com.jil.filexplorer.api.SettingParam;
 import com.jil.filexplorer.utils.FileUtils;
 
@@ -70,6 +73,11 @@ public abstract class SupperAdapter<T> extends RecyclerView.Adapter<SupperAdapte
 
     @Override
     public void onViewAttachedToWindow(@NonNull VH holder) {
+//        RoundedCorners roundedCorners= new RoundedCorners(10);
+//        RequestOptions requestOptions =RequestOptions.bitmapTransform(roundedCorners)
+//                .skipMemoryCache(true)//跳过缓存
+//                .diskCacheStrategy(DiskCacheStrategy.NONE)//不缓存
+//                .override(width,height);
         //item进入视图
         super.onViewAttachedToWindow(holder);
     }

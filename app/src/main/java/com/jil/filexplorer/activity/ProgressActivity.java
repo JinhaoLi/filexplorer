@@ -6,14 +6,12 @@ import android.content.Intent;
 import android.graphics.drawable.Icon;
 import android.os.*;
 import android.text.Html;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.jil.filexplorer.api.*;
@@ -29,14 +27,14 @@ public class ProgressActivity extends AppCompatActivity implements ProgressChang
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            progressMessage= (ProgressMessage) msg.obj;
-            if(progressMessage!=null){
+            ProgressMessage progressMessage = (ProgressMessage) msg.obj;
+            if(progressMessage !=null){
 
                 progressBar.setProgress(progressMessage.getProgress());
                 mTitle.setText(progressMessage.getTitle(progressBar.getProgress()));
                 mMessage.setText(Html.fromHtml(progressMessage.getMessage()));
                 smallTitle.setText(progressMessage.getTitle(progressBar.getProgress()));
-                speedText.setText(progressMessage.getSpeed());
+                speedText.setText(progressMessage.getSpeedMessage());
                 projectName.setText(progressMessage.getNowProjectName());
                 remainTime.setText(progressMessage.getReMainTime());
                 remainCount.setText(progressMessage.getReMainCount());
@@ -53,12 +51,10 @@ public class ProgressActivity extends AppCompatActivity implements ProgressChang
         }
     };
 
-    private ProgressMessage progressMessage;
     private ProgressBar progressBar;
-    private Button hide, finish;
+    private Button finish;
     private TextView mTitle,mMessage,smallTitle,speedText,projectName,remainTime,remainCount;
-    private ImageView ico;
-    FileOperation fileOperation;
+    private FileOperation fileOperation;
 
     public static void start(Context context, long id) {
         Intent intent =new Intent(context,ProgressActivity.class);
@@ -90,7 +86,7 @@ public class ProgressActivity extends AppCompatActivity implements ProgressChang
             finish();
         }
 
-        ico=findViewById(R.id.imageView7);
+        ImageView ico = findViewById(R.id.imageView7);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ico.setImageIcon(Icon.createWithResource(this,R.mipmap.copy_move_progress_ico));
         }else {
@@ -106,7 +102,7 @@ public class ProgressActivity extends AppCompatActivity implements ProgressChang
                 finish();
             }
         });
-        hide =findViewById(R.id.button);
+        Button hide = findViewById(R.id.button);
         hide.setText("隐藏");
         progressBar= findViewById(R.id.progressBar);
         mTitle=findViewById(R.id.textView8);

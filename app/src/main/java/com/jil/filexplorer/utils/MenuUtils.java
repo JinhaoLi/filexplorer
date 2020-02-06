@@ -16,16 +16,16 @@ public class MenuUtils {
 
     public static boolean addMenu(Menu menu) {
         //单选
-        addMenu(1,menu, 1, 1, R.string.copy, R.drawable.ic_content_copy_black_24dp);
-        addMenu(1,menu, 3, 2, R.string.delete, R.drawable.ic_delete_black_24dp);
-        addMenu(1,menu, 5, 3, R.string.cut, R.drawable.ic_content_cut_black_24dp);
-        addMenu(4,menu, 2, 4, R.string.paste, R.drawable.ic_content_paste_black_24dp);
-        addMenu(2,menu, 4, 5, R.string.add_new, R.drawable.ic_add);
-        addMenu(2,menu, 6, 6, R.string.refresh, R.drawable.ic_refresh);
-        addMenu(3,menu, 9, 7, R.string.interval, R.drawable.ic_all_selecte_in_qu);
-        addMenu(2,menu, 7, 8, R.string.close, R.drawable.ic_close_black_24dp);
-        addMenu(3,menu, 8, 9, R.string.all_choose, R.drawable.ic_all_selecte_ico);
-        addMenu(1,menu, 10, 10, R.string.compress,R.drawable.ic_pages_black_24dp);
+//        addMenu(1,menu, 1, 1, R.string.copy, R.drawable.ic_content_copy_black_24dp);
+//        addMenu(1,menu, 3, 2, R.string.delete, R.drawable.ic_delete_black_24dp);
+//        addMenu(1,menu, 5, 3, R.string.cut, R.drawable.ic_content_cut_black_24dp);
+        addMenu(4,menu, 2, 1, R.string.paste, R.drawable.ic_content_paste_black_24dp);
+        addMenu(3,menu, 9, 2, R.string.interval, R.drawable.ic_all_selecte_in_qu);
+        addMenu(3,menu, 8, 3, R.string.all_choose, R.drawable.ic_all_selecte_ico);
+        addMenu(2,menu, 4, 4, R.string.add_new, R.drawable.ic_add);
+        addMenu(2,menu, 6, 5, R.string.refresh, R.drawable.ic_refresh);
+        addMenu(2,menu, 7, 6, R.string.close, R.drawable.ic_close_black_24dp);
+        addMenu(1,menu, 10, 7, R.string.compress,R.drawable.ic_pages_black_24dp);
 
         return true;
     }
@@ -41,17 +41,17 @@ public class MenuUtils {
             menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         }
         /**
-         * 反射
+         * 反射显示图标
          */
-        if (menu.getClass().getSimpleName().equals("MenuBuilder")) {
-            try{
-                Method m = menu.getClass().getDeclaredMethod("setOptionalIconsVisible", Boolean.TYPE);
-                m.setAccessible(true);
-                m.invoke(menu, true);
-            } catch (Exception e) {
-                //Log.e(getClass().getSimpleName(), "onMenuOpened Exception", e);
-            }
-        }
+//        if (menu.getClass().getSimpleName().equals("MenuBuilder")) {
+//            try{
+//                Method m = menu.getClass().getDeclaredMethod("setOptionalIconsVisible", Boolean.TYPE);
+//                m.setAccessible(true);
+//                m.invoke(menu, true);
+//            } catch (Exception e) {
+//                //Log.e(getClass().getSimpleName(), "onMenuOpened Exception", e);
+//            }
+//        }
     }
 
 //    public static SwipeMenuItem createSwipeMenu(Context context, int backgroundRes, int titleRes, int textColor) {

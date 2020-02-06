@@ -209,8 +209,15 @@ public class FileModel implements FilePresenterCompl.IFileModel {
         return reNameOk;
     }
 
-    public void refreshMissionList() {
-        FileOperation.inFiles=getSelectedList(aBunchOfData);
+    public ArrayList<FileInfo> refreshMissionList(int mode) {
+        if(mode==FileOperation.MODE_DELETE){
+            return getSelectedList(aBunchOfData);
+        }else{
+            FileOperation.inFiles=getSelectedList(aBunchOfData);
+        }
+
+        return FileOperation.inFiles;
+
     }
 
     public FileInfo getFileInfoByPosition(int position) {

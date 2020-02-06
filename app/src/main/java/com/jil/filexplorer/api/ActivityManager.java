@@ -33,6 +33,15 @@ public class ActivityManager {
         }
     }
 
+    public Activity getActivity(Class<?> cls) {
+        for (Activity activity : mActivities) {
+            if (activity.getClass().getSimpleName().equals(cls.getSimpleName())) {
+                return activity;
+            }
+        }
+        return null;
+    }
+
     //关闭指定的Activity
     public void removeActivity(Activity activity) {
         if (activity != null) {

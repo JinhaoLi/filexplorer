@@ -41,26 +41,34 @@ import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;
  * 必须在非UI线程调用
  * 结合ProgressMessage，ProgressChangeListener
  */
-public class FileOperation implements Runnable{
+public class FileOperation implements Runnable {
 
     public final static int MODE_COPY = -4;
     public final static int MODE_MOVE = -5;
     public final static int MODE_DELETE = -6;
     public final static int MODE_RENAME = -7;
-    public final static int MODE_COMPRESS =-8;
-    public final static int MODE_DOWNLOAD =-9;
-    public final static int MODE_CREATE_FILE=-10;
-    private static HashMap<Long,FileOperation> MissionList;
+    public final static int MODE_COMPRESS = -8;
+    public final static int MODE_DOWNLOAD = -9;
+    public final static int MODE_CREATE_FILE = -10;
+    public static final int MODE_RECYCLE = -11;
+    /**
+     * 任务队列
+     */
+    private static HashMap<Long, FileOperation> MissionList;
     private long id;
     /**
      * 任务模式
      */
     private int mode;
     /**
-     * 任务队列
+     * 剪切板
      * 下载模式MODE_DOWNLOAD下，此为下载文件名数组
      */
     public static ArrayList<FileInfo> inFiles;
+    /**
+     * 待删除文件
+     */
+    private ArrayList<FileInfo> deleteList;
     /**
      * 模式MODE_DOWNLOAD输入
      */
@@ -106,49 +114,58 @@ public class FileOperation implements Runnable{
      * 压缩文件参数
      */
     private ZipParameters zipParameters;
-
+    /**
+     * 点击通知显示进度activity
+     */
     private PendingIntent pendingIntent;
 
+    /**
+     * 通知消息
+     */
     private String notificationMessage;
 
+    /**
+     * 通知构建
+     */
     private NotificationCompat.Builder builder;
+
     private static NotificationManager notificationManager;
 
     public void setProgressChangeListener(ProgressChangeListener progressChangeListener) {
         this.progressChangeListener = progressChangeListener;
     }
 
-    public void setFileChangeListener(FileChangeListener fileChangeListener){
-        this.fileChangeListener=fileChangeListener;
+    public void setFileChangeListener(FileChangeListener fileChangeListener) {
+        this.fileChangeListener = fileChangeListener;
     }
 
     public long getId() {
         return id;
     }
 
-    private FileOperation(Context context,long id) {
-        this.id =id;
-        this.pendingIntent=getIntent(context,id);
+    private FileOperation(Context context, long id) {
+        this.id = id;
+        this.pendingIntent = getIntent(context, id);
         this.builder = new NotificationCompat.Builder(context, PROGRESS_ID);
         this.notificationMessage = "任务准备中...";
     }
 
     @SuppressLint("UseSparseArrays")
     public static FileOperation with(Context context) {
-        FileOperation fileOperation =new FileOperation(context,System.currentTimeMillis());
+        FileOperation fileOperation = new FileOperation(context, System.currentTimeMillis());
 
-        if(MissionList==null)
-            MissionList=new HashMap<>();
-        MissionList.put(fileOperation.id,fileOperation);
+        if (MissionList == null)
+            MissionList = new HashMap<>();
+        MissionList.put(fileOperation.id, fileOperation);
 
-        if(notificationManager==null)
+        if (notificationManager == null)
             notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
 
         return fileOperation;
     }
 
     public static FileOperation getInstance(long id) {
-        FileOperation fileOperation =MissionList.get(id);
+        FileOperation fileOperation = MissionList.get(id);
         if (fileOperation != null) {
             return fileOperation;
         } else {
@@ -156,84 +173,64 @@ public class FileOperation implements Runnable{
         }
     }
 
-    public FileOperation compress(ArrayList<FileInfo> inFiles){
-        this.inFiles =inFiles;
-        this.mode =MODE_COMPRESS;
-        initialization();
-        return this;
-    }
-
-    public FileOperation compress(){
-        this.mode =MODE_COMPRESS;
-        initialization();
-        return this;
-    }
-
-    public FileOperation move(ArrayList<FileInfo> inFiles) {
-        this.inFiles = inFiles;
-        this.mode = MODE_MOVE;
-        initialization();
+    public FileOperation compress() {
+        this.mode = MODE_COMPRESS;
+        initialization(inFiles);
         return this;
     }
 
     public FileOperation move() {
         this.mode = MODE_MOVE;
-        initialization();
+        initialization(inFiles);
         return this;
     }
 
-    public FileOperation delete(ArrayList<FileInfo> inFiles) {
-        this.inFiles = inFiles;
+    public FileOperation moveToRecycleBin(ArrayList<FileInfo> deleteList) {
+        this.deleteList = deleteList;
+        this.mode = MODE_RECYCLE;
+        initialization(deleteList);
+        return this;
+    }
+
+    public FileOperation delete(ArrayList<FileInfo> deleteList) {
+        this.deleteList = deleteList;
         this.mode = MODE_DELETE;
-        initialization();
-        return this;
-    }
-
-    public FileOperation delete() {
-        this.mode = MODE_DELETE;
-        initialization();
-        return this;
-    }
-
-    public FileOperation copy(ArrayList<FileInfo> inFiles) {
-        this.inFiles = inFiles;
-        this.mode = MODE_COPY;
-        initialization();
+        initialization(deleteList);
         return this;
     }
 
     public FileOperation copy() {
         this.mode = MODE_COPY;
-        initialization();
+        initialization(inFiles);
         return this;
     }
 
-    public FileOperation download(ArrayList<InputStream> inputStreams,ArrayList<FileInfo> downloadFileNameList,long actionSize){
-        this.inputStreams =inputStreams;
-        this.inFiles =downloadFileNameList;
-        this.mode =MODE_DOWNLOAD;
+    public FileOperation download(ArrayList<InputStream> inputStreams, ArrayList<FileInfo> downloadFileNameList, long actionSize) {
+        this.inputStreams = inputStreams;
+        this.inFiles = downloadFileNameList;
+        this.mode = MODE_DOWNLOAD;
         downloadInit(actionSize);
         return this;
     }
 
     public FileOperation to(FileInfo to$Path) {
         notificationMessage = "源文件不存在";
-        if(mode==MODE_MOVE||mode==MODE_COPY){
+        if (mode == MODE_MOVE || mode == MODE_COPY) {
             if (!to$Path.isDir()) {
                 LogUtils.i("FileOperation", "目标不是文件夹");
                 notificationMessage = "目标不是文件夹";
                 isReady = false;
                 return null;
             }
-        }else if(mode==MODE_COMPRESS){
-            File f =new File(to$Path.getFilePath());
-            if(f.exists()){
+        } else if (mode == MODE_COMPRESS) {
+            File f = new File(to$Path.getFilePath());
+            if (f.exists()) {
                 LogUtils.i("FileOperation.to():mode==MODE_COMPRESS", "存在同名文件");
-                notificationMessage ="存在同名文件";
+                notificationMessage = "存在同名文件";
                 isReady = false;
                 return null;
             }
-        }else {
+        } else {
             notificationMessage = "源文件不存在";
         }
         this.toDir = to$Path;
@@ -242,18 +239,18 @@ public class FileOperation implements Runnable{
     }
 
     public FileOperation to(String to$Path) {
-        File to =new File(to$Path);
-        if(mode==MODE_MOVE||mode==MODE_COPY){
+        File to = new File(to$Path);
+        if (mode == MODE_MOVE || mode == MODE_COPY) {
             if (!to.isDirectory()) {
                 LogUtils.i("FileOperation", "目标不是文件夹");
                 notificationMessage = "目标不是文件夹";
                 isReady = false;
                 return null;
             }
-        }else if(mode==MODE_COMPRESS){
-            if(to.exists()){
+        } else if (mode == MODE_COMPRESS) {
+            if (to.exists()) {
                 LogUtils.i("FileOperation.to():mode==MODE_COMPRESS", "存在同名文件");
-                notificationMessage ="存在同名文件";
+                notificationMessage = "存在同名文件";
                 isReady = false;
                 return null;
             }
@@ -264,7 +261,7 @@ public class FileOperation implements Runnable{
     }
 
 
-    private void initialization() {
+    private void initialization(ArrayList<FileInfo> inFiles) {
         completedSize = 0;
         totalTaskSize = 0;
         projectCount = 0;
@@ -277,14 +274,15 @@ public class FileOperation implements Runnable{
             totalTaskSize = size;
         }
         isReady = projectCount > 0;
+        LogUtils.d(getClass().getName(),"totalTaskSize="+totalTaskSize+"\t"+"projectCount="+projectCount);
     }
 
-    private void downloadInit(long actionSize){
+    private void downloadInit(long actionSize) {
         completedCount = 0;
         completedSize = 0;
-        this.totalTaskSize =actionSize;
+        this.totalTaskSize = actionSize;
         projectCount = inputStreams.size();
-        isReady = inputStreams.size()>0;
+        isReady = inputStreams.size() > 0;
     }
 
     public void pushProgressMsg() {
@@ -296,12 +294,13 @@ public class FileOperation implements Runnable{
 
     /**
      * 历遍目录获取总大小
+     *
      * @param f
      */
     public long getLength(File f) {
         long size = 0;
-        if(!f.exists()){
-            notificationMessage =f+"不存在";
+        if (!f.exists()) {
+            notificationMessage = f + "不存在";
         }
         if (f.isDirectory() && f.exists()) {
             projectCount++;
@@ -366,14 +365,14 @@ public class FileOperation implements Runnable{
         progressMessage.setProjectOverCount(completedCount);
         if (progressChangeListener != null)
             progressChangeListener.progressChang(progressMessage);
-        if(fileChangeListener!=null)
+        if (fileChangeListener != null)
             fileChangeListener.change();
-        notificationManager.cancel((int)id);
+        notificationManager.cancel((int) id);
         removeMission(id);
 
     }
 
-    public static void removeMission(long id){
+    public static void removeMission(long id) {
         MissionList.remove(id);
     }
 
@@ -384,13 +383,13 @@ public class FileOperation implements Runnable{
         progressMessage.setTitle(notificationMessage);
         if (progressChangeListener != null)
             progressChangeListener.progressChang(progressMessage);
-        notificationManager.cancel((int)id);
+        notificationManager.cancel((int) id);
         //setNotification(0);
     }
 
 
     private void filesDelete() {
-        for (FileInfo temp : inFiles) {
+        for (FileInfo temp : deleteList) {
             if (!running)
                 break;
 
@@ -405,8 +404,15 @@ public class FileOperation implements Runnable{
         }
     }
 
-    private  boolean filesMove() {
-        for (FileInfo temp : inFiles) {
+
+    private boolean filesMove() {
+        ArrayList<FileInfo> list;
+        if (deleteList != null && deleteList.size() != 0) {
+            list = deleteList;
+        } else {
+            list = inFiles;
+        }
+        for (FileInfo temp : list) {
             if (!running)
                 return false;
             if (toDir.getFilePath().startsWith(temp.getFilePath())) {
@@ -426,25 +432,25 @@ public class FileOperation implements Runnable{
         return true;
     }
 
-    public FileOperation applyZipParameters(ZipParameters zipParameters){
-        if(mode==MODE_COMPRESS){
-            this.zipParameters=zipParameters;
-        }else {
-            this.zipParameters=null;
+    public FileOperation applyZipParameters(ZipParameters zipParameters) {
+        if (mode == MODE_COMPRESS) {
+            this.zipParameters = zipParameters;
+        } else {
+            this.zipParameters = null;
         }
         return this;
     }
 
-    private boolean compressFiles(){
-        List<File> fs =new ArrayList<>();
-        for(int i = 0;i<inFiles.size();i++){
-            File f =new File(inFiles.get(i).getFilePath());
+    private boolean compressFiles() {
+        List<File> fs = new ArrayList<>();
+        for (int i = 0; i < inFiles.size(); i++) {
+            File f = new File(inFiles.get(i).getFilePath());
             fs.add(f);
         }
         try {
-            zipEncryptMulti(fs,new File(toDir.getFilePath()));
+            zipEncryptMulti(fs, new File(toDir.getFilePath()));
         } catch (ZipException e) {
-            LogUtils.e("压缩文件出错:",e.getMessage());
+            LogUtils.e("压缩文件出错:", e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -452,23 +458,24 @@ public class FileOperation implements Runnable{
     }
 
     public void zipEncryptMulti(List<File> files, File outFile) throws ZipException {
-        zipEncryptMulti(files,outFile,null);
+        zipEncryptMulti(files, outFile, null);
     }
 
     /**
      * 压缩一组文件
+     *
      * @param files
      * @param outFile
      * @param pass
      * @throws ZipException
      */
     public void zipEncryptMulti(List<File> files, File outFile, String pass) throws ZipException {
-        if(files==null||files.size()==0)return;
-        if(zipParameters==null){
+        if (files == null || files.size() == 0) return;
+        if (zipParameters == null) {
             ZipParameters parameters = new ZipParameters();
             parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE); // 压缩方式
             parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL); // 压缩级别
-            if(pass!=null){
+            if (pass != null) {
                 parameters.setEncryptFiles(true);
                 parameters.setEncryptionMethod(Zip4jConstants.ENC_METHOD_STANDARD); // 加密方式
                 parameters.setPassword(pass);//密码
@@ -476,7 +483,7 @@ public class FileOperation implements Runnable{
         }
         //parameters.setIncludeRootFolder(true);
         //压缩文件,并生成压缩文件
-        ZipFile zipFile  =new ZipFile(outFile);
+        ZipFile zipFile = new ZipFile(outFile);
         for (File temp : files) {
             if (temp.isFile()) {
                 zipFile.addFile(temp, zipParameters);
@@ -492,7 +499,6 @@ public class FileOperation implements Runnable{
      * 移动文件
      *
      * @param file
-     *
      * @return
      */
     private boolean moveFile(File file) {
@@ -514,8 +520,8 @@ public class FileOperation implements Runnable{
      * @param target G:\作业\安卓\安卓项目开发\解包打包G:\作业\安卓\安卓项目开发\解包打包\ayun.apk
      */
     private void nioBufferCopy(File source, File target) {
-        if(!source.exists()){
-            notificationMessage =source.getPath()+"不存在！";
+        if (!source.exists()) {
+            notificationMessage = source.getPath() + "不存在！";
             refreshProgress(0);
             return;
         }
@@ -580,7 +586,7 @@ public class FileOperation implements Runnable{
                     copyDirWithFile(temp, targt);
                 }
             }
-        }else{
+        } else {
             missionFinish();
         }
     }
@@ -589,17 +595,16 @@ public class FileOperation implements Runnable{
      * 删除单个文件
      *
      * @param filePath$Name 要删除的文件的文件名
-     *
      * @return 单个文件删除成功返回true，否则返回false
      */
     private boolean deleteSingleFile(String filePath$Name) {
         File file = new File(filePath$Name);
         // 如果文件路径所对应的文件存在，并且是一个文件，则直接删除
         if (file.exists() && file.isFile()) {
-            completedCount++;
-            progressMessage.setProjectOverCount(completedCount);
-            refreshProgress(file.length());
             if (file.delete()) {
+                completedCount++;
+                progressMessage.setProjectOverCount(completedCount);
+                refreshProgress(file.length());
                 LogUtils.i("删除进程：", "Copy_Delete.deleteSingleFile: 删除单个文件" + filePath$Name + "成功！");
                 return true;
             } else {
@@ -616,7 +621,6 @@ public class FileOperation implements Runnable{
      * 删除目录及目录下的文件
      *
      * @param filePath 要删除的目录的文件路径
-     *
      * @return 目录删除成功返回true，否则返回false
      */
     private boolean deleteDirectory(String filePath) {
@@ -653,7 +657,11 @@ public class FileOperation implements Runnable{
         }
         // 删除当前目录
         if (dirFile.delete()) {
+
             completedCount++;
+            progressMessage.setProjectOverCount(completedCount);
+            refreshProgress(1);
+
             LogUtils.i("删除进程", "Copy_Delete.deleteDirectory: 删除目录" + filePath + "成功！");
             return true;
         } else {
@@ -672,13 +680,12 @@ public class FileOperation implements Runnable{
 
     @Override
     public void run() {
-        if(SettingParam.TestModeSwitch>0){
+        if (SettingParam.TestModeSwitch > 0) {
             test();
             return;
         }
         if (!isReady) {
             missionNotReady();
-            //setNotification(0);
             return;
         } else {
             notificationMessage = "任务进行中-";
@@ -689,14 +696,15 @@ public class FileOperation implements Runnable{
             case MODE_COPY:
                 if (progressChangeListener != null)
                     progressChangeListener.progressChang(progressMessage);
-                if(!filesCopy()){
+                if (!filesCopy()) {
                     return;
                 }
                 break;
+            case MODE_RECYCLE:
             case MODE_MOVE:
                 if (progressChangeListener != null)
                     progressChangeListener.progressChang(progressMessage);
-                if(!filesMove()){
+                if (!filesMove()) {
                     return;
                 }
                 break;
@@ -719,54 +727,79 @@ public class FileOperation implements Runnable{
     }
 
     private void test() {
-        if(!isReady){
+        ArrayList<FileInfo> missionList;
+        if(mode==MODE_DELETE||mode==MODE_RECYCLE){
+            missionList=deleteList;
+        }else {
+            missionList=inFiles;
+        }
+        if (!isReady) {
             return;
         }
-        notificationMessage ="任务进行中...";
-        running=true;
-        if(progressMessage==null)
+        notificationMessage = "任务进行中...";
+        running = true;
+        if (progressMessage == null)
             progressMessage = new ProgressMessage(System.currentTimeMillis(), totalTaskSize, projectCount, mode);
         setNotification(0);
-        while (running){
-            if(progressMessage.getProgress()==100){
-                break;
+
+        if(mode!=MODE_COPY&&mode!=MODE_COMPRESS&&mode!=MODE_DOWNLOAD&&running){
+            for(int i=0;i<projectCount;i++){
+                if(!running){
+                    break;
+                }
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                completedCount++;
+                progressMessage.setIn(missionList.get(0).getFilePath());
+                progressMessage.setNowProjectName(missionList.get(0).getFileName());
+                refreshProgress(totalTaskSize/projectCount);
             }
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        }else {
+            while (running) {
+
+                if (progressMessage.getProgress() == 100) {
+                    break;
+                }
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                progressMessage.setIn(missionList.get(0).getFilePath());
+                progressMessage.setNowProjectName(missionList.get(0).getFileName());
+                refreshProgress(totalTaskSize / 10);
             }
-            progressMessage.setIn(inFiles.get(0).getFilePath());
-            if(mode==MODE_DELETE)
-                progressMessage.setProjectOverCount(completedCount);
-            refreshProgress(totalTaskSize /50);
         }
-        completedCount=projectCount;
+
+        completedCount = projectCount;
         missionFinish();
     }
 
     private void downloadFiles() {
-        for(InputStream in:inputStreams){
-            downloadFile(in,inFiles.get(inputStreams.indexOf(in)).getFileName());
+        for (InputStream in : inputStreams) {
+            downloadFile(in, inFiles.get(inputStreams.indexOf(in)).getFileName());
         }
         missionFinish();
     }
 
     private void downloadFile(InputStream inputStream, String name) {
-        File storeFile = new File(toDir.getFilePath(),name);
+        File storeFile = new File(toDir.getFilePath(), name);
         FileOutputStream fis = null;
-        int sum=0;
+        int sum = 0;
         try {
             fis = new FileOutputStream(storeFile);
-            byte[] b =new byte[1024];
+            byte[] b = new byte[1024];
             int len;
             while ((len = inputStream.read(b)) != -1) {
-                fis.write(b,0,len);
+                fis.write(b, 0, len);
                 fis.flush();
-                sum+=len;
+                sum += len;
                 refreshProgress(len);
             }
-            System.out.println("数据大小：---------------------------------------------"+sum);
+            System.out.println("数据大小：---------------------------------------------" + sum);
         } catch (Exception exception) {
             exception.printStackTrace();
         } finally {
@@ -774,30 +807,30 @@ public class FileOperation implements Runnable{
         }
     }
 
-    private static PendingIntent getIntent(Context context,long id) {
-        Intent intent =new Intent(context, ProgressActivity.class);
-        intent.putExtra("FileOperation.id",id);
+    private static PendingIntent getIntent(Context context, long id) {
+        Intent intent = new Intent(context, ProgressActivity.class);
+        intent.putExtra("FileOperation.id", id);
         //LogUtils.i("FileOperation.getIntent()","id"+id);
-        return PendingIntent.getActivity(context, (int) (Math.random()*100000),intent,PendingIntent.FLAG_CANCEL_CURRENT);
+        return PendingIntent.getActivity(context, (int) (Math.random() * 100000), intent, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
-    public void setNotification(int progress){
+    public void setNotification(int progress) {
 
         String message;
-        if(progressMessage!=null)
-            message =progressMessage.getTitle(progress);
+        if (progressMessage != null)
+            message = progressMessage.getTitle(progress);
         else
-            message="";
+            message = "";
 
-        Notification notification =builder.setSmallIcon(R.mipmap.copy_move_progress_ico)
+        Notification notification = builder.setSmallIcon(R.mipmap.copy_move_progress_ico)
                 .setWhen(id)
-                .setContentTitle(notificationMessage +message)
-                .setProgress(100,progress,false)
+                .setContentTitle(notificationMessage + message)
+                .setProgress(100, progress, false)
                 .setContentIntent(pendingIntent)
                 .build();
-        notification.flags=Notification.FLAG_ONGOING_EVENT;
+        notification.flags = Notification.FLAG_ONGOING_EVENT;
         if (notificationManager != null) {
-            notificationManager.notify((int) getId(),notification);
+            notificationManager.notify((int) getId(), notification);
         }
 
 

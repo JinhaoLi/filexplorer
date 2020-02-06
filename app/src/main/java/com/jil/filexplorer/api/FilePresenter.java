@@ -2,6 +2,7 @@ package com.jil.filexplorer.api;
 
 
 import android.content.Context;
+import android.os.Environment;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.activity.ProgressActivity;
 import com.jil.filexplorer.adapter.FileListAdapter;
@@ -40,7 +41,18 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
         this.mContext = context;
         this.fileView = fileView;
         this.fileModel = new FileModel();
+        tListAdapter = new FileListAdapter(this,CustomFragment.makeItemLayoutRes(SettingParam.Column));
 
+
+    }
+
+    @Override
+    public void onComplete(List<FileInfo> list, String resultPath, String name) {
+        tListAdapter.setmData((ArrayList<FileInfo>) list);
+        this.path = resultPath;
+        this.fragmentTitle = name;
+        //刷新视图
+        fileView.upDatePath(path);
     }
 
     public void deleteFileInfoItem(int position) {
@@ -66,20 +78,7 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
         return fileModel.isNoneData();
     }
 
-    @Override
-    public void onComplete(List<FileInfo> list, String resultPath, String name) {
-        if (tListAdapter == null) {
-            tListAdapter = new FileListAdapter((ArrayList<FileInfo>) list, this, CustomFragment.makeItemLayoutRes(SettingParam.Column));
-            fileView.init();
-        } else {
-            tListAdapter.setmData((ArrayList<FileInfo>) list);
-        }
 
-        this.path = resultPath;
-        this.fragmentTitle = name;
-        //刷新视图
-        fileView.upDatePath(path);
-    }
 
     public void changeItemLayout() {
         tListAdapter.setItemLayoutRes(CustomFragment.makeItemLayoutRes(SettingParam.Column));
@@ -153,8 +152,14 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
     }
 
     public void deleteSelectFile() {
-        fileModel.refreshMissionList();
-        FileOperation fileOperation=FileOperation.with(getContext()).delete();
+        ArrayList<FileInfo> deleteList=fileModel.refreshMissionList(FileOperation.MODE_DELETE);
+        FileOperation fileOperation;
+        if(SettingParam.RecycleBin>0 && !getPath().equals(ExplorerApp.RECYCLE_PATH)){
+            fileOperation=FileOperation.with(getContext()).moveToRecycleBin(deleteList).to(ExplorerApp.RECYCLE_PATH);
+        }else {
+            fileOperation=FileOperation.with(getContext()).delete(deleteList);
+        }
+
         fileOperation.setFileChangeListener(this);
         ProgressActivity.start(getContext(),fileOperation.getId());
         new Thread(fileOperation).start();
@@ -381,7 +386,7 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
     }
 
     public void compressFile(ZipParameters zipParameters, String zipName) {
-        fileModel.refreshMissionList();
+        fileModel.refreshMissionList(FileOperation.MODE_COMPRESS);
         FileOperation fileOperation =FileOperation.with(getContext()).compress().to(getPath()+File.separator+zipName);
         fileOperation.setFileChangeListener(this);
         fileOperation.applyZipParameters(zipParameters);

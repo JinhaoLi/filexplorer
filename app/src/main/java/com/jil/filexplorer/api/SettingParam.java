@@ -75,7 +75,7 @@ public class SettingParam {
     public static int Column;
 
     public static void setColumn(int i){
-        if(i>0&&i<8){
+        if(i>0&&i<7){
             Column=i;
         }
     }

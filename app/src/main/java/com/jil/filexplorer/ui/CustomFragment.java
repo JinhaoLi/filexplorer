@@ -112,16 +112,16 @@ public abstract class CustomFragment extends Fragment {
     }
 
     public static int makeItemLayoutRes(int spanCount) {
-        if (spanCount == MAX_SPAN_COUNT) {
+        if (spanCount == 6) {
             return R.layout.flie_grid_item_layout_60dp;
-        } else if (spanCount == MAX_SPAN_COUNT - 1) {
+        } else if (spanCount == 5) {
             return R.layout.flie_grid_item_layout_80dp;
-        } else if (spanCount == MIN_SPAN_COUNT + 1) {
+        } else if (spanCount == 4) {
             return R.layout.flie_grid_item_layout_100dp;
-        } else if (spanCount == MIN_SPAN_COUNT) {
+        } else if (spanCount == 3) {
             return R.layout.flie_grid_item_layout_120dp;
         } else {
-            return R.layout.flie_grid_item_layout_100dp;
+            return R.layout.file_list_item_layout;
         }
     }
 
@@ -153,15 +153,17 @@ public abstract class CustomFragment extends Fragment {
                             if (newDistance > 100f && newDistance >= distance * 1.3) {
                                 if (spanCount > ConstantUtils.MIN_SPAN_COUNT) {
                                     spanCount--;
-                                    makeGridLayout(spanCount);
                                     SettingParam.setColumn(spanCount);
+                                    changeView(spanCount);
+
                                 }
                                 distance = newDistance;
                             } else if (newDistance > 100f && newDistance <= distance / 1.3) {
                                 if (spanCount < ConstantUtils.MAX_SPAN_COUNT) {
                                     spanCount++;
-                                    makeGridLayout(spanCount);
                                     SettingParam.setColumn(spanCount);
+                                    changeView(spanCount);
+
                                 }
                                 distance = newDistance;
                             }

@@ -27,9 +27,6 @@ public class DialogUtils {
 
 
     public static void showFileInfoMsg(Context context, final FileInfo fileInfo){
-
-//        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
-//        dialogBuilder.setTitle("文件详细信息");
         int icoRes;
         String path =hideMax(fileInfo.getFilePath(),35);
         final StringBuilder msg =new StringBuilder();
@@ -50,10 +47,7 @@ public class DialogUtils {
             }
             icoRes=fileInfo.getIcon();
         }
-//        dialogBuilder.setMessage(msg.toString());
-//        dialogBuilder.setInverseBackgroundForced(true);
-//        AlertDialog dialog = dialogBuilder.create();
-//        showAndMake(dialog);
+
 
         SimpleDialog updateDialog =new SimpleDialog(context,R.layout.dialog_detail_info_layout,fileInfo.getFileName()) {
             TextView info;
@@ -63,7 +57,7 @@ public class DialogUtils {
                 ClipData clip = ClipData.newPlainText(null, fileInfo.getFilePath());
                 assert clipboard != null;
                 clipboard.setPrimaryClip(clip);
-                ToastUtils.showToast(getContext(), "密码已复制到粘贴板", 1000);
+                ToastUtils.showToast(getContext(), "已复制到粘贴板", 1000);
                 dismiss();
             }
 

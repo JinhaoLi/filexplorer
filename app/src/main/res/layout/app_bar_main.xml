@@ -30,17 +30,16 @@
                     app:srcCompat="@mipmap/list_ico_dir" />
 
                 <EditText
-                    android:id="@+id/editText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:background="@drawable/edit_text_back"
-                    android:ems="10"
-                    android:hint="此处可手动输入路径"
-                    android:textSize="15sp"
-                    android:inputType="textPersonName"
-                    android:text="/sdcard"
-                    android:textColor="@drawable/text_color_state" />
+                        android:id="@+id/editText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/edit_text_back"
+                        android:ems="10"
+                        android:hint="此处可手动输入路径"
+                        android:textSize="15sp"
+                        android:inputType="textPersonName"
+                        android:textColor="@drawable/text_color_state"/>
 
                 <ImageButton
                     android:id="@+id/imageButton3"

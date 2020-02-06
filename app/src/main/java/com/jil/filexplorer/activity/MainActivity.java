@@ -5,10 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.*;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -19,9 +19,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListPopupWindow;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -30,16 +30,13 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
-
 import com.google.android.material.navigation.NavigationView;
 import com.jil.filexplorer.api.*;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.ui.MyItemDecoration;
 import com.jil.filexplorer.ui.InputDialog;
 import com.jil.filexplorer.utils.*;
-
 import java.io.File;
-
 import static com.jil.filexplorer.api.FileComparator.SORT_BY_DATE;
 import static com.jil.filexplorer.api.FileComparator.SORT_BY_DATE_REV;
 import static com.jil.filexplorer.api.FileComparator.SORT_BY_NAME;
@@ -48,12 +45,10 @@ import static com.jil.filexplorer.api.FileComparator.SORT_BY_SIZE;
 import static com.jil.filexplorer.api.FileComparator.SORT_BY_SIZE_REV;
 import static com.jil.filexplorer.api.FileComparator.SORT_BY_TYPE;
 import static com.jil.filexplorer.api.FileComparator.SORT_BY_TYPE_REV;
-import static com.jil.filexplorer.api.SettingParam.readSharedPreferences;
 import static com.jil.filexplorer.utils.ConstantUtils.GIRD_LINER_LAYOUT;
 import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.FileUtils.hideMax;
 import static com.jil.filexplorer.utils.FileUtils.requestPermission;
-import static com.jil.filexplorer.utils.NotificationUtils.registerNotifty;
 
 
 /**
@@ -63,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ViewPager.OnPageChangeListener, View.OnClickListener, FragmentPresenterCompl.IFragmentView {
 
     public static final String INTENT_INPUT_PATH = "file_path";
-    private EditText pathEdit;//路径输入框
+    private EditText pathEdit;                              //路径输入框
     private DrawerLayout drawerLayout;
     private TextView underInfoBar;
     private ImageView liner, grid;                        //排列方式按钮
@@ -80,25 +75,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        readSharedPreferences(this);
-        registerNotifty(this);//注册通知渠道
-        requestPermission(this);//动态申请权限
         ExplorerApp.setApplicationContext(this);
-
-
+        requestPermission(this);//动态申请权限
         init();
     }
 
 
     @Override
     public void update() {
-
         if (pathEdit != null && fragmentPresenter.getPath() != null && !fragmentPresenter.getPath().equals("")) {
             String s = hideMax(fragmentPresenter.getPath(), 55);
             pathEdit.setText(s);
             setTitle(fragmentPresenter.getCurrentCustomFragment().getFragmentTitle());
         }
-
     }
 
     /**
@@ -125,7 +114,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        //super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 1) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 fragmentPresenter.refresh(fragmentPager.getCurrentItem(), pathEdit.getText().toString(), true);
@@ -155,7 +143,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        //path.setFocusable(false);
         switch (id) {
             case 2:
                 fragmentPresenter.pasteFileHere(this);
@@ -203,26 +190,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onClick(View v) {
-                String s = nameInput.getText().toString();
-                boolean isFile = false;
-                switch (v.getId()) {
-                    case R.id.button3:
-                        isFile = true;
-                        break;
-                    case R.id.button4:
-                        isFile = false;
-                        break;
+                String name = nameInput.getText().toString();
+                boolean successful;
+                if(v.getId()==R.id.button3){
+                    successful = fragmentPresenter.createNewFile(name, true);
+                }else if(v.getId()==R.id.button4){
+                    successful = fragmentPresenter.createNewFile(name, false);
+                }else {
+                    dismiss();
+                    return;
                 }
-
-                boolean successful = fragmentPresenter.createNewFile(s, isFile);
-                ToastUtils.showToast(MainActivity.this, successful ? "成功" : "失败", 1000);
-                dismiss();
+                if(!successful){
+                    ToastUtils.showToast(MainActivity.this, successful ? "成功" : "失败", 1000);
+                }else
+                    dismiss();
             }
 
             @Override
-            public void queryButtonClick(View v) {
-
-            }
+            public void queryButtonClick(View v) { }
 
             @Override
             public void setTitle(@Nullable CharSequence title) {
@@ -231,7 +216,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         };
-        newFileOrDir.showAndSetName("新项目");
+        newFileOrDir.showAndSetName("新建项目");
     }
 
     /**
@@ -242,9 +227,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void changeAllSelectIco(boolean isAllSelected) {
         if (menu != null)
             if (isAllSelected) {
-                menu.getItem(8).setIcon(R.drawable.ic_all_no_selecte_ico);
+                menu.getItem(2).setIcon(R.drawable.ic_all_no_selecte_ico);
             } else {
-                menu.getItem(8).setIcon(R.drawable.ic_all_selecte_ico);
+                menu.getItem(2).setIcon(R.drawable.ic_all_selecte_ico);
             }
     }
 
@@ -260,7 +245,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
      * @param visible
      */
     public void setSelectIntervalIco(boolean visible) {
-        menu.getItem(6).setVisible(visible);
+        menu.getItem(1).setVisible(visible);
     }
 
     @Override
@@ -284,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_ftp_net:
                 break;
             case R.id.nav_recycle_station:
-                File bin = new File(Environment.getExternalStorageDirectory() + File.separator + "RecycleBin");
+                File bin = new File(ExplorerApp.RECYCLE_PATH);
                 if (!bin.exists()) {
                     bin.mkdirs();
                 }
@@ -398,6 +383,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         listPopupWindow.show();//把ListPopWindow展示出来
     }
 
+
+
     /**
      * 关闭输入法
      *
@@ -472,7 +459,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case R.id.imageView3://网格布局
                 int spanCount = SettingParam.Column;
-                if (spanCount <= 2) spanCount += 2;
+                if (spanCount < 3)
+                    spanCount = 6;
                 fragmentPresenter.changeView(spanCount);
                 view.setBackgroundColor(GIRD_LINER_LAYOUT);
                 liner.setBackgroundColor(NORMAL_COLOR);
@@ -501,7 +489,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void setPasteVisible(boolean pasteVisible) {
         this.pasteVisible = pasteVisible;
         if (menu != null) {
-            menu.getItem(3).setVisible(pasteVisible);
+            menu.getItem(0).setVisible(pasteVisible);
         }
     }
 
@@ -512,7 +500,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void init() {
         setContentView(R.layout.activity_main);
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            setupWindowAnimations();
+        }
         fragmentPager = findViewById(R.id.fragment_pager);
 
         FrameLayout underBar = findViewById(R.id.under_bar);
@@ -534,6 +524,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 fragmentPresenter.load(pathEdit.getText().toString().trim());
+                hideInput();
                 return true;
             }
         });
@@ -575,8 +566,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Intent shortCutIntent = getIntent();
         String path = shortCutIntent.getStringExtra(INTENT_INPUT_PATH);
 
-        LogUtils.d(getClass().getName(), "path:" + path);
-
         fragmentPresenter = FragmentPresenter.getInstance(this, path);
         fragmentPager.setAdapter(fragmentPresenter.fragmentAdapter);
         fragmentPager.setCurrentItem(0);
@@ -616,6 +605,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         hideInput();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void setupWindowAnimations() {
+
+        //爆炸效果进入进出
+//        Explode explodeTransition = new Explode();
+//        explodeTransition.setDuration(300);
+//        //排除状态栏
+//        explodeTransition.excludeTarget(android.R.id.statusBarBackground, true);
+//        //是否同时执行
+//        getWindow().setAllowEnterTransitionOverlap(false);
+//        getWindow().setAllowReturnTransitionOverlap(false);
+//        //进入
+//        getWindow().setEnterTransition(explodeTransition);
     }
 
     @SuppressLint("ClickableViewAccessibility")

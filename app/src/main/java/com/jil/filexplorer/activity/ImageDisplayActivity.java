@@ -3,11 +3,9 @@ package com.jil.filexplorer.activity;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
+import android.os.*;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -17,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.ListPopupWindow;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,18 +30,23 @@ import com.jil.filexplorer.adapter.ImageAdapter;
 import com.jil.filexplorer.adapter.SupperAdapter;
 import com.jil.filexplorer.adapter.UriAdapter;
 import com.jil.filexplorer.ui.ImagesPager;
+import com.jil.filexplorer.ui.SimpleDialog;
 import com.jil.filexplorer.utils.ConstantUtils;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.ToastUtils;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import static com.jil.filexplorer.utils.DialogUtils.showFileInfoMsg;
 import static com.jil.filexplorer.utils.DialogUtils.showListPopupWindow;
 import static com.jil.filexplorer.utils.FileUtils.getPicWidthAndHeight;
+import static com.jil.filexplorer.utils.FileUtils.hideMax;
 import static com.jil.filexplorer.utils.UiUtils.NavigationBarStatusBar;
 import static com.jil.filexplorer.utils.UiUtils.setNavigationBar;
 
@@ -50,7 +54,7 @@ import static com.jil.filexplorer.utils.UiUtils.setNavigationBar;
  * 图片展示
  */
 public class ImageDisplayActivity extends AppCompatActivity {
-    private ImagesPager viewPager;
+    public ImagesPager viewPager;
     private ArrayList<File> images;
     private ArrayList<Uri> uris;
     private RecyclerView small_image_list;
@@ -64,7 +68,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
     private SupperAdapter<Uri> uriSupperAdapter;
     private Button menuButton;
     private String imageDirPath;
-    private boolean isThisAppRes;
+    private boolean canFindRootPath;
     private boolean isSamePath;
     private static FileChangeListener fileChangeListener;
 
@@ -90,9 +94,10 @@ public class ImageDisplayActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_image_display);
         Intent intent =getIntent();
+        initView();
         tryFindPath(intent);
 
-        initView();
+
 
     }
 
@@ -100,12 +105,14 @@ public class ImageDisplayActivity extends AppCompatActivity {
 
 
     private void tryFindPath(Intent intent) {
-        isThisAppRes=checkUriEqualsDisk(intent);
-        if (isThisAppRes) {
+        canFindRootPath =checkUriEqualsDisk(intent);
+        if (canFindRootPath) {
             loadImagesInDisk();
+
         } else {
             getRes(intent);
             uriAdapter=new UriAdapter(uris,this);
+            initAction();
         }
     }
 
@@ -138,6 +145,9 @@ public class ImageDisplayActivity extends AppCompatActivity {
     }
 
     private void initView() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            setupWindowAnimations();
+        }
         titleTopBar =findViewById(R.id.image_top_bar);
         menuButton =findViewById(R.id.button2);
         viewPager=findViewById(R.id.image_show);
@@ -155,7 +165,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
         });
         linearLayoutManager =new LinearLayoutManager(this);
         linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
-        viewPager.setAdapter(isThisAppRes?imageAdapter:uriAdapter);
+        viewPager.setAdapter(canFindRootPath ?imageAdapter:uriAdapter);
         selectPosition=findNowPosition();
         viewPager.setCurrentItem(selectPosition);
         setTopBarTitle(selectPosition);
@@ -190,6 +200,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
 
             @Override
             public void onPageScrollStateChanged(int state) {
+
                 if(stateStopSelect&&state==0){
                     try{
                         linearLayoutManager.findViewByPosition(selectPosition).setBackgroundColor(ConstantUtils.IMAGE_SELECTED_COLOR);
@@ -204,7 +215,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
     }
 
     private void setSmallListAdapter() {
-        if(isThisAppRes){
+        if(canFindRootPath){
             small_image_list.setAdapter(imageFileSupperAdapter);
         }else {
             small_image_list.setAdapter(uriSupperAdapter);
@@ -213,14 +224,14 @@ public class ImageDisplayActivity extends AppCompatActivity {
     }
 
     private int findNowPosition() {
-        if(isThisAppRes)
+        if(canFindRootPath)
             return imageAdapter.findPositionByName(imageDirPath);
         else
             return uriAdapter.findPositionByName(uris.get(0));
     }
 
     private void makeAdapter() {
-        if(isThisAppRes){
+        if(canFindRootPath){
             imageFileSupperAdapter =new SupperAdapter<File>(images, this, new SupperAdapter.OnItemClickListener<File>() {
                 @Override
                 public void onItemClick(SupperAdapter.VH holder, File data, int position) {
@@ -267,7 +278,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
     }
 
     private void setTopBarTitle(int selectPosition) {
-        if(isThisAppRes){
+        if(canFindRootPath){
             imageTitle.setText(images.get(selectPosition).getName());
         }else {
             imageTitle.setText(uris.get(selectPosition).getPath());
@@ -305,7 +316,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
     private void showImageMenu(final View v) {
         if(menu ==null){
             Item[] menuList;
-            if(isThisAppRes){
+            if(canFindRootPath){
                menuList = new Item[]{new Item("删除", 0), new Item("分享", 1), new Item("属性", 2), new Item("打开为", 3),new Item("加载原图",4)};//要填充的数据
             }else {
                 menuList = new Item[]{new Item("属性", 2),new Item("加载大图",4)};//要填充的数据
@@ -328,9 +339,11 @@ public class ImageDisplayActivity extends AppCompatActivity {
                             if(selectPosition!=images.size()){
                                 setTopBarTitle(selectPosition);
                             }
-                            if(fileChangeListener !=null)
+                            if(fileChangeListener !=null){
                                 ExplorerApp.fragmentPresenter.update();
-                            fileChangeListener.change();
+                                fileChangeListener.change();
+                            }
+
                         }else {
                             ToastUtils.showToast(ImageDisplayActivity.this,"删除失败",1000);
                         }
@@ -340,7 +353,41 @@ public class ImageDisplayActivity extends AppCompatActivity {
                         FileUtils.shareFile(ImageDisplayActivity.this,file1.getPath(),"image/*");
                         break;
                     case 2:
-                        showFileInfoMsg(ImageDisplayActivity.this,images.get(selectPosition).getPath());
+                        if(canFindRootPath)
+                            showFileInfoMsg(ImageDisplayActivity.this,images.get(selectPosition).getPath());
+                        else {
+                            try {
+                                InputStream image =ImageDisplayActivity.this.getContentResolver().openInputStream(uris.get(selectPosition));
+                                int[] wh=FileUtils.getPicWidthAndHeight(image);
+                                int w =wh[0];
+                                int h =wh[1];
+                                String path =uris.get(selectPosition).getPath();
+                                final StringBuilder msg =new StringBuilder();
+                                msg.     append("名称：").append(path).append("\n")
+                                        .append("路径：").append(path).append("\n");
+
+                                msg.append("\n宽度：").append(w).append("\n")
+                                        .append("高度：").append(h);
+                                SimpleDialog simpleDialog =new SimpleDialog(ImageDisplayActivity.this,R.layout.dialog_detail_info_layout,"资源属性") {
+                                    TextView info;
+                                    @Override
+                                    public void queryButtonClick(View v) {
+
+                                    }
+
+                                    @Override
+                                    public void customView() {
+                                        super.customView();
+                                        info=findViewById(R.id.textView13);
+                                        info.setText(msg.toString());
+                                        query.setText("确定");
+                                    }
+                                };
+                                simpleDialog.showAndSet(R.mipmap.list_ico_image);
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            }
+                        }
                         break;
                     case 3:
                         clickId=3;
@@ -348,10 +395,25 @@ public class ImageDisplayActivity extends AppCompatActivity {
                         FileUtils.chooseViewFile(ImageDisplayActivity.this,view,file2.getPath(),menu);
                         break;
                     case 4:
-                        int[] wh =getPicWidthAndHeight(images.get(selectPosition).getAbsolutePath());
-                        imageAdapter.width=wh[0];
-                        imageAdapter.height=wh[1];
-                        imageAdapter.notifyDataSetChanged();
+                        int[] wh;
+                        if(canFindRootPath) {
+                            wh = getPicWidthAndHeight(images.get(selectPosition).getAbsolutePath());
+                            imageAdapter.width=wh[0];
+                            imageAdapter.height=wh[1];
+                            imageAdapter.notifyDataSetChanged();
+                        }else{
+                            InputStream image = null;
+                            try {
+                                image = ImageDisplayActivity.this.getContentResolver().openInputStream(uris.get(selectPosition));
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            }
+                            wh=FileUtils.getPicWidthAndHeight(image);
+                            uriAdapter.width=wh[0];
+                            uriAdapter.height=wh[1];
+                            uriAdapter.notifyDataSetChanged();
+                        }
+
                         break;
                 }
                 if(clickId!=3)
@@ -430,5 +492,24 @@ public class ImageDisplayActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         fileChangeListener =null;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void setupWindowAnimations() {
+//        ChangeBounds changeBounds = new ChangeBounds();
+//        changeBounds.setDuration(300);
+//        //排除状态栏
+//        changeBounds.excludeTarget(android.R.id.statusBarBackground, true);
+        //是否同时执行
+//        getWindow().setAllowEnterTransitionOverlap(true);
+//        getWindow().setAllowReturnTransitionOverlap(false);
+        //进入
+        //getWindow().setEnterTransition(changeBounds);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        //ActivityCompat.finishAfterTransition(ImageDisplayActivity.this);
     }
 }

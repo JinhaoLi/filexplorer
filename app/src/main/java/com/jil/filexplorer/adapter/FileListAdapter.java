@@ -1,5 +1,9 @@
 package com.jil.filexplorer.adapter;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,11 +15,17 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.ActivityOptionsCompat;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.signature.MediaStoreSignature;
+import com.jil.filexplorer.BuildConfig;
+import com.jil.filexplorer.activity.ImageDisplayActivity;
+import com.jil.filexplorer.activity.MainActivity;
 import com.jil.filexplorer.api.*;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.utils.ConstantUtils;
@@ -63,6 +73,11 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
         this.itemLayoutRes = itemLayoutRes;
     }
 
+    public FileListAdapter(FilePresenter filePresenter,int itemLayoutRes) {
+        this.filePresenter = filePresenter;
+        this.itemLayoutRes = itemLayoutRes;
+    }
+
     public void setItemLayoutRes(int itemLayoutRes) {
         this.itemLayoutRes = itemLayoutRes;
     }
@@ -82,12 +97,11 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
     //item进入视图
     @Override
     public void onViewAttachedToWindow(@NonNull DefaultViewHolder holder) {
-        if (mData.get(holder.getAdapterPosition()).isSelected()) {
-            holder.itemView.setBackgroundColor(ConstantUtils.SELECTED_COLOR);
-        } else {
-            holder.itemView.setBackgroundColor(NORMAL_COLOR);
-        }
-
+//        if (mData.get(holder.getAdapterPosition()).isSelected()) {
+//            holder.itemView.setBackgroundColor(ConstantUtils.SELECTED_COLOR);
+//        } else {
+//            holder.itemView.setBackgroundColor(NORMAL_COLOR);
+//        }
         super.onViewAttachedToWindow(holder);
     }
 
@@ -106,7 +120,7 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
         }else {
             //holder.type.setVisibility(View.GONE);
             if(fileInfo.isDir()){
-                holder.type.setText(fileInfo.getCount()+"");
+                holder.type.setText(String.valueOf(fileInfo.getCount()));
             }else{
                 holder.type.setText("");
             }
@@ -156,7 +170,20 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                     String path = fileInfo.getFilePath();
                     filePresenter.input2Model(path, null,true);
                 } else {
-                    viewFile(filePresenter.mContext, fileInfo,view);
+                    if(fileInfo.getIcon()==R.mipmap.list_ico_image){
+//                        Activity activity=ActivityManager.getInstance().getActivity(MainActivity.class);
+//                        ActivityOptionsCompat activityOptionsCompat = ActivityOptionsCompat.makeSceneTransitionAnimation(activity,holder.icon, "shareElement");
+//                        Intent intent =new Intent(activity, ImageDisplayActivity.class);
+//                        Uri uri = FileProvider.getUriForFile(ExplorerApp.ApplicationContext, BuildConfig.APPLICATION_ID + ".fileprovider", new File(fileInfo.getFilePath()));
+//                        intent.setData(uri);
+//                        ActivityCompat.startActivity(activity, intent, activityOptionsCompat.toBundle());
+                        viewFile(filePresenter.mContext, fileInfo,view);
+
+                    }else {
+                        viewFile(filePresenter.mContext, fileInfo,view);
+                    }
+
+
                 }
             }
 
@@ -279,7 +306,8 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
         }
     }
 
-    private void setItemTypeAndSize(FileInfo fileInfo,DefaultViewHolder holder){
+    @SuppressLint("SetTextI18n")
+    private void setItemTypeAndSize(FileInfo fileInfo, DefaultViewHolder holder){
         if(fileInfo.isDir()){
             holder.type.setText("文件夹");
             try {
@@ -305,6 +333,8 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
 
     @Override
     public int getItemCount(){
+        if(mData==null)
+            return 0;
         return mData.size();
     }
 

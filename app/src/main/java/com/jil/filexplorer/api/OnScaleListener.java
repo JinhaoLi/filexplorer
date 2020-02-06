@@ -36,9 +36,9 @@ public class OnScaleListener implements View.OnTouchListener{
 
     public interface OnScalceCallBack {
         //开始触摸就调用
-        void scaleType(ImageView.ScaleType scaleType);
+        //void scaleType(ImageView.ScaleType scaleType);
         //动作结束调用
-        void scaleTouch(Matrix matrix);
+        //void scaleTouch(Matrix matrix);
         //点击调用
         void onClick(View view);
     }
@@ -46,7 +46,8 @@ public class OnScaleListener implements View.OnTouchListener{
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        onScalceCallBack.scaleType(ImageView.ScaleType.MATRIX );
+        ImageView imageView= (ImageView) v;
+        imageView.setScaleType( ImageView.ScaleType.MATRIX );;
         ImageView view = (ImageView) v;
         switch (event.getAction()& MotionEvent.ACTION_MASK){
             case MotionEvent.ACTION_DOWN:
@@ -94,7 +95,7 @@ public class OnScaleListener implements View.OnTouchListener{
                 }
                 break;
         }
-        onScalceCallBack.scaleTouch(matrix);
+        imageView.setImageMatrix(matrix);
         return true;
     }
 
@@ -119,8 +120,6 @@ public class OnScaleListener implements View.OnTouchListener{
         double radians = Math.atan2(delta_y, delta_x);
         return (float) Math.toDegrees(radians);
     }
-
-
 
     public void setOnScalceCallBack(OnScalceCallBack onScalceCallBack){
         this.onScalceCallBack = onScalceCallBack;

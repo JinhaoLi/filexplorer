@@ -5,7 +5,7 @@ import androidx.fragment.app.Fragment;
 import com.jil.filexplorer.activity.MainActivity;
 import com.jil.filexplorer.ui.CustomFragment;
 import com.jil.filexplorer.ui.FileShowFragment;
-import com.jil.filexplorer.ui.SettingFragment;
+
 
 import java.util.ArrayList;
 import java.util.List;

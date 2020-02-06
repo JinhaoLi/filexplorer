@@ -50,20 +50,6 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if(filePresenter==null)
-            filePresenter =new FilePresenter(this,getContext());
-
-        if (getArguments() != null) {
-            if(filePresenter.path==null)
-                filePresenter.path = getArguments().getString(ARG_PARAM);
-        }
-
-
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return super.onCreateView(inflater, container, savedInstanceState);
     }
@@ -90,6 +76,14 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     protected void initAction() {
+        if(filePresenter==null)
+            filePresenter =new FilePresenter(this,getContext());
+
+        if (getArguments() != null) {
+            if(filePresenter.path==null)
+                filePresenter.path = getArguments().getString(ARG_PARAM);
+        }
+        init();
         enlargeIcon();
         load(filePresenter.path, false);
 
@@ -97,13 +91,7 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     public void makeGridLayout(int spanCount) {
-        if(linearLayoutManager!=null){
-            filePresenter.saveSharedPreferences(spanCount);
-        }
-        linearLayoutManager = new GridLayoutManager(getContext(), spanCount);
-        filePresenter.changeItemLayout();
-        tList.setAdapter(filePresenter.tListAdapter);
-        tList.setLayoutManager(linearLayoutManager);
+
     }
 
     @Override
@@ -220,11 +208,13 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     public void init() {
-        if(SettingParam.Column>2){
-            makeGridLayout(SettingParam.Column);
-        }else {
-            makeLinerLayout();
-        }
+        if(SettingParam.Column>2)
+            linearLayoutManager = new GridLayoutManager(getContext(), SettingParam.Column);
+        else
+            linearLayoutManager = new LinearLayoutManager(getContext());
+        tList.setAdapter(filePresenter.tListAdapter);
+        tList.setLayoutManager(linearLayoutManager);
+
     }
 
     @Override
@@ -242,7 +232,6 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
             }
             if(msg.what==UPDATE_MESSAGE){
                 filePresenter.tListAdapter.notifyDataSetChanged();
-
                 iFragmentPresenter.update();
                 if(filePresenter.isAddHistory()){
                     iFragmentPresenter.addHistory((String) msg.obj);
@@ -278,11 +267,11 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     public void changeView(int spanCount) {
+        filePresenter.saveSharedPreferences(spanCount);
         filePresenter.changeItemLayout();
-        if(spanCount<2)
-            makeLinerLayout();
-        else
-            makeGridLayout(spanCount);
+        tList.setAdapter(filePresenter.tListAdapter);
+        linearLayoutManager = new GridLayoutManager(getContext(), spanCount);
+        tList.setLayoutManager(linearLayoutManager);
 
     }
 
