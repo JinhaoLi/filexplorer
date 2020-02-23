@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.jil.filexplorer.api.ActivityManager;
+import com.jil.filexplorer.api.ExplorerApp;
 import com.jil.filexplorer.api.SettingItem;
 import com.jil.filexplorer.api.SettingParam;
 import com.jil.filexplorer.R;
@@ -153,11 +154,12 @@ public class SettingActivity extends AppCompatActivity {
         versionName = getVersionName(this);
         activityManager = ActivityManager.getInstance();
 
-        if(itemArrayList==null||itemArrayList.size()==0){
-            itemArrayList = new ArrayList<>();
-            createSettingItem();
+        if(itemArrayList!=null){
+            itemArrayList.clear();
+        }else {
+            itemArrayList=new ArrayList<>();
         }
-
+        createSettingItem();
         settingList = findViewById(R.id.set_list);
         LinearLayoutManager llm = new LinearLayoutManager(this);
         supperAdapter = new SupperAdapter<SettingItem>(itemArrayList, this) {
@@ -214,31 +216,31 @@ public class SettingActivity extends AppCompatActivity {
 
     private void createSettingItem() {
 
-//        SettingItem theme = new SettingItem("主题", 5151) {
-//            @Override
-//            public void click(View v) {
-//                int i = 0;
-//                if (SettingParam.Theme != R.style.AppTheme) {
-//                    i = 1;
-//                }
-//                String[] item = new String[]{"亮色", "暗色"};
-//                AlertDialog.Builder builder = showAlertDialog(SettingActivity.this, "主题选择");
-//                builder.setSingleChoiceItems(item, i, new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        if (which == 0) {
-//                            saveSharedPreferences(SettingActivity.this, "theme", R.style.AppTheme);
-//                            saveSharedPreferences(SettingActivity.this, "main_color", BULE_COLOR);
-//                        } else if (which == 1) {
-//                            saveSharedPreferences(SettingActivity.this, "theme", R.style.MyThemeGray);
-//                            saveSharedPreferences(SettingActivity.this, "main_color", DARK_COLOR);
-//                        }
-//                        readSharedPreferences(SettingActivity.this);
-//                        activityManager.removeActivity(MainActivity.class);
-//                    }
-//                }).create().show();
-//            }
-//        };
+        SettingItem theme = new SettingItem("主题", 5151) {
+            @Override
+            public void click(View v) {
+                int i = 0;
+                if (SettingParam.Theme != R.style.AppTheme) {
+                    i = 1;
+                }
+                String[] item = new String[]{"亮色", "暗色"};
+                AlertDialog.Builder builder = showAlertDialog(SettingActivity.this, "主题选择");
+                builder.setSingleChoiceItems(item, i, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == 0) {
+                            saveSharedPreferences(SettingActivity.this, "theme", R.style.AppTheme);
+                            saveSharedPreferences(SettingActivity.this, "main_color", BULE_COLOR);
+                        } else if (which == 1) {
+                            saveSharedPreferences(SettingActivity.this, "theme", R.style.MyThemeGray);
+                            saveSharedPreferences(SettingActivity.this, "main_color", DARK_COLOR);
+                        }
+                        readSharedPreferences(SettingActivity.this);
+                        activityManager.removeActivity(MainActivity.class);
+                    }
+                }).create().show();
+            }
+        };
         SettingItem recycleBin = new SettingItem("回收站", "开启回收站之后文件不会被真正地删除", (SettingParam.RecycleBin > 0), 5051) {
             @Override
             public void click(View v) {
@@ -261,7 +263,6 @@ public class SettingActivity extends AppCompatActivity {
                 setImageCacheSwitch(check ? 1 : -1);
             }
         };
-
         SettingItem smallViewSwitch = new SettingItem("显示缩略图", "开启后可以显示视频或图片的预览图标", (SettingParam.SmallViewSwitch > 0), 4485) {
             @Override
             public void click(View v) {
@@ -273,35 +274,42 @@ public class SettingActivity extends AppCompatActivity {
                 setSmallViewSwitch(check ? 1 : -1);
             }
         };
-
+        SettingItem showHide =new SettingItem("显示隐藏文件","显示以\".\"开头的文件", (ShowHide>0),1468) {
+            @Override
+            public void click(View v) {
+                CompoundButton s = (CompoundButton) v;
+                boolean check = s.isChecked();
+                setSwitchOpen(s.isChecked());
+                int i = check ? 1 : -1;
+                saveSharedPreferences(SettingActivity.this, "ShowHide", i);
+                setShowHide(check ? 1 : -1);
+            }
+        };
         SettingItem email = new SettingItem("发送日志", "发送日志给开发者帮助开发者发现bug", 851) {
             @Override
             public void click(View v) {
                 EmailHelper.sendEmail();
             }
         };
-
         SettingItem donations =new SettingItem("支持开发者","开发者正在为生计奔波劳累◑﹏◐",1552) {
             @Override
             public void click(View v) {
                 SimpleDialog donationsAlipayPic =new SimpleDialog(SettingActivity.this,R.layout.dialog_detail_pic_layout,"打钱给开发者") {
                     @Override
                     public void queryButtonClick(View v) {
-                              ToastUtils.showToast(SettingActivity.this,"开发者支付宝13809761134",5000); 
+                        ToastUtils.showToast(v.getContext(),"开发者支付宝13809761134",1000);
                     }
 
                     @Override
                     public void customView() {
-                        super.customView();
                         ImageView pic =findViewById(R.id.imageView10);
-                        Glide.with(getContext()).load(R.mipmap.alipay).into(pic);
+                        Glide.with(SettingActivity.this).load(R.mipmap.alipay).into(pic);
                     }
                 };
                 donationsAlipayPic.showAndSet(R.drawable.ic_payment_black_24dp);
 
             }
         };
-
         updateItem = new SettingItem("检查更新", "当前版本" + versionName + "，点击检查更新", 4501) {
             @Override
             public void click(View v) {
@@ -329,14 +337,7 @@ public class SettingActivity extends AppCompatActivity {
                     new Thread(checkUpdate).start();
                 }
             }
-
-            @Override
-            public String getDescription() {
-
-                return super.getDescription();
-            }
         };
-
         SettingItem testMode =new SettingItem("测试模式","测试模式下不会进行真正的文件操作",(SettingParam.TestModeSwitch>0),9595) {
             @Override
             public void click(View v) {
@@ -353,11 +354,12 @@ public class SettingActivity extends AppCompatActivity {
         itemArrayList.add(recycleBin);
         itemArrayList.add(imageCache);
         itemArrayList.add(smallViewSwitch);
+        itemArrayList.add(showHide);
         itemArrayList.add(email);
         itemArrayList.add(updateItem);
         itemArrayList.add(donations);
         itemArrayList.add(testMode);
-        new Thread(checkUpdate).start();
+        //new Thread(checkUpdate).start();
         new Thread(countCacheSize).start();
     }
 

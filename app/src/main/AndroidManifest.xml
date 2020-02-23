@@ -79,5 +79,7 @@
                     android:resource="@xml/file_paths"/>
         </provider>
     </application>
+<!--    cd E:\As_SDK\platform-tools-->
+<!--    adb connect 192.168.43.1:15229-->
 
 </manifest>

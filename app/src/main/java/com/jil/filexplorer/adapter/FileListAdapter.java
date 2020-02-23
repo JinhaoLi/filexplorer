@@ -58,11 +58,11 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
     private ArrayList<FileInfo> mData;
     private FilePresenter filePresenter;
     private int itemLayoutRes;
-    static Item[] dirMenu = {new Item("新页面打开",142),new Item("压缩",854),new Item("剪切",321)
+    static Item[] dirMenu = {new Item("新页面打开",142),/*new Item("压缩",854),*/new Item("剪切",321)
             ,new Item("复制",44),new Item("发送到桌面",52)
             ,new Item("重命名",623),new Item("删除",732)
             ,new Item("属性",813)};//要填充的数据
-    static Item[] fileMenu = {new Item("打开方式",143),new Item("压缩",854),new Item("分享",128),new Item("剪切",321)
+    static Item[] fileMenu = {new Item("打开方式",143),/*new Item("压缩",854),*/new Item("分享",128),new Item("剪切",321)
             ,new Item("复制",44),new Item("发送到桌面",52)
             ,new Item("重命名",623),new Item("删除",732)
             ,new Item("属性",813)};//要填充的数据
@@ -168,7 +168,7 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
             public void onDoubleClick(View view) {
                 if (fileInfo.isDir()) {
                     String path = fileInfo.getFilePath();
-                    filePresenter.input2Model(path, null,true);
+                    filePresenter.input2Model(path,true);
                 } else {
                     if(fileInfo.getIcon()==R.mipmap.list_ico_image){
 //                        Activity activity=ActivityManager.getInstance().getActivity(MainActivity.class);

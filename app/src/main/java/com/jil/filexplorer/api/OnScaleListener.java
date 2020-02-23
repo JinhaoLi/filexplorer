@@ -43,19 +43,56 @@ public class OnScaleListener implements View.OnTouchListener{
         void onClick(View view);
     }
 
+    private int clickCount = 0;//点击次数
+
+    private long firstClick = 0;//第一次点击时间
+    /**
+     * 两次点击时间间隔，单位毫秒
+     */
+    private final static int totalTime = 300;
+
+    private boolean isScale=false;
+
+    private boolean isDoubleClick(){
+        clickCount++;
+        if (1 == clickCount) {
+            firstClick = System.currentTimeMillis();//记录第一次点击时间
+
+        } else if (2 == clickCount) {
+            //第二次点击时间
+            long secondClick = System.currentTimeMillis();//记录第二次点击时间
+            if (secondClick - firstClick < totalTime) {//判断二次点击时间间隔是否在设定的间隔时间之内
+                clickCount = 0;
+                firstClick = 0;
+                return true;
+            } else {
+                firstClick = secondClick;
+                clickCount = 1;
+                return false;
+            }
+        }
+        return false;
+    }
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         ImageView imageView= (ImageView) v;
         imageView.setScaleType( ImageView.ScaleType.MATRIX );;
-        ImageView view = (ImageView) v;
         switch (event.getAction()& MotionEvent.ACTION_MASK){
             case MotionEvent.ACTION_DOWN:
-                matrix.set(view.getImageMatrix());
-                saveMatrix.set( matrix );
-                startPoint.set( event.getX(),event.getY() );
-                mode=DRAG;
-                over=true;
+                if(isDoubleClick()){
+                    if(isScale)
+                        matrix.postScale(0.33f, 0.33f, event.getX(), event.getY());
+                    else
+                        matrix.postScale(3, 3, event.getX(), event.getY());
+                    isScale=!isScale;
+                }else {
+                    matrix.set(imageView.getImageMatrix());
+                    saveMatrix.set( matrix );
+                    startPoint.set( event.getX(),event.getY() );
+                    mode=DRAG;
+                    over=true;
+                }
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 over=false;
@@ -72,7 +109,6 @@ public class OnScaleListener implements View.OnTouchListener{
                 onScalceCallBack.onClick(v);
                 break;
             case MotionEvent.ACTION_POINTER_UP:
-
                 mode = NONE;
                 break;
             // 单指滑动事件

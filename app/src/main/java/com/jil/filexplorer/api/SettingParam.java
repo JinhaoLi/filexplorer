@@ -50,6 +50,7 @@ public class SettingParam {
         setImageCacheSwitch(sp.getInt("ImageCacheSwitch",1));
         setSmallViewSwitch(sp.getInt("SmallViewSwitch",1));
         setTestModeSwitch(sp.getInt("TestModeSwitch",-1));
+        setShowHide(sp.getInt("ShowHide",-1));
     }
     /**
      * 主题资源
@@ -114,5 +115,14 @@ public class SettingParam {
 
     public static void setTestModeSwitch(int testModeSwitch) {
         TestModeSwitch = testModeSwitch;
+    }
+
+    /**
+     * 测试模式
+     */
+    public static int ShowHide;
+
+    public static void setShowHide(int showHide) {
+        ShowHide = showHide;
     }
 }

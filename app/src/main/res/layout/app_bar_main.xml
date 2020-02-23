@@ -42,12 +42,12 @@
                         android:textColor="@drawable/text_color_state"/>
 
                 <ImageButton
-                    android:id="@+id/imageButton3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/button_click_type"
-                    app:srcCompat="@drawable/ic_arrow_drop_down_black_24dp"
-                    tools:ignore="VectorDrawableCompat" />
+                        android:id="@+id/imageButton3"
+                        android:layout_width="40dp"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/button_click_type"
+                        app:srcCompat="@drawable/ic_arrow_drop_down_black_24dp"
+                        tools:ignore="VectorDrawableCompat"/>
 
                 <!--<ImageButton
                     android:id="@+id/imageButton2"

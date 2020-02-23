@@ -37,7 +37,7 @@ public class FilePresenterCompl {
     }
 
     public interface IFilePresenter extends MVPFramework.IPresenter {
-        void input2Model(String path, FileFilter fileFilter, boolean addHistory);
+        void input2Model(String path, boolean addHistory);
 
         boolean isNoneData();
     }

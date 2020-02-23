@@ -63,7 +63,7 @@ import static com.jil.filexplorer.utils.UiUtils.getScreenHeight;
 public class FileUtils {
 
     /**
-     * 读取文件——请求授权
+     * 读写文件——请求授权
      */
     public static void requestPermission(Activity activity) {
         if (ContextCompat.checkSelfPermission(activity,
@@ -263,9 +263,6 @@ public class FileUtils {
             return null;
     }
 
-
-
-
     public static FileInfo getFileInfoFromFile(File file) {
         boolean isDir = file.isDirectory();
         String name = file.getName();
@@ -328,7 +325,6 @@ public class FileUtils {
         SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd");//设置日期格式
         return df.format(date);
     }
-
 
     public static String getFormatData(long date,String format) {
         SimpleDateFormat df = new SimpleDateFormat(format);//设置日期格式

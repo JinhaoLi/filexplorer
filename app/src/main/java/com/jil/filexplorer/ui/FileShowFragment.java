@@ -29,8 +29,8 @@ import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
 @SuppressLint("ValidFragment")
 public class FileShowFragment extends CustomFragment implements FileChangeListener, FilePresenterCompl.IFileView {
     private static final String ARG_PARAM = "DirPath";
-    private static final int ERR_MESSAGE=-1;
-    private static final int UPDATE_MESSAGE=1;
+    private static final int ERR_MESSAGE = -1;
+    private static final int UPDATE_MESSAGE = 1;
 
     private FilePresenter filePresenter;
 
@@ -38,10 +38,10 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     public FileShowFragment(FragmentPresenterCompl.IFragmentPresenter iFragmentPresenter) {
         super();
-        this.iFragmentPresenter=iFragmentPresenter;
+        this.iFragmentPresenter = iFragmentPresenter;
     }
 
-    public static FileShowFragment newInstance(String param2,FragmentPresenterCompl.IFragmentPresenter iFragmentPresenter) {
+    public static FileShowFragment newInstance(String param2, FragmentPresenterCompl.IFragmentPresenter iFragmentPresenter) {
         FileShowFragment fragment = new FileShowFragment(iFragmentPresenter);
         Bundle args = new Bundle();
         args.putString(ARG_PARAM, param2);
@@ -50,23 +50,18 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return super.onCreateView(inflater, container, savedInstanceState);
-    }
-
-    @Override
-    protected View initView(LayoutInflater inflater, ViewGroup container) {
-        return super.initView(inflater, container);
-    }
-
-    @Override
     public String getUnderBarMsg() {
         return filePresenter.getUnderBarMsg();
     }
 
     @Override
+    public void refreshUnderBar() {
+        filePresenter.refreshUnderBar();
+    }
+
+    @Override
     public void selectSomePosition(int startPosition, int endPosition) {
-        filePresenter.selectSomePosition(startPosition,endPosition);
+        filePresenter.selectSomePosition(startPosition, endPosition);
     }
 
     @Override
@@ -76,43 +71,37 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     protected void initAction() {
-        if(filePresenter==null)
-            filePresenter =new FilePresenter(this,getContext());
+        if (filePresenter == null)
+            filePresenter = new FilePresenter(this, getContext());
 
         if (getArguments() != null) {
-            if(filePresenter.path==null)
+            if (filePresenter.path == null)
                 filePresenter.path = getArguments().getString(ARG_PARAM);
         }
         init();
-        enlargeIcon();
         load(filePresenter.path, false);
 
     }
 
     @Override
-    public void makeGridLayout(int spanCount) {
-
-    }
-
-    @Override
     public void makeLinerLayout() {
-        if(linearLayoutManager!=null){
+        if (linearLayoutManager != null) {
             filePresenter.saveSharedPreferences(1);
         }
         linearLayoutManager = new LinearLayoutManager(getContext());
         filePresenter.tListAdapter.setItemLayoutRes(R.layout.file_list_item_layout);
-        try{
+        try {
             tList.setAdapter(filePresenter.tListAdapter);
             tList.setLayoutManager(linearLayoutManager);
-        }catch (Exception e){
-            LogUtils.e(e.getMessage(),e.getMessage()+getString(R.string.eat_err));
+        } catch (Exception e) {
+            LogUtils.e(e.getMessage(), e.getMessage() + getString(R.string.eat_err));
         }
 
     }
 
     @Override
     public boolean isAllSelect() {
-        if(filePresenter.isNoneData()){
+        if (filePresenter.isNoneData()) {
             return false;
         }
         return filePresenter.isAllSelected();
@@ -127,31 +116,22 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     public void load(String filePath, boolean isBack) {
-        filePresenter.input2Model(filePath, new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return true;
-            }
-        },isBack);
+        filePresenter.input2Model(filePath,isBack);
     }
 
 
     @Override
     public void change() {
-        load(filePresenter.path,false);
-    }
-
-    @Override
-    public void refreshUnderBar() {
-        filePresenter.refreshUnderBar();
+        load(filePresenter.path, false);
     }
 
 
     /**
      * 返回当前按什么方式排序
+     *
      * @return
      */
-    public int getSortType(){
+    public int getSortType() {
         return filePresenter.getSortType();
     }
 
@@ -163,41 +143,41 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     public String getPath() {
-        if(filePresenter==null)
+        if (filePresenter == null)
             return "null";
         return filePresenter.path;
     }
 
     @Override
     public void refresh() {
-        load(filePresenter.path,false);
+        load(filePresenter.path, false);
     }
 
     @Override
     public void unSelectItem(int position) {
-        selectOrNot_Item(position,false);
+        selectOrNot_Item(position, false);
     }
 
     @Override
     public void selectItem(int position) {
-        selectOrNot_Item(position,true);
+        selectOrNot_Item(position, true);
     }
 
-    private void selectOrNot_Item(int position,boolean isSelected){
+    private void selectOrNot_Item(int position, boolean isSelected) {
         View selectItem = linearLayoutManager.findViewByPosition(position);
-        if (selectItem != null){
-            if(isSelected){
+        if (selectItem != null) {
+            if (isSelected) {
                 selectItem.setBackgroundColor(SELECTED_COLOR);
-            }else {
+            } else {
                 selectItem.setBackgroundColor(NORMAL_COLOR);
             }
         }
 
     }
 
-
     /**
      * 排序
+     *
      * @param sortType 排序方式
      */
     @Override
@@ -208,7 +188,7 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     public void init() {
-        if(SettingParam.Column>2)
+        if (SettingParam.Column > 2)
             linearLayoutManager = new GridLayoutManager(getContext(), SettingParam.Column);
         else
             linearLayoutManager = new LinearLayoutManager(getContext());
@@ -219,21 +199,20 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     public void update() {
-
     }
 
     @SuppressLint("HandlerLeak")
-    private Handler handler=new Handler(){
+    private Handler handler = new Handler() {
         @Override
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
-            if(msg.what==ERR_MESSAGE){
+            if (msg.what == ERR_MESSAGE) {
                 ToastUtils.showToast(getContext(), (String) msg.obj, 1000);
             }
-            if(msg.what==UPDATE_MESSAGE){
+            if (msg.what == UPDATE_MESSAGE) {
                 filePresenter.tListAdapter.notifyDataSetChanged();
                 iFragmentPresenter.update();
-                if(filePresenter.isAddHistory()){
+                if (filePresenter.isAddHistory()) {
                     iFragmentPresenter.addHistory((String) msg.obj);
                 }
                 refreshUnderBar();
@@ -243,23 +222,18 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     public void upDatePath(String okPath) {
-        Message message =Message.obtain();;
-        message.what=UPDATE_MESSAGE;
-        message.obj =okPath;
-
+        Message message = Message.obtain();
+        ;
+        message.what = UPDATE_MESSAGE;
+        message.obj = okPath;
         handler.sendMessage(message);
-
-    }
-
-    public void missionSuccess(String okPath) {
-
     }
 
     @Override
     public void setErr(String msg) {
-        Message message =Message.obtain();
-        message.what=ERR_MESSAGE;
-        message.obj =msg;
+        Message message = Message.obtain();
+        message.what = ERR_MESSAGE;
+        message.obj = msg;
 
         handler.sendMessage(message);
     }
@@ -283,14 +257,14 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     public void reNameDialog(String title, int layoutId, String oldName, final int type) {
-        InputDialog dialog =new InputDialog(filePresenter.mContext,layoutId,title) {
+        InputDialog dialog = new InputDialog(filePresenter.mContext, layoutId, title) {
             @Override
             public void queryButtonClick(View v) {
 
             }
 
             @Override
-            public void queryButtonClick(View v,String name) {
+            public void queryButtonClick(View v, String name) {
                 filePresenter.reNameSelectFile(name);
             }
 
@@ -300,10 +274,10 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     public void showCompressDialog(String parentName) {
-        CompressDialog compressDialog= new CompressDialog(getContext(), R.layout.dialog_compression_layout, "配置压缩文件参数") {
+        CompressDialog compressDialog = new CompressDialog(getContext(), R.layout.dialog_compression_layout, "配置压缩文件参数") {
             @Override
             public void doIt(ZipParameters zipParameters, String zipName) {
-                filePresenter.compressFile(zipParameters,zipName);
+                filePresenter.compressFile(zipParameters, zipName);
             }
         };
         compressDialog.showAndSetName(parentName);

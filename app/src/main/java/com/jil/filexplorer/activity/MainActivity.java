@@ -479,7 +479,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         underInfoBar.setText(msg);
     }
 
-
     @Override
     public void setErr(String msg) {
 

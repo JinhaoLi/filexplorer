@@ -1,5 +1,6 @@
 package com.jil.filexplorer.utils;
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -63,6 +64,7 @@ public class PackageInfoManager {
      * @param context
      * @return
      */
+    @SuppressLint("WrongConstant")
     public static List<ResolveInfo> getShareApps(Context context){
         List<ResolveInfo> mApps = new ArrayList<ResolveInfo>();
         Intent intent=new Intent(Intent.ACTION_SEND,null);
@@ -79,6 +81,7 @@ public class PackageInfoManager {
      * @param context
      * @return
      */
+    @SuppressLint("WrongConstant")
     public static List<ResolveInfo> getViewFileApps(Context context){
         List<ResolveInfo> mApps = new ArrayList<ResolveInfo>();
         Intent intent=new Intent(Intent.ACTION_VIEW);

@@ -9,6 +9,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -35,23 +36,18 @@ public abstract class CustomFragment extends Fragment {
     private View rootView;
 
     protected RecyclerView tList;
-
-    public Bitmap smallView;
-
-    //全选按钮可见状态
-    public boolean allSelect = false;
-
+    //预览图
+    private Bitmap smallView;
+    //恢复的布局
     protected boolean isRecovery;
 
     protected LinearLayoutManager linearLayoutManager;
-    //网格布局计数
+    //网格布局列数
     int spanCount = SettingParam.Column;
 
     protected abstract void initAction();
 
     public abstract void refreshUnderBar();
-
-    public abstract void makeGridLayout(int spanCount);
 
     public abstract void makeLinerLayout();
 
@@ -79,11 +75,11 @@ public abstract class CustomFragment extends Fragment {
 
     public CustomFragment() { }
 
-    @SuppressLint({"ClickableViewAccessibility", "ResourceType"})
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         initView(inflater, container);
         if (!isRecovery) {
+            enlargeIcon();
             initAction();
         }
         return rootView;
@@ -94,20 +90,15 @@ public abstract class CustomFragment extends Fragment {
             isRecovery = false;
             rootView = inflater.inflate(R.layout.fragment_file_view_layout, container, false);
             tList = rootView.findViewById(R.id.file_list_view);
-
         } else {
             isRecovery = true;
         }
         return rootView;
     }
 
-    private void refreshSmallView() {
+    public Bitmap getSmallView() {
         if (tList != null)
             smallView = UiUtils.createViewBitmap(smallView, tList);
-    }
-
-    public Bitmap getSmallView() {
-        refreshSmallView();
         return smallView;
     }
 
@@ -138,7 +129,7 @@ public abstract class CustomFragment extends Fragment {
     private float distance = 50000;
 
     @SuppressLint("ClickableViewAccessibility")
-    protected void enlargeIcon() {
+    private void enlargeIcon() {
         tList.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {

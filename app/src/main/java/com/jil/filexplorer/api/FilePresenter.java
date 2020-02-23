@@ -42,8 +42,6 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
         this.fileView = fileView;
         this.fileModel = new FileModel();
         tListAdapter = new FileListAdapter(this,CustomFragment.makeItemLayoutRes(SettingParam.Column));
-
-
     }
 
     @Override
@@ -55,20 +53,25 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
         fileView.upDatePath(path);
     }
 
-    public void deleteFileInfoItem(int position) {
-        fileModel.remove(position);
-    }
-
-    public int getModelSize() {
-        if (fileModel.isNoneData()) {
-            return 0;
-        } else
-            return fileModel.size();
-    }
-
     @Override
-    public void input2Model(String path, FileFilter fileFilter, boolean addHistory) {
+    public void input2Model(String path, boolean addHistory) {
         this.addHistory = addHistory;
+        FileFilter fileFilter;
+        if(SettingParam.ShowHide>0){
+            fileFilter=new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    return true;
+                }
+            };
+        }else{
+            fileFilter=new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    return !pathname.getName().startsWith(".");
+                }
+            };
+        }
         fileModel.load(path, fileFilter, this);
 
     }
@@ -127,11 +130,6 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
         tListAdapter.notifyDataSetChanged();
     }
 
-
-
-    public void refreshUnderBar() {
-        ExplorerApp.fragmentPresenter.setUnderBarMsg(getUnderBarMsg());
-    }
 
     public void copySelectFile() {
         ExplorerApp.fragmentPresenter.fileOperationType=FileOperation.MODE_COPY;
@@ -328,8 +326,11 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
 
     }
 
-    public String getUnderBarMsg() {
+    public void refreshUnderBar() {
+        ExplorerApp.fragmentPresenter.setUnderBarMsg(getUnderBarMsg());
+    }
 
+    public String getUnderBarMsg() {
         int selectSize = fileModel.getSelectedSize();
         setMenuVisible(selectSize);
         long size = fileModel.getAllSelectedLength();
