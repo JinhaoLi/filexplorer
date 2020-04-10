@@ -4,23 +4,16 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
-import com.bumptech.glide.util.Util;
-import com.jil.filexplorer.R;
 import com.jil.filexplorer.api.SettingParam;
 import com.jil.filexplorer.utils.FileUtils;
 
@@ -34,7 +27,7 @@ import java.util.List;
  */
 public abstract class SupperAdapter<T> extends RecyclerView.Adapter<SupperAdapter.VH> {
 
-    private List<T> mDatas;
+    private List<T> mData;
     private Context mContext;
     protected OnItemClickListener<T> listener;
 
@@ -42,13 +35,13 @@ public abstract class SupperAdapter<T> extends RecyclerView.Adapter<SupperAdapte
         void onItemClick(VH holder, T data, int position);
     }
 
-    public SupperAdapter(List<T> mDatas, Context context) {
-        this.mDatas = mDatas;
+    public SupperAdapter(List<T> mData, Context context) {
+        this.mData = mData;
         this.mContext = context;
     }
 
-    public SupperAdapter(List<T> mDatas, Context mContext, OnItemClickListener<T> listener) {
-        this.mDatas = mDatas;
+    public SupperAdapter(List<T> mData, Context mContext, OnItemClickListener<T> listener) {
+        this.mData = mData;
         this.mContext = mContext;
         this.listener = listener;
     }
@@ -60,31 +53,26 @@ public abstract class SupperAdapter<T> extends RecyclerView.Adapter<SupperAdapte
 
     public abstract int getLayoutId(int viewType, T data);
 
+
     @Override
     public VH onCreateViewHolder(ViewGroup viewGroup, int i) {
-        return VH.get(viewGroup, getLayoutId(i, mDatas.get(i)));
+        return VH.get(viewGroup, getLayoutId(i, mData.get(i)));
     }
 
     @Override
-    public void onViewDetachedFromWindow(VH holder) {
+    public void onViewDetachedFromWindow(@NonNull VH holder) {
         //item退出视图
         super.onViewDetachedFromWindow(holder);
     }
 
     @Override
     public void onViewAttachedToWindow(@NonNull VH holder) {
-//        RoundedCorners roundedCorners= new RoundedCorners(10);
-//        RequestOptions requestOptions =RequestOptions.bitmapTransform(roundedCorners)
-//                .skipMemoryCache(true)//跳过缓存
-//                .diskCacheStrategy(DiskCacheStrategy.NONE)//不缓存
-//                .override(width,height);
-        //item进入视图
+
         super.onViewAttachedToWindow(holder);
     }
 
     @Override
-    public void onViewRecycled(VH holder) {
-        //Log.e("SupperAdapter--", "onViewRecycled" + holder.getAdapterPosition());
+    public void onViewRecycled(@NonNull VH holder) {
         super.onViewRecycled(holder);
 
     }
@@ -95,18 +83,18 @@ public abstract class SupperAdapter<T> extends RecyclerView.Adapter<SupperAdapte
             vh.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    listener.onItemClick(vh, mDatas.get(vh.getLayoutPosition()), i);
+                    listener.onItemClick(vh, mData.get(vh.getLayoutPosition()), i);
                 }
             });
 
         }
-        convert(vh, mDatas.get(i), i, mContext);
+        convert(vh, mData.get(i), i, mContext);
     }
 
 
     @Override
     public int getItemCount() {
-        return mDatas.size();
+        return mData.size();
     }
 
     public abstract void convert(VH holder, T data, int position, Context mContext);
@@ -168,11 +156,11 @@ public abstract class SupperAdapter<T> extends RecyclerView.Adapter<SupperAdapte
 
     //带动画效果的添加
     public void addDate(T account, int position, int type) {
-        mDatas.add(position, account);
+        mData.add(position, account);
         if (type == 1) {
             notifyItemInserted(position);
-            if (position != mDatas.size()) {
-                notifyItemRangeChanged(position, mDatas.size() - position);
+            if (position != mData.size()) {
+                notifyItemRangeChanged(position, mData.size() - position);
             }
         } else {
             notifyDataSetChanged();
@@ -181,11 +169,11 @@ public abstract class SupperAdapter<T> extends RecyclerView.Adapter<SupperAdapte
 
     //带动画效果的移除
     public void remove(int position, int type) {
-        mDatas.remove(position);
+        mData.remove(position);
         if (type == 1) {
             notifyItemRemoved(position);
-            if (position != mDatas.size()) {
-                notifyItemRangeChanged(position, mDatas.size() - position);
+            if (position != mData.size()) {
+                notifyItemRangeChanged(position, mData.size() - position);
             }
         }
     }

@@ -1,5 +1,8 @@
 package com.jil.filexplorer.adapter;
 
+import android.view.ViewGroup;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
@@ -19,6 +22,12 @@ public class FragmentAdapter extends FragmentStatePagerAdapter {
     public FragmentAdapter(FragmentManager fm, List<CustomFragment> fragments) {
         super(fm);
         this.fragments=fragments;
+    }
+
+    @Nullable
+    @Override
+    public CharSequence getPageTitle(int position) {
+        return fragments.get(position).getFragmentTitle();
     }
 
     @Override
