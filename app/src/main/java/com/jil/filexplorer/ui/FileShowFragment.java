@@ -5,9 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,12 +14,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.jil.filexplorer.api.*;
 import com.jil.filexplorer.R;
+import com.jil.filexplorer.bean.FileInfo;
+import com.jil.filexplorer.presenter.FilePresenter;
+import com.jil.filexplorer.presenter.FilePresenterCompl;
+import com.jil.filexplorer.presenter.FragmentPresenterCompl;
 import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.ToastUtils;
 import net.lingala.zip4j.model.ZipParameters;
-
-import java.io.File;
-import java.io.FileFilter;
 
 import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
@@ -66,7 +65,11 @@ public class FileShowFragment extends CustomFragment implements FileChangeListen
 
     @Override
     public String getFragmentTitle() {
-        return filePresenter.fragmentTitle;
+        if(filePresenter!=null&&filePresenter.fragmentTitle!=null)
+            return filePresenter.fragmentTitle;
+        else {
+            return "null";
+        }
     }
 
     @Override

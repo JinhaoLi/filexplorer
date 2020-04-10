@@ -1,6 +1,11 @@
-package com.jil.filexplorer.api;
+package com.jil.filexplorer.model;
 
 import com.jil.filexplorer.R;
+import com.jil.filexplorer.custom.FileComparator;
+import com.jil.filexplorer.api.FileOperation;
+import com.jil.filexplorer.presenter.FilePresenterCompl;
+import com.jil.filexplorer.custom.ReNameList;
+import com.jil.filexplorer.bean.FileInfo;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
 
@@ -9,7 +14,7 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import static com.jil.filexplorer.api.ExplorerApp.ApplicationContext;
+import static com.jil.filexplorer.custom.ExplorerApp.ApplicationContext;
 import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromFile;
 import static com.jil.filexplorer.utils.FileUtils.getSelectedList;
 
@@ -210,7 +215,7 @@ public class FileModel implements FilePresenterCompl.IFileModel {
     }
 
     public ArrayList<FileInfo> refreshMissionList(int mode) {
-        if(mode==FileOperation.MODE_DELETE){
+        if(mode== FileOperation.MODE_DELETE){
             return getSelectedList(aBunchOfData);
         }else{
             FileOperation.inFiles=getSelectedList(aBunchOfData);

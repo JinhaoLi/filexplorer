@@ -1,33 +1,23 @@
 package com.jil.filexplorer.ui;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.jil.filexplorer.activity.MainActivity;
-import com.jil.filexplorer.api.FileInfo;
-import com.jil.filexplorer.api.Item;
-import com.jil.filexplorer.api.SettingParam;
 import com.jil.filexplorer.R;
+import com.jil.filexplorer.bean.FileInfo;
+import com.jil.filexplorer.api.SettingParam;
 import com.jil.filexplorer.utils.ConstantUtils;
 import com.jil.filexplorer.utils.UiUtils;
 
-import java.util.ArrayList;
-
-import static com.jil.filexplorer.api.SettingParam.saveSharedPreferences;
-import static com.jil.filexplorer.utils.ConstantUtils.MAX_SPAN_COUNT;
-import static com.jil.filexplorer.utils.ConstantUtils.MIN_SPAN_COUNT;
 import static com.jil.filexplorer.utils.FileUtils.getDistance;
 
 public abstract class CustomFragment extends Fragment {

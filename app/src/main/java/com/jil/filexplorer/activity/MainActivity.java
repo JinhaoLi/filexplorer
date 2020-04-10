@@ -1,13 +1,17 @@
 package com.jil.filexplorer.activity;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
 import android.view.*;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -25,6 +29,8 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
@@ -33,51 +39,126 @@ import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.navigation.NavigationView;
 import com.jil.filexplorer.api.*;
 import com.jil.filexplorer.R;
+import com.jil.filexplorer.custom.ExplorerApp;
+import com.jil.filexplorer.presenter.FragmentPresenter;
+import com.jil.filexplorer.presenter.FragmentPresenterCompl;
 import com.jil.filexplorer.ui.MyItemDecoration;
 import com.jil.filexplorer.ui.InputDialog;
+import com.jil.filexplorer.ui.SimpleDialog;
 import com.jil.filexplorer.utils.*;
+
 import java.io.File;
-import static com.jil.filexplorer.api.FileComparator.SORT_BY_DATE;
-import static com.jil.filexplorer.api.FileComparator.SORT_BY_DATE_REV;
-import static com.jil.filexplorer.api.FileComparator.SORT_BY_NAME;
-import static com.jil.filexplorer.api.FileComparator.SORT_BY_NAME_REV;
-import static com.jil.filexplorer.api.FileComparator.SORT_BY_SIZE;
-import static com.jil.filexplorer.api.FileComparator.SORT_BY_SIZE_REV;
-import static com.jil.filexplorer.api.FileComparator.SORT_BY_TYPE;
-import static com.jil.filexplorer.api.FileComparator.SORT_BY_TYPE_REV;
+
+import static com.jil.filexplorer.custom.FileComparator.SORT_BY_DATE;
+import static com.jil.filexplorer.custom.FileComparator.SORT_BY_DATE_REV;
+import static com.jil.filexplorer.custom.FileComparator.SORT_BY_NAME;
+import static com.jil.filexplorer.custom.FileComparator.SORT_BY_NAME_REV;
+import static com.jil.filexplorer.custom.FileComparator.SORT_BY_SIZE;
+import static com.jil.filexplorer.custom.FileComparator.SORT_BY_SIZE_REV;
+import static com.jil.filexplorer.custom.FileComparator.SORT_BY_TYPE;
+import static com.jil.filexplorer.custom.FileComparator.SORT_BY_TYPE_REV;
+import static com.jil.filexplorer.api.SettingParam.CONFIRM_REJECTION;
 import static com.jil.filexplorer.utils.ConstantUtils.GIRD_LINER_LAYOUT;
 import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.FileUtils.hideMax;
-import static com.jil.filexplorer.utils.FileUtils.requestPermission;
-
 
 /**
  * 主页面
  */
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
         ViewPager.OnPageChangeListener, View.OnClickListener, FragmentPresenterCompl.IFragmentView {
-
     public static final String INTENT_INPUT_PATH = "file_path";
-    private EditText pathEdit;                              //路径输入框
+    private EditText pathEdit;
     private DrawerLayout drawerLayout;
     private TextView underInfoBar;
-    private ImageView liner, grid;                        //排列方式按钮
+    private ImageView liner, grid;
     private ViewPager fragmentPager;
-
     private FragmentPresenter fragmentPresenter;
-
-    public boolean pasteVisible = false;                   //粘贴按钮可见状态
-    private boolean operationGroupVisible = false;           //操作按钮可见状态
-
-    private int refuseCount;
+    public boolean pasteVisible = false;
+    private boolean operationGroupVisible = false;
     public Menu menu;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ExplorerApp.setApplicationContext(this);
-        requestPermission(this);//动态申请权限
+        if (SettingParam.getBoolean(this, CONFIRM_REJECTION, false)) {
+            queryRequest();
+        } else
+            requestPermission(this);
         init();
+    }
+
+    private void queryRequest() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE) &&
+                SettingParam.getBoolean(this, CONFIRM_REJECTION, false)) {//用户明确拒绝权限
+            SimpleDialog simpleDialog = new SimpleDialog(this, R.layout.dialog_detail_info_layout, "抱歉！") {
+                @Override
+                public void queryButtonClick(View v) {
+                    requestPermission(MainActivity.this);//动态申请权限
+                }
+
+                @Override
+                public void customView() {
+                    query.setText("授予权限");
+                    cancle.setText("拒绝权限");
+                    TextView textView = findViewById(R.id.textView13);
+                    textView.setText("抱歉，APP没有权限读取你的文件！");
+                }
+            };
+            simpleDialog.showAndSet(R.drawable.ic_info_outline_black_24dp);
+        } else if (!checkSelfPermission()) {
+            SimpleDialog simpleDialog = new SimpleDialog(this, R.layout.dialog_detail_info_layout, "抱歉！") {
+                @Override
+                public void queryButtonClick(View v) {
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Uri uri = Uri.fromParts("package", MainActivity.this.getPackageName(), null);
+                    intent.setData(uri);
+                    startActivity(intent);
+                }
+
+                @Override
+                public void customView() {
+                    query.setText("手动授予权限");
+                    cancle.setText("拒绝权限");
+                    TextView textView = findViewById(R.id.textView13);
+                    textView.setText("抱歉，APP没有权限读取你的文件！");
+                }
+            };
+            simpleDialog.showAndSet(R.drawable.ic_info_outline_black_24dp);
+        }
+    }
+
+    /**
+     * check permission
+     *
+     * @return true(if have permission)
+     */
+    private boolean checkSelfPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * request permission
+     *
+     */
+    private void requestPermission(Activity activity) {
+        if (!checkSelfPermission()) {//进行授权
+            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == 1) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                fragmentPresenter.refresh(fragmentPager.getCurrentItem(), pathEdit.getText().toString(), true);
+            } else {
+                SettingParam.saveBoolean(this, CONFIRM_REJECTION, true);
+                queryRequest();
+            }
+        }
     }
 
 
@@ -112,21 +193,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return this;
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == 1) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                fragmentPresenter.refresh(fragmentPager.getCurrentItem(), pathEdit.getText().toString(), true);
-            } else { //拒绝权限申请
-                if (refuseCount >= 2) {
-                    finish();
-                    return;
-                }
-                refuseCount++;
-                requestPermission(this);//动态申请权限
-            }
-        }
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -192,22 +258,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onClick(View v) {
                 String name = nameInput.getText().toString();
                 boolean successful;
-                if(v.getId()==R.id.button3){
+                if (v.getId() == R.id.button3) {
                     successful = fragmentPresenter.createNewFile(name, true);
-                }else if(v.getId()==R.id.button4){
+                } else if (v.getId() == R.id.button4) {
                     successful = fragmentPresenter.createNewFile(name, false);
-                }else {
+                } else {
                     dismiss();
                     return;
                 }
-                if(!successful){
+                if (!successful) {
                     ToastUtils.showToast(MainActivity.this, successful ? "成功" : "失败", 1000);
-                }else
+                } else
                     dismiss();
             }
 
             @Override
-            public void queryButtonClick(View v) { }
+            public void queryButtonClick(View v) {
+            }
 
             @Override
             public void setTitle(@Nullable CharSequence title) {
@@ -303,7 +370,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -325,7 +391,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
      * 移除当前fragment
      */
     public void removeFragmentPage() {
-        if(fragmentPresenter.size()==1){
+        if (fragmentPresenter.size() == 1) {
             finish();
             return;
         }
@@ -384,7 +450,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-
     /**
      * 关闭输入法
      *
@@ -410,7 +475,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+    }
 
     @Override
     public void onPageSelected(int position) {

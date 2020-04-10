@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.jil.filexplorer.api.*;
 import com.jil.filexplorer.R;
+import com.jil.filexplorer.bean.ProgressMessage;
 import com.jil.filexplorer.utils.LogUtils;
 
 /**

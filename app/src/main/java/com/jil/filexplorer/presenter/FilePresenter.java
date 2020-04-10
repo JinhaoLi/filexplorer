@@ -1,11 +1,14 @@
-package com.jil.filexplorer.api;
+package com.jil.filexplorer.presenter;
 
 
 import android.content.Context;
-import android.os.Environment;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.activity.ProgressActivity;
 import com.jil.filexplorer.adapter.FileListAdapter;
+import com.jil.filexplorer.api.*;
+import com.jil.filexplorer.bean.FileInfo;
+import com.jil.filexplorer.custom.ExplorerApp;
+import com.jil.filexplorer.model.FileModel;
 import com.jil.filexplorer.ui.CustomFragment;
 import com.jil.filexplorer.utils.LogUtils;
 import net.lingala.zip4j.model.ZipParameters;
@@ -108,7 +111,7 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
 
 
     public void saveSharedPreferences(int spanCount) {
-        SettingParam.saveSharedPreferences(mContext, "Column", spanCount);
+        SettingParam.saveInt(mContext, "Column", spanCount);
     }
 
     public boolean isAddHistory() {

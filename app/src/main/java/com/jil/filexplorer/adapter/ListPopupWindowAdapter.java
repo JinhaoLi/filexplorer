@@ -6,7 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 
-import com.jil.filexplorer.api.Item;
+import com.jil.filexplorer.bean.Item;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.utils.ConstantUtils;
 

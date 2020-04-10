@@ -1,7 +1,6 @@
 package com.jil.filexplorer.utils;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
@@ -13,7 +12,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.graphics.drawable.Drawable;
@@ -40,10 +38,11 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.signature.MediaStoreSignature;
 import com.jil.filexplorer.activity.MainActivity;
-import com.jil.filexplorer.api.FileInfo;
+import com.jil.filexplorer.bean.FileInfo;
 import com.jil.filexplorer.BuildConfig;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.BoxAdapter;
+import com.jil.filexplorer.custom.FileTypeFilter;
 
 import java.io.*;
 import java.lang.ref.SoftReference;
@@ -724,6 +723,9 @@ public class FileUtils {
      * @return
      */
     public static float keepADecimalPlaces(float priceCar) {
+        if(priceCar==Float.POSITIVE_INFINITY){
+            return 0.000001f;
+        }
         // 设置位数
         int scale = 2;
         // 表示四舍五入，可以选择其他舍值方式，例如去尾，等等.

@@ -1,6 +1,7 @@
-package com.jil.filexplorer.api;
+package com.jil.filexplorer.bean;
 
 import android.widget.Checkable;
+import com.jil.filexplorer.bean.Item;
 
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
 

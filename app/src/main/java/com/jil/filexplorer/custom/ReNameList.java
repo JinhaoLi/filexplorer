@@ -1,5 +1,6 @@
-package com.jil.filexplorer.api;
+package com.jil.filexplorer.custom;
 
+import android.annotation.SuppressLint;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +10,9 @@ import java.util.Map;
 public class ReNameList {
     private static ReNameList reNameList;
     static String DIO =":/";
+    @SuppressLint("UseSparseArrays")
     Map<Integer,String> map=new HashMap<>();
+
     private ReNameList(){
 
     }
@@ -57,7 +60,7 @@ public class ReNameList {
                 it= Integer.parseInt(t.substring(t.indexOf("=")+1));
                 name.append(it+twice);
             }else if(t.startsWith("/i-")){
-                it =Integer.parseInt(t.substring(t.indexOf("=")+1));
+                it = Integer.parseInt(t.substring(t.indexOf("=")+1));
                 name.append(it-twice);
             }else {
                 name.append(t);

@@ -1,9 +1,6 @@
 package com.jil.filexplorer.adapter;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Intent;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,19 +12,16 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.ActivityOptionsCompat;
-import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.signature.MediaStoreSignature;
-import com.jil.filexplorer.BuildConfig;
-import com.jil.filexplorer.activity.ImageDisplayActivity;
-import com.jil.filexplorer.activity.MainActivity;
 import com.jil.filexplorer.api.*;
 import com.jil.filexplorer.R;
+import com.jil.filexplorer.bean.FileInfo;
+import com.jil.filexplorer.bean.Item;
+import com.jil.filexplorer.presenter.FilePresenter;
 import com.jil.filexplorer.utils.ConstantUtils;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
@@ -42,8 +36,8 @@ import static com.jil.filexplorer.utils.ConstantUtils.NORMAL_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.SELECTED_COLOR;
 import static com.jil.filexplorer.utils.DialogUtils.showFileInfoMsg;
 import static com.jil.filexplorer.utils.DialogUtils.showListPopupWindow;
-import static com.jil.filexplorer.utils.FileTypeFilter.imageIf;
-import static com.jil.filexplorer.utils.FileTypeFilter.videoIf;
+import static com.jil.filexplorer.custom.FileTypeFilter.imageIf;
+import static com.jil.filexplorer.custom.FileTypeFilter.videoIf;
 import static com.jil.filexplorer.utils.FileUtils.addFastToDesk;
 import static com.jil.filexplorer.utils.FileUtils.chooseViewFile;
 import static com.jil.filexplorer.utils.FileUtils.getOptions;

@@ -1,4 +1,4 @@
-package com.jil.filexplorer.api;
+package com.jil.filexplorer.bean;
 
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.LogUtils;
@@ -34,10 +34,6 @@ public class ProgressMessage {
     private String title;
 
     private float speed;
-
-    public int getMode() {
-        return mode;
-    }
 
 
     public ProgressMessage(long startTime, long totalSize, int projectCount, int mode) {

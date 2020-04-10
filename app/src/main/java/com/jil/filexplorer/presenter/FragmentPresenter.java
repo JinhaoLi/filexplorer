@@ -1,4 +1,4 @@
-package com.jil.filexplorer.api;
+package com.jil.filexplorer.presenter;
 
 import android.content.Context;
 import android.os.Environment;
@@ -9,6 +9,10 @@ import com.jil.filexplorer.R;
 import com.jil.filexplorer.activity.ProgressActivity;
 import com.jil.filexplorer.adapter.FragmentAdapter;
 import com.jil.filexplorer.adapter.SupperAdapter;
+import com.jil.filexplorer.api.FileChangeListener;
+import com.jil.filexplorer.api.FileOperation;
+import com.jil.filexplorer.api.SettingParam;
+import com.jil.filexplorer.model.FragmentModel;
 import com.jil.filexplorer.ui.*;
 import com.jil.filexplorer.utils.ConstantUtils;
 import com.jil.filexplorer.utils.FileUtils;
@@ -18,7 +22,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import static com.jil.filexplorer.api.ExplorerApp.fragmentPresenter;
+import static com.jil.filexplorer.custom.ExplorerApp.fragmentPresenter;
 import static com.jil.filexplorer.api.FileOperation.*;
 import static com.jil.filexplorer.utils.ConstantUtils.*;
 import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;

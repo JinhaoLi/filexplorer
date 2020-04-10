@@ -1,6 +1,6 @@
-package com.jil.filexplorer.api;
+package com.jil.filexplorer.custom;
 
-import com.jil.filexplorer.utils.LogUtils;
+import com.jil.filexplorer.bean.FileInfo;
 
 import java.util.Comparator;
 

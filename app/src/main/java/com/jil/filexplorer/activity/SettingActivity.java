@@ -5,7 +5,6 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -22,15 +21,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.jil.filexplorer.api.ActivityManager;
-import com.jil.filexplorer.api.ExplorerApp;
-import com.jil.filexplorer.api.SettingItem;
+import com.jil.filexplorer.utils.ActivityManager;
+import com.jil.filexplorer.bean.SettingItem;
 import com.jil.filexplorer.api.SettingParam;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.SupperAdapter;
 import com.jil.filexplorer.ui.MyItemDecoration;
 import com.jil.filexplorer.ui.SimpleDialog;
-import com.jil.filexplorer.utils.EmailHelper;
+//import com.jil.filexplorer.utils.EmailHelper;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.ToastUtils;
 
@@ -42,9 +40,7 @@ import static com.jil.filexplorer.utils.ConstantUtils.BULE_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.DARK_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
 import static com.jil.filexplorer.utils.DialogUtils.showAlertDialog;
-import static com.jil.filexplorer.utils.FileUtils.deleteDirectory;
-import static com.jil.filexplorer.utils.FileUtils.installApk;
-import static com.jil.filexplorer.utils.FileUtils.stayFireNumber;
+import static com.jil.filexplorer.utils.FileUtils.*;
 import static com.jil.filexplorer.utils.PackageInfoManager.getVersionName;
 
 /**
@@ -53,16 +49,11 @@ import static com.jil.filexplorer.utils.PackageInfoManager.getVersionName;
 public class SettingActivity extends AppCompatActivity {
 
     private SupperAdapter<SettingItem> supperAdapter;
-    private static ArrayList<SettingItem> itemArrayList;
+    private ArrayList<SettingItem> itemArrayList;
     private RecyclerView settingList;
     float cacheSize;
     SettingItem clearCache;
-    private ActivityManager activityManager;
-    SettingItem updateItem;
-    javax.mail.Message updateMessage;
     String versionName;
-    EmailHelper up;
-    Thread downLoadFile;
 
 
     @SuppressLint("HandlerLeak")
@@ -83,45 +74,6 @@ public class SettingActivity extends AppCompatActivity {
             countCacheSize.run();
         }
     };
-
-    Runnable checkUpdate = new Runnable() {//检查更新
-        @Override
-        public void run() {
-
-            if (up == null)
-                up = new EmailHelper();
-            String s=up.getSubject();
-            if (s != null) {
-                if (s.contains("=")) {
-                    String ver = s.substring(s.lastIndexOf("=") + 1);
-                    if (versionName.equals(ver)) {
-                        updateItem.setDescription("已经是最新版本" + ver);
-                    } else {
-                        updateItem.setDescription("最新版本" + ver + "，点击查看");
-                        updateItem.setSwitchOpen(true);
-                    }
-                }
-            }
-            updateUi();
-        }
-    };
-
-    Runnable downloadUpdate = new Runnable() {
-        @Override
-        public void run() {
-            File updateApk = null;
-            try {
-                updateApk = up.saveAttachMent(SettingActivity.this);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            if (updateApk != null && updateApk.exists())
-                installApk(updateApk.getPath(), SettingActivity.this);
-            else
-                ToastUtils.showToast(SettingActivity.this, "升级下载失败！", 1000);
-        }
-    };
-
 
     Runnable countCacheSize = new Runnable() {//计算缓存大小
         @Override
@@ -152,13 +104,7 @@ public class SettingActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
         versionName = getVersionName(this);
-        activityManager = ActivityManager.getInstance();
-
-        if(itemArrayList!=null){
-            itemArrayList.clear();
-        }else {
-            itemArrayList=new ArrayList<>();
-        }
+        itemArrayList=new ArrayList<>();
         createSettingItem();
         settingList = findViewById(R.id.set_list);
         LinearLayoutManager llm = new LinearLayoutManager(this);
@@ -177,7 +123,6 @@ public class SettingActivity extends AppCompatActivity {
                 holder.setText(R.id.textView2, data.getName());
                 if (data.getDescription() != null && !data.getDescription().equals("")) {
                     holder.setText(R.id.textView, data.getDescription());
-                    //holder.getView(R.id.textView).setVisibility(View.VISIBLE);
                 } else {
                     holder.getView(R.id.textView).setVisibility(View.GONE);
                 }
@@ -197,7 +142,6 @@ public class SettingActivity extends AppCompatActivity {
                         } else {
                             data.click(cuView);
                         }
-
                     }
                 });
 
@@ -215,30 +159,11 @@ public class SettingActivity extends AppCompatActivity {
     }
 
     private void createSettingItem() {
-
-        SettingItem theme = new SettingItem("主题", 5151) {
+        SettingItem item =new SettingItem("测试项目","",false,515){
             @Override
             public void click(View v) {
-                int i = 0;
-                if (SettingParam.Theme != R.style.AppTheme) {
-                    i = 1;
-                }
-                String[] item = new String[]{"亮色", "暗色"};
-                AlertDialog.Builder builder = showAlertDialog(SettingActivity.this, "主题选择");
-                builder.setSingleChoiceItems(item, i, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0) {
-                            saveSharedPreferences(SettingActivity.this, "theme", R.style.AppTheme);
-                            saveSharedPreferences(SettingActivity.this, "main_color", BULE_COLOR);
-                        } else if (which == 1) {
-                            saveSharedPreferences(SettingActivity.this, "theme", R.style.MyThemeGray);
-                            saveSharedPreferences(SettingActivity.this, "main_color", DARK_COLOR);
-                        }
-                        readSharedPreferences(SettingActivity.this);
-                        activityManager.removeActivity(MainActivity.class);
-                    }
-                }).create().show();
+                CompoundButton s = (CompoundButton) v;
+                setSwitchOpen(s.isChecked());
             }
         };
         SettingItem recycleBin = new SettingItem("回收站", "开启回收站之后文件不会被真正地删除", (SettingParam.RecycleBin > 0), 5051) {
@@ -248,7 +173,7 @@ public class SettingActivity extends AppCompatActivity {
                 boolean check = s.isChecked();
                 setSwitchOpen(s.isChecked());
                 int i = check ? 1 : -1;
-                saveSharedPreferences(SettingActivity.this, "RecycleBin", i);
+                saveInt(SettingActivity.this, "RecycleBin", i);
                 setRecycleBin(check ? 1 : -1);
             }
         };
@@ -259,7 +184,7 @@ public class SettingActivity extends AppCompatActivity {
                 boolean check = s.isChecked();
                 setSwitchOpen(s.isChecked());
                 int i = check ? 1 : -1;
-                saveSharedPreferences(SettingActivity.this, "ImageCacheSwitch", i);
+                saveInt(SettingActivity.this, "ImageCacheSwitch", i);
                 setImageCacheSwitch(check ? 1 : -1);
             }
         };
@@ -270,25 +195,19 @@ public class SettingActivity extends AppCompatActivity {
                 boolean check = s.isChecked();
                 setSwitchOpen(s.isChecked());
                 int i = check ? 1 : -1;
-                saveSharedPreferences(SettingActivity.this, "SmallViewSwitch", i);
+                saveInt(SettingActivity.this, "SmallViewSwitch", i);
                 setSmallViewSwitch(check ? 1 : -1);
             }
         };
-        SettingItem showHide =new SettingItem("显示隐藏文件","显示以\".\"开头的文件", (ShowHide>0),1468) {
+        SettingItem showHide =new SettingItem("显示隐藏文件","显示以.开头的文件", (ShowHide>0),1468) {
             @Override
             public void click(View v) {
                 CompoundButton s = (CompoundButton) v;
                 boolean check = s.isChecked();
                 setSwitchOpen(s.isChecked());
                 int i = check ? 1 : -1;
-                saveSharedPreferences(SettingActivity.this, "ShowHide", i);
+                saveInt(SettingActivity.this, "ShowHide", i);
                 setShowHide(check ? 1 : -1);
-            }
-        };
-        SettingItem email = new SettingItem("发送日志", "发送日志给开发者帮助开发者发现bug", 851) {
-            @Override
-            public void click(View v) {
-                EmailHelper.sendEmail();
             }
         };
         SettingItem donations =new SettingItem("支持开发者","开发者正在为生计奔波劳累◑﹏◐",1552) {
@@ -310,34 +229,6 @@ public class SettingActivity extends AppCompatActivity {
 
             }
         };
-        updateItem = new SettingItem("检查更新", "当前版本" + versionName + "，点击检查更新", 4501) {
-            @Override
-            public void click(View v) {
-                if (isSwitchOpen()) {
-                    SimpleDialog updateDialog =new SimpleDialog(SettingActivity.this,R.layout.dialog_detail_info_layout,"升级信息") {
-                        TextView info;
-                        @Override
-                        public void queryButtonClick(View v) {
-                            new Thread(downloadUpdate).start();
-                        }
-
-                        @Override
-                        public void customView() {
-                            super.customView();
-                            info=findViewById(R.id.textView13);
-                            info.setText(up.getUpdateInfo());
-                            query.setText("下载");
-                        }
-                    };
-                    updateDialog.showAndSet(R.drawable.ic_arrow_upward_black_24dp);
-
-                } else {
-                    setDescription("正在检查更新，请稍侯...");
-                    updateUi();
-                    new Thread(checkUpdate).start();
-                }
-            }
-        };
         SettingItem testMode =new SettingItem("测试模式","测试模式下不会进行真正的文件操作",(SettingParam.TestModeSwitch>0),9595) {
             @Override
             public void click(View v) {
@@ -345,31 +236,20 @@ public class SettingActivity extends AppCompatActivity {
                 boolean check = s.isChecked();
                 setSwitchOpen(s.isChecked());
                 int i = check ? 1 : -1;
-                saveSharedPreferences(SettingActivity.this, "TestModeSwitch", i);
+                saveInt(SettingActivity.this, "TestModeSwitch", i);
                 setTestModeSwitch(check ? 1 : -1);
             }
         };
 
-        //itemArrayList.add(theme);
+        itemArrayList.add(item);
         itemArrayList.add(recycleBin);
         itemArrayList.add(imageCache);
         itemArrayList.add(smallViewSwitch);
         itemArrayList.add(showHide);
-        itemArrayList.add(email);
-        itemArrayList.add(updateItem);
         itemArrayList.add(donations);
         itemArrayList.add(testMode);
-        //new Thread(checkUpdate).start();
-        new Thread(countCacheSize).start();
-    }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-//        if (!activityManager.isLive(MainActivity.class)) {
-//            Intent i = new Intent(SettingActivity.this, MainActivity.class);
-//            startActivity(i);
-//        }
+        new Thread(countCacheSize).start();
     }
 
     private void updateUi(){

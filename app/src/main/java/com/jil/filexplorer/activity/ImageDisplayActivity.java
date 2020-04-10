@@ -3,7 +3,6 @@ package com.jil.filexplorer.activity;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.*;
 import android.view.View;
@@ -21,10 +20,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
-import com.jil.filexplorer.api.ExplorerApp;
+import com.jil.filexplorer.custom.ExplorerApp;
 import com.jil.filexplorer.api.FileChangeListener;
 import com.jil.filexplorer.api.ImageFilter;
-import com.jil.filexplorer.api.Item;
+import com.jil.filexplorer.bean.Item;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.ImageAdapter;
 import com.jil.filexplorer.adapter.SupperAdapter;
@@ -37,7 +36,6 @@ import com.jil.filexplorer.utils.LogUtils;
 import com.jil.filexplorer.utils.ToastUtils;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -46,7 +44,6 @@ import java.util.Arrays;
 import static com.jil.filexplorer.utils.DialogUtils.showFileInfoMsg;
 import static com.jil.filexplorer.utils.DialogUtils.showListPopupWindow;
 import static com.jil.filexplorer.utils.FileUtils.getPicWidthAndHeight;
-import static com.jil.filexplorer.utils.FileUtils.hideMax;
 import static com.jil.filexplorer.utils.UiUtils.NavigationBarStatusBar;
 import static com.jil.filexplorer.utils.UiUtils.setNavigationBar;
 

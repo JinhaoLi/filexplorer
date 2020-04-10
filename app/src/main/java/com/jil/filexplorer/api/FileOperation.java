@@ -11,6 +11,8 @@ import androidx.core.app.NotificationCompat;
 
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.activity.ProgressActivity;
+import com.jil.filexplorer.bean.FileInfo;
+import com.jil.filexplorer.bean.ProgressMessage;
 import com.jil.filexplorer.utils.LogUtils;
 
 import net.lingala.zip4j.core.ZipFile;
@@ -25,11 +27,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.jil.filexplorer.utils.ConstantUtils.PROGRESS_ID;
@@ -384,7 +384,7 @@ public class FileOperation implements Runnable {
         if (progressChangeListener != null)
             progressChangeListener.progressChang(progressMessage);
         notificationManager.cancel((int) id);
-        //setNotification(0);
+        setNotification(0);
     }
 
 
@@ -392,7 +392,6 @@ public class FileOperation implements Runnable {
         for (FileInfo temp : deleteList) {
             if (!running)
                 break;
-
             String location = temp.getFilePath();
             progressMessage.setIn(location);
             progressMessage.setNowProjectName(temp.getFileName());
@@ -427,7 +426,7 @@ public class FileOperation implements Runnable {
                 progressMessage.setIn(f.getPath());
                 progressMessage.setProjectOverCount(completedCount);
             }
-            refreshProgress(f.length());
+            updateProgress(f.length());
         }
         return true;
     }
@@ -490,7 +489,7 @@ public class FileOperation implements Runnable {
             } else {
                 zipFile.addFolder(temp, zipParameters);
             }
-            refreshProgress(onlyGetLength(temp));
+            updateProgress(onlyGetLength(temp));
         }
         missionFinish();
     }
@@ -522,7 +521,12 @@ public class FileOperation implements Runnable {
     private void nioBufferCopy(File source, File target) {
         if (!source.exists()) {
             notificationMessage = source.getPath() + "不存在！";
-            refreshProgress(0);
+            updateProgress(0);
+            return;
+        }
+        if(target.exists()){
+            notificationMessage=target.getPath()+"已存在!";
+            updateProgress(0);
             return;
         }
         FileChannel in = null;
@@ -542,7 +546,7 @@ public class FileOperation implements Runnable {
                 out.write(buffer);
                 buffer.clear();
                 size -= 1024 * 1024 * 20;
-                refreshProgress(size > 0 ? 1024 * 1024 * 20 : (1024 * 1024 * 20) + size);
+                updateProgress(size > 0 ? 1024 * 1024 * 20 : (1024 * 1024 * 20) + size);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -556,7 +560,7 @@ public class FileOperation implements Runnable {
     /**
      * 复制文件时发送进度
      */
-    private void refreshProgress(long size) {
+    private void updateProgress(long size) {
         progressMessage.setProjectOverCount(completedCount);
         completedSize += size;
         progressMessage.setNowLoacation(completedSize);
@@ -604,7 +608,7 @@ public class FileOperation implements Runnable {
             if (file.delete()) {
                 completedCount++;
                 progressMessage.setProjectOverCount(completedCount);
-                refreshProgress(file.length());
+                updateProgress(file.length());
                 LogUtils.i("删除进程：", "Copy_Delete.deleteSingleFile: 删除单个文件" + filePath$Name + "成功！");
                 return true;
             } else {
@@ -660,7 +664,7 @@ public class FileOperation implements Runnable {
 
             completedCount++;
             progressMessage.setProjectOverCount(completedCount);
-            refreshProgress(1);
+            updateProgress(1);
 
             LogUtils.i("删除进程", "Copy_Delete.deleteDirectory: 删除目录" + filePath + "成功！");
             return true;
@@ -755,7 +759,7 @@ public class FileOperation implements Runnable {
                 completedCount++;
                 progressMessage.setIn(missionList.get(0).getFilePath());
                 progressMessage.setNowProjectName(missionList.get(0).getFileName());
-                refreshProgress(totalTaskSize/projectCount);
+                updateProgress(totalTaskSize/projectCount);
             }
         }else {
             while (running) {
@@ -770,7 +774,7 @@ public class FileOperation implements Runnable {
                 }
                 progressMessage.setIn(missionList.get(0).getFilePath());
                 progressMessage.setNowProjectName(missionList.get(0).getFileName());
-                refreshProgress(totalTaskSize / 10);
+                updateProgress(totalTaskSize / 10);
             }
         }
 
@@ -797,7 +801,8 @@ public class FileOperation implements Runnable {
                 fis.write(b, 0, len);
                 fis.flush();
                 sum += len;
-                refreshProgress(len);
+
+                updateProgress(len);
             }
             System.out.println("数据大小：---------------------------------------------" + sum);
         } catch (Exception exception) {
@@ -810,12 +815,10 @@ public class FileOperation implements Runnable {
     private static PendingIntent getIntent(Context context, long id) {
         Intent intent = new Intent(context, ProgressActivity.class);
         intent.putExtra("FileOperation.id", id);
-        //LogUtils.i("FileOperation.getIntent()","id"+id);
         return PendingIntent.getActivity(context, (int) (Math.random() * 100000), intent, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
     public void setNotification(int progress) {
-
         String message;
         if (progressMessage != null)
             message = progressMessage.getTitle(progress);
@@ -832,8 +835,6 @@ public class FileOperation implements Runnable {
         if (notificationManager != null) {
             notificationManager.notify((int) getId(), notification);
         }
-
-
     }
 
 

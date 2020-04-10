@@ -10,9 +10,8 @@ import android.view.View;
 import android.widget.ListPopupWindow;
 import android.widget.TextView;
 
-import com.jil.filexplorer.activity.SettingActivity;
-import com.jil.filexplorer.api.FileInfo;
-import com.jil.filexplorer.api.Item;
+import com.jil.filexplorer.bean.FileInfo;
+import com.jil.filexplorer.bean.Item;
 import com.jil.filexplorer.R;
 import com.jil.filexplorer.adapter.ListPopupWindowAdapter;
 import com.jil.filexplorer.ui.SimpleDialog;

@@ -10,18 +10,10 @@ import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 
-import com.jil.filexplorer.activity.MainActivity;
 import com.jil.filexplorer.R;
 
-import com.jil.filexplorer.api.FileInfo;
-import com.jil.filexplorer.utils.ToastUtils;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
-
-import java.io.File;
-import java.util.ArrayList;
-
-import static com.jil.filexplorer.utils.FileUtils.getFileInfoFromPath;
 
 /**
  * @author JIL

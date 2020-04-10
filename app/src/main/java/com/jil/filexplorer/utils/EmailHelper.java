@@ -3,7 +3,7 @@ package com.jil.filexplorer.utils;
 import android.content.Context;
 import android.os.Environment;
 
-import com.jil.filexplorer.api.FileInfo;
+import com.jil.filexplorer.bean.FileInfo;
 import com.jil.filexplorer.api.FileOperation;
 
 import org.json.JSONException;
@@ -43,7 +43,7 @@ import static com.jil.filexplorer.utils.FileUtils.closeAnyThing;
 /***
  * 升级邮件主题格式
  * 邮件主题：Filexplorer Update Message=1.0.0
- * 正文：{ "name":"filexplorer.apk", "length":10000, "description":"1.这是一个全新的版本，你没有见过的版本。\n2.apk本体使用方舟编译器编译。" }
+ * 正文：{ "name":"filexplorer.apk", "length":10000, "description":"1.这是一个全新的版本，你没有见过的版本。" }
  */
 public class EmailHelper {
     private Properties properties;

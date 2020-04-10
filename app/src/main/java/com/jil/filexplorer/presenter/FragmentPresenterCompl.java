@@ -1,12 +1,14 @@
-package com.jil.filexplorer.api;
+package com.jil.filexplorer.presenter;
 
 import android.content.Context;
 import androidx.fragment.app.FragmentManager;
+import com.jil.filexplorer.api.MVPFramework;
+import com.jil.filexplorer.presenter.FilePresenter;
 import com.jil.filexplorer.ui.CustomFragment;
 
 public class FragmentPresenterCompl {
 
-    public interface IFragmentModel extends MVPFramework.IModel{
+    public interface IFragmentModel extends MVPFramework.IModel {
 
         void init();
 

@@ -30,12 +30,11 @@
     </FrameLayout>
 
     <androidx.viewpager.widget.ViewPager
-        android:id="@+id/fragment_pager"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:overScrollMode="never">
-
+            android:id="@+id/fragment_pager"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:overScrollMode="never">
     </androidx.viewpager.widget.ViewPager>
 
     <FrameLayout

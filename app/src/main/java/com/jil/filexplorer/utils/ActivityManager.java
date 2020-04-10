@@ -1,4 +1,4 @@
-package com.jil.filexplorer.api;
+package com.jil.filexplorer.utils;
 
 import android.app.Activity;
 

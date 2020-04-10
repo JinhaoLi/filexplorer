@@ -1,8 +1,7 @@
-package com.jil.filexplorer.api;
+package com.jil.filexplorer.model;
 
-import android.content.Context;
-import androidx.fragment.app.Fragment;
-import com.jil.filexplorer.activity.MainActivity;
+import com.jil.filexplorer.presenter.FilePresenter;
+import com.jil.filexplorer.presenter.FragmentPresenterCompl;
 import com.jil.filexplorer.ui.CustomFragment;
 import com.jil.filexplorer.ui.FileShowFragment;
 
@@ -10,7 +9,7 @@ import com.jil.filexplorer.ui.FileShowFragment;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FragmentModel implements FragmentPresenterCompl.IFragmentModel{
+public class FragmentModel implements FragmentPresenterCompl.IFragmentModel {
 
     public List<CustomFragment> fragments;
     private static FragmentModel fragmentModel =null;

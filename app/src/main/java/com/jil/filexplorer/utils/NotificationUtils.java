@@ -14,8 +14,6 @@ import androidx.core.app.NotificationCompat;
 
 import com.jil.filexplorer.activity.ProgressActivity;
 import com.jil.filexplorer.R;
-import com.jil.filexplorer.api.FileOperation;
-import com.jil.filexplorer.api.ProgressMessage;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.jil.filexplorer.utils.ConstantUtils.PROGRESS_ID;

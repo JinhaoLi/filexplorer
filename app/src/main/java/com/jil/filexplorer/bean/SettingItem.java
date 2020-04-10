@@ -1,12 +1,12 @@
-package com.jil.filexplorer.api;
+package com.jil.filexplorer.bean;
 
 import android.view.View;
 
 import com.jil.filexplorer.R;
 
-public abstract class SettingItem extends Item{
+public abstract class SettingItem extends Item {
     private String description;
-    private int itemLayout;
+    private int itemLayout=0;
     private boolean switchOpen;
 
     public SettingItem(String name, int id) {
