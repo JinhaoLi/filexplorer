@@ -335,7 +335,7 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
 
     public String getUnderBarMsg() {
         int selectSize = fileModel.getSelectedSize();
-        setMenuVisible(selectSize);
+        setMenuVisible();
         long size = fileModel.getAllSelectedLength();
         boolean haveDir = fileModel.haveSelectedDir();
         String howStr = selectSize == 0 ? "" : "|\t" + getContext().getString(R.string.select) + selectSize + "" + getContext().getString(R.string.how_many_item);
@@ -351,7 +351,7 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
         return "\t" + fileModel.size() + getContext().getString(R.string.how_many_item) + "\t\t" + howStr + "\t\t" + bigStr;
     }
 
-    private void setMenuVisible(int selectSize) {
+    private void setMenuVisible() {
         //区间选择menu
         int[] se = getSelectStartAndEndPosition();
         if (se[1] - se[0] > 1)
@@ -359,12 +359,6 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
         else
             ExplorerApp.fragmentPresenter.setSelectIntervalIco(false, -1, -1);
 
-        //文件操作menus
-//        if (selectSize != 0) {
-//            ExplorerApp.fragmentPresenter.setOperationGroupVisible(true);
-//        } else {
-//            ExplorerApp.fragmentPresenter.setOperationGroupVisible(false);
-//        }
         if(isAllSelected()){
             ExplorerApp.fragmentPresenter.changeAllSelectIco(true);
         }else {

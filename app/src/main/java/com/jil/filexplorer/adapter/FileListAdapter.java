@@ -91,11 +91,6 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
     //item进入视图
     @Override
     public void onViewAttachedToWindow(@NonNull DefaultViewHolder holder) {
-//        if (mData.get(holder.getAdapterPosition()).isSelected()) {
-//            holder.itemView.setBackgroundColor(ConstantUtils.SELECTED_COLOR);
-//        } else {
-//            holder.itemView.setBackgroundColor(NORMAL_COLOR);
-//        }
         super.onViewAttachedToWindow(holder);
     }
 
@@ -165,12 +160,6 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
                     filePresenter.input2Model(path,true);
                 } else {
                     if(fileInfo.getIcon()==R.mipmap.list_ico_image){
-//                        Activity activity=ActivityManager.getInstance().getActivity(MainActivity.class);
-//                        ActivityOptionsCompat activityOptionsCompat = ActivityOptionsCompat.makeSceneTransitionAnimation(activity,holder.icon, "shareElement");
-//                        Intent intent =new Intent(activity, ImageDisplayActivity.class);
-//                        Uri uri = FileProvider.getUriForFile(ExplorerApp.ApplicationContext, BuildConfig.APPLICATION_ID + ".fileprovider", new File(fileInfo.getFilePath()));
-//                        intent.setData(uri);
-//                        ActivityCompat.startActivity(activity, intent, activityOptionsCompat.toBundle());
                         viewFile(filePresenter.mContext, fileInfo,view);
 
                     }else {
