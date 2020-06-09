@@ -62,93 +62,6 @@ import static com.jil.filexplorer.utils.UiUtils.getScreenHeight;
 public class FileUtils {
 
     /**
-     * 读写文件——请求授权
-     */
-    public static void requestPermission(Activity activity) {
-        if (ContextCompat.checkSelfPermission(activity,
-                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) { //表示未授权时
-            //进行授权
-            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-        }
-    }
-
-    /**
-     * 应用程序运行命令获取 Root权限，设备必须已破解(获得ROOT权限)
-     *
-     * @param command 命令：String apkRoot="chmod 777 "+getPackageCodePath(); RootCommand(apkRoot);
-     *
-     * @return 应用程序是/否获取Root权限
-     */
-    public static boolean RootCommand(String command) {
-        Process process = null;
-        DataOutputStream os = null;
-        DataInputStream is = null;
-        try {
-            process = Runtime.getRuntime().exec("su");
-            os = new DataOutputStream(process.getOutputStream());
-            os.writeBytes(command + "\n");
-            os.writeBytes("exit\n");
-            os.flush();
-            int aa = process.waitFor();
-            LogUtils.d("waitFor():", aa + "");
-            is = new DataInputStream(process.getInputStream());
-            byte[] buffer = new byte[is.available()];
-            LogUtils.d("大小", buffer.length + "");
-            is.read(buffer);
-            String out = new String(buffer);
-            LogUtils.d("返回:", out);
-        } catch (Exception e) {
-            e.printStackTrace();
-            LogUtils.e("错误", "205:" + e.getMessage());
-            return false;
-        } finally {
-            try {
-                if (os != null) {
-                    os.close();
-                }
-                if (is != null) {
-                    is.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                LogUtils.e("错误", "217:" + e.getMessage());
-            }
-            process.destroy();
-        }
-        LogUtils.d("成功", "222 SUCCESS");
-        return true;
-    }
-
-    //翻译并执行相应的adb命令
-    public static boolean exusecmd(String command) {
-        Process process = null;
-        DataOutputStream os = null;
-        try {
-            process = Runtime.getRuntime().exec("su");
-            os = new DataOutputStream(process.getOutputStream());
-            os.writeBytes(command + "\n");
-            os.writeBytes("exit\n");
-            os.flush();
-            process.waitFor();
-        } catch (Exception e) {
-            LogUtils.e("root command err", e.getMessage());
-            return false;
-        } finally {
-            try {
-                if (os != null) {
-                    os.close();
-                }
-                if (process != null) {
-                    process.destroy();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return true;
-    }
-
-    /**
      * 添加快捷方式到桌面
      * @param context
      * @param name
@@ -177,7 +90,7 @@ public class FileUtils {
                 shortCutIntent.setAction(Intent.ACTION_VIEW);
                 shortCutIntent.putExtra(MainActivity.INTENT_INPUT_PATH, path);
                 //快捷方式创建相关信息。图标名字 id
-                ShortcutInfo shortcutInfo = null;
+                ShortcutInfo shortcutInfo;
                 shortcutInfo = new ShortcutInfo.Builder(context, path)
                         .setIcon(Icon.createWithResource(context, icoRes))
                         .setShortLabel(name)
@@ -190,25 +103,6 @@ public class FileUtils {
             }
         }
 
-    }
-
-    /**
-     * 刷新RequestOptions，解決Glide图片缓存导致不刷新问题
-     *
-     * @param options
-     * @param file     图片地址
-     * @param modified 图片修改时间
-     */
-    public static void updateOptions(RequestOptions options, File file, long modified) {
-        if (!file.getPath().equals("") && modified != 0) {
-            try {
-                String tail = file.getName().toLowerCase();
-                String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(tail);
-                if (type != null && !type.equals(""))
-                    options.signature(new MediaStoreSignature(type, modified, 0));
-            } catch (Exception e) {
-            }
-        }
     }
 
     public static RequestOptions getOptions(int imageCache, int width, int height) {
@@ -277,9 +171,7 @@ public class FileUtils {
             int lCount;
             File[] files = file.listFiles();
             // files==null意味着无法访问此目录
-            if (files == null) {
-                //return null;
-            } else {
+            if (null != files) {
                 lCount = files.length;
                 fileInfo.setCount(lCount);
             }
@@ -295,16 +187,8 @@ public class FileUtils {
     }
 
     public static FileInfo getFileInfoFromPath(String path) {
-        SoftReference<File> softReference = new SoftReference<File>(new File(path));
+        SoftReference<File> softReference = new SoftReference<>(new File(path));
         return getFileInfoFromFile(softReference.get());
-    }
-
-    public static boolean reNameFile(File file, String name) {
-        File file1 = new File(file.getParent(), name);
-        if (file.isFile()) {
-            return file.renameTo(file1);
-        }
-        return false;
     }
 
     public static Drawable getApkIcon(Context context, String apkPath) {
@@ -318,16 +202,6 @@ public class FileUtils {
             return appInfo.loadIcon(pm);
         }
         return null;
-    }
-
-    public static String getFormatData(Date date) {
-        SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd");//设置日期格式
-        return df.format(date);
-    }
-
-    public static String getFormatData(long date,String format) {
-        SimpleDateFormat df = new SimpleDateFormat(format);//设置日期格式
-        return df.format(date);
     }
 
     public static String getFormatData(long date) {
@@ -375,8 +249,7 @@ public class FileUtils {
             return new ArrayList<>();
         }
         ArrayList<FileInfo> selectList = new ArrayList<>();
-        for (int i = 0; i < fileInfos.size(); i++) {
-            FileInfo fileInfo = fileInfos.get(i);
+        for (FileInfo fileInfo : fileInfos) {
             if (fileInfo.isSelected()) {
                 selectList.add(fileInfo);
             }
@@ -657,9 +530,8 @@ public class FileUtils {
         if (dotPosition == -1)
             return "未知";
 
-        String ext = filePath.substring(dotPosition + 1)
+        return filePath.substring(dotPosition + 1)
                 .toLowerCase();
-        return ext;
     }
 
     public static void installApk(String filePath, Context context) {
@@ -689,22 +561,24 @@ public class FileUtils {
      *
      * @param context
      */
-    @RequiresApi(api = Build.VERSION_CODES.O)
     private static void startInstallPermissionSettingActivity(Context context) {
         //注意这个是8.0新API
-        Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+            Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        }
+
     }
 
     /**
-     * 保留5位有效数字
+     * 保留4位有效数字
      *
-     * @param priceCar
+     * @param priceCar 输入
      *
      * @return
      */
-    public static float stayFireNumber(float priceCar) {
+    public static float stay4Number(float priceCar) {
         // 设置位数
         int scale = getScale(priceCar);
         // 表示四舍五入，可以选择其他舍值方式，例如去尾，等等.
@@ -763,47 +637,6 @@ public class FileUtils {
         }
     }
 
-    /**
-     * 删除文件
-     *
-     * @param fileInfo
-     *
-     * @return
-     */
-    public static boolean deleteAFile(FileInfo fileInfo) {
-
-        String loaction = fileInfo.getFilePath();
-        if (fileInfo.isDir()) {
-            return deleteDirectory(loaction);
-        } else {
-            return deleteSingleFile(loaction);
-        }
-
-    }
-
-    /**
-     * 复制文件夹及其路径下的所有文件
-     *
-     * @param from
-     * @param to
-     *
-     * @throws IOException
-     */
-    public static void copyDirWithFile(File from, File to) {
-        File targt = new File(to.getPath(), from.getName());
-        if (!targt.exists()) targt.mkdir();
-        File[] files = from.listFiles();
-        if (files != null) {
-            for (File temp : files) {
-                if (temp.isFile()) {
-                    nioBufferCopy(temp, new File(targt, temp.getName()));
-                } else {
-                    copyDirWithFile(temp, targt);
-                }
-            }
-        }
-    }
-
     public static boolean reNameFile(FileInfo inFile, String fileName) {
         File in = new File(inFile.getFilePath());
         File out = new File(in.getParent(), fileName);
@@ -814,59 +647,6 @@ public class FileUtils {
         }
     }
 
-
-    /**
-     * 复制文件，效率最高
-     *
-     * @param source
-     * @param target
-     */
-    private static void nioTransferCopy(File source, File target) {
-        FileChannel in = null;
-        FileChannel out = null;
-        FileInputStream inStream = null;
-        FileOutputStream outStream = null;
-        try {
-            inStream = new FileInputStream(source);
-            outStream = new FileOutputStream(target);
-            in = inStream.getChannel();
-            out = outStream.getChannel();
-            in.transferTo(0, in.size(), out);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            closeAnyThing(inStream, in, outStream, out);
-        }
-    }
-
-    /**
-     * 复制文件，可监测进度
-     *
-     * @param source
-     * @param target
-     */
-    private static void nioBufferCopy(File source, File target) {
-        FileChannel in = null;
-        FileChannel out = null;
-        FileInputStream inStream = null;
-        FileOutputStream outStream = null;
-        try {
-            inStream = new FileInputStream(source);
-            outStream = new FileOutputStream(target);
-            in = inStream.getChannel();
-            out = outStream.getChannel();
-            ByteBuffer buffer = ByteBuffer.allocate(4096);
-            while (in.read(buffer) != -1) {
-                buffer.flip();
-                out.write(buffer);
-                buffer.clear();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            closeAnyThing(inStream, in, outStream, out);
-        }
-    }
 
     public static void closeAnyThing(Closeable... closeable) {
         for (Closeable temp : closeable) {
@@ -989,7 +769,7 @@ public class FileUtils {
                 recursionZip(zipOut, fileSec, baseDir + file.getName() + File.separator);
             }
         }else{
-            FileChannel in = null;
+            FileChannel in;
             ByteBuffer buffer = ByteBuffer.allocate(409600);
             FileInputStream input = new FileInputStream(file);
             in =input.getChannel();

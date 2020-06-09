@@ -2,9 +2,7 @@ package com.jil.filexplorer.activity;
 
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -13,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.Switch;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
@@ -21,7 +18,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.jil.filexplorer.utils.ActivityManager;
 import com.jil.filexplorer.bean.SettingItem;
 import com.jil.filexplorer.api.SettingParam;
 import com.jil.filexplorer.R;
@@ -32,14 +28,10 @@ import com.jil.filexplorer.ui.SimpleDialog;
 import com.jil.filexplorer.utils.FileUtils;
 import com.jil.filexplorer.utils.ToastUtils;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import static com.jil.filexplorer.api.SettingParam.*;
-import static com.jil.filexplorer.utils.ConstantUtils.BULE_COLOR;
-import static com.jil.filexplorer.utils.ConstantUtils.DARK_COLOR;
 import static com.jil.filexplorer.utils.ConstantUtils.MB;
-import static com.jil.filexplorer.utils.DialogUtils.showAlertDialog;
 import static com.jil.filexplorer.utils.FileUtils.*;
 import static com.jil.filexplorer.utils.PackageInfoManager.getVersionName;
 
@@ -80,14 +72,14 @@ public class SettingActivity extends AppCompatActivity {
         public void run() {
             cacheSize = (float) FileUtils.getLength(SettingActivity.this.getCacheDir()) / MB;
             if (clearCache == null) {
-                clearCache = new SettingItem("清除缓存", "当前缓存大小为" + stayFireNumber(cacheSize) + "MB", 5151) {
+                clearCache = new SettingItem("清除缓存", "当前缓存大小为" + stay4Number(cacheSize) + "MB", 5151) {
                     @Override
                     public void click(View v) {
                         new Thread(deleteCacheThread).start();
                     }
                 };
             } else {
-                clearCache.setDescription("当前缓存大小为" + stayFireNumber(cacheSize) + "MB");
+                clearCache.setDescription("当前缓存大小为" + stay4Number(cacheSize) + "MB");
             }
             if (!itemArrayList.contains(clearCache))
                 itemArrayList.add(clearCache);

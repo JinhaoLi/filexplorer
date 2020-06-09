@@ -343,9 +343,9 @@ public class FilePresenter implements FilePresenterCompl.IFilePresenter, MVPFram
         if (haveDir || selectSize == 0) {
             bigStr = "";
         } else {
-            bigStr = size > GB ? stayFireNumber((float) size / GB) + "GB" + "\t\t|"
-                    : size > MB ? stayFireNumber((float) size / MB) + "MB" + "\t\t|"
-                    : stayFireNumber((float) size / KB) + "KB" + "\t\t|";
+            bigStr = size > GB ? stay4Number((float) size / GB) + "GB" + "\t\t|"
+                    : size > MB ? stay4Number((float) size / MB) + "MB" + "\t\t|"
+                    : stay4Number((float) size / KB) + "KB" + "\t\t|";
         }
         LogUtils.d(getClass().getName(),"getUnderBarMsg():{fileModel.size():"+fileModel.size()+"}"+"{selectSize:"+selectSize+"}");
         return "\t" + fileModel.size() + getContext().getString(R.string.how_many_item) + "\t\t" + howStr + "\t\t" + bigStr;

@@ -153,9 +153,9 @@ public class ProgressMessage {
 
     public String getSpeedMessage() {
         if (mode == MODE_COPY || mode == MODE_COMPRESS) {
-            return "速度：" + FileUtils.stayFireNumber(speedGet() / MB) + "Mb/秒";
+            return "速度：" + FileUtils.stay4Number(speedGet() / MB) + "Mb/秒";
         } else if (mode == MODE_MOVE||mode==MODE_DELETE) {
-            return "速度：" + FileUtils.stayFireNumber(speedGet()) + "个项目/秒";
+            return "速度：" + FileUtils.stay4Number(speedGet()) + "个项目/秒";
         } else {
             return "";
         }

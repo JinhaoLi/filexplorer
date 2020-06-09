@@ -42,7 +42,7 @@ import static com.jil.filexplorer.utils.FileUtils.addFastToDesk;
 import static com.jil.filexplorer.utils.FileUtils.chooseViewFile;
 import static com.jil.filexplorer.utils.FileUtils.getOptions;
 import static com.jil.filexplorer.utils.FileUtils.shareFile;
-import static com.jil.filexplorer.utils.FileUtils.stayFireNumber;
+import static com.jil.filexplorer.utils.FileUtils.stay4Number;
 import static com.jil.filexplorer.utils.FileUtils.viewFile;
 
 /**
@@ -313,7 +313,7 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.Defaul
         }else {
             long size = fileInfo.getFileSize();
             String mineType =fileInfo.getName();
-            holder.size.setText(size > GB ? stayFireNumber((float) size / GB) + "GB" : size > MB ? stayFireNumber((float) size / MB) + "MB" : stayFireNumber((float) size / KB) + "KB");
+            holder.size.setText(size > GB ? stay4Number((float) size / GB) + "GB" : size > MB ? stay4Number((float) size / MB) + "MB" : stay4Number((float) size / KB) + "KB");
             if(mineType.contains("."))
                 holder.type.setText(mineType.substring(mineType.lastIndexOf(".")+1).toUpperCase()+"文件");//文件种类
             else
