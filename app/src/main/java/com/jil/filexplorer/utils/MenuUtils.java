@@ -16,9 +16,6 @@ public class MenuUtils {
 
     public static boolean addMenu(Menu menu) {
         //单选
-//        addMenu(1,menu, 1, 1, R.string.copy, R.drawable.ic_content_copy_black_24dp);
-//        addMenu(1,menu, 3, 2, R.string.delete, R.drawable.ic_delete_black_24dp);
-//        addMenu(1,menu, 5, 3, R.string.cut, R.drawable.ic_content_cut_black_24dp);
         addMenu(4,menu, 2, 1, R.string.paste, R.drawable.ic_content_paste_black_24dp);
         addMenu(3,menu, 9, 2, R.string.interval, R.drawable.ic_all_selecte_in_qu);
         addMenu(3,menu, 8, 3, R.string.all_choose, R.drawable.ic_all_selecte_ico);
@@ -53,29 +50,5 @@ public class MenuUtils {
 //            }
 //        }
     }
-
-//    public static SwipeMenuItem createSwipeMenu(Context context, int backgroundRes, int titleRes, int textColor) {
-//        return new SwipeMenuItem(context)
-//                .setText(context.getString(titleRes)) // 文字。
-//                .setTextColor(textColor) // 文字颜色。
-//                .setTextSize(15) // 文字大小。
-//                .setWidth(60)
-//                .setWeight(1)
-//                .setHeight(-1)
-//                .setBackgroundDrawable(backgroundRes);
-//    }
-
- //  public static void fileSwipeMenu(SwipeMenu swipeLeftMenu, SwipeMenu swipeRightMenu, Context context) {
-//        SwipeMenuItem deleteItem = createSwipeMenu(context, R.drawable.button_click_type_alp_bule, R.string.delete, Color.WHITE);
-//        SwipeMenuItem detailItem = createSwipeMenu(context, R.drawable.button_click_type_bule_bule, R.string.detail, Color.WHITE);
-//        SwipeMenuItem actionItem = createSwipeMenu(context, R.drawable.button_click_type_bule_bule, R.string.action, Color.WHITE);
-//        SwipeMenuItem cutItem = createSwipeMenu(context, R.drawable.button_click_type_bule_bule, R.string.cut, Color.WHITE);
-//
-//        swipeRightMenu.addMenuItem(deleteItem);// 添加一个按钮到右侧侧菜单。.
-//        swipeRightMenu.addMenuItem(detailItem);// 添加一个按钮到右侧侧菜单。.
-//        swipeLeftMenu.addMenuItem(actionItem);// 添加一个按钮到左侧侧菜单。.
-//        swipeLeftMenu.addMenuItem(cutItem);// 添加一个按钮到左侧侧菜单。.
-   // }
-
 
 }

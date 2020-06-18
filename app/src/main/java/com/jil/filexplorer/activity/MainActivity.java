@@ -641,9 +641,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         smallFragmentList.addItemDecoration(new MyItemDecoration(this, 1));
         smallFragmentList.setAdapter(fragmentPresenter.smallFragmentViewAdapter);
 
-        ActivityManager activityManager = ActivityManager.getInstance();
-        activityManager.addActivity(this);
-
         ImageButton viewHistory = findViewById(R.id.imageButton3);
         viewHistory.setOnClickListener(new View.OnClickListener() {
             @Override
