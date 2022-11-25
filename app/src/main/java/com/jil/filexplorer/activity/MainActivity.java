@@ -696,9 +696,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         String path = intent.getStringExtra(INTENT_INPUT_PATH);
 
         if (path != null && !path.equals("")) {
-//            if (fragmentPresenter == null) {
-//                FragmentPresenter.getInstance(this, path);
-//            }
             fragmentPresenter.slideToPager(path);
         }
     }
